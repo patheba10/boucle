@@ -19,6 +19,7 @@ npm run validate -- py-04   # une seule leçon
 pip install -r requirements.txt -r requirements-dev.txt
 python -m playwright install chromium
 npm run test:e2e            # parcours élève dans un vrai navigateur
+npm run test:unit           # simulateur Git
 ```
 
 ## Valider le contenu
@@ -60,6 +61,8 @@ Une leçon est un objet dans `public/content/courses/<cours>.js` :
 - `challenge` : `{ prompt, starter, solution, hint, ... }`
   - Python : `expected` (sortie exacte), plus `tests` optionnel, du code ajouté après celui de l'élève.
   - C++ : `tests`, une liste de `{ input, expected }`.
+  - Git (cours dont `lang` vaut `"git"`) : `setup` (commandes de mise en place, silencieuses), `checks` (état attendu, critères listés dans `evaluate` de `lib/gitsim.js`), `solution` (une suite de commandes possible).
+- Blocs `~~~git` : exécutés dans un dépôt simulé neuf ; une ligne préfixée par `!` doit échouer.
 
 Pour lire un jeu de données dans un exercice, place le fichier dans `public/datasets/` (et complète son README), puis lis-le via `"data/<fichier>"`.
 

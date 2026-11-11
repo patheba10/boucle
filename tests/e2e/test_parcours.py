@@ -44,7 +44,7 @@ def test_accueil(page):
 
 
 def test_pages_principales_sans_erreur(page):
-    for route in ["python", "data", "cpp", "roadmaps", "devops", "installer", "atelier", "py-01", "np-01", "cpp-10"]:
+    for route in ["python", "data", "git", "cpp", "roadmaps", "devops", "installer", "atelier", "py-01", "np-01", "git-01", "cpp-10"]:
         page.goto(page.base + "#" + route)
         expect(page.locator("#app")).not_to_be_empty()
     assert page.errors == []
@@ -107,15 +107,21 @@ def test_parite_navigateur_toutes_les_solutions(page):
     (Pyodide 32 bits, JSCPP). Hors ligne, on saute les cours qui ont besoin de paquets du CDN."""
     page.goto(page.base)
     lessons = page.evaluate("""import('./content/index.js').then(m => m.COURSES.flatMap(c =>
-        c.lessons.filter(l => l.challenge).map(l => ({ id: l.id, course: c.id }))))""")
+        c.lessons.filter(l => l.challenge).map(l => ({ id: l.id, course: c.id, lang: c.lang,
+            solution: c.lang === "git" ? l.challenge.solution : null }))))""")
     if OFFLINE:
         lessons = [l for l in lessons if l["course"] != "data"]
     assert lessons, "aucun défi trouvé"
     echecs = []
     for lesson in lessons:
         page.goto(page.base + "#" + lesson["id"])
-        page.click('[data-act="sol"]')
-        page.click('[data-act="sol"]')
+        if lesson["lang"] == "git":
+            for cmd in lesson["solution"]:
+                page.fill(".gterm-in", cmd)
+                page.press(".gterm-in", "Enter")
+        else:
+            page.click('[data-act="sol"]')
+            page.click('[data-act="sol"]')
         page.click('[data-act="check"]')
         verdict = page.locator('[data-slot="verdict"] .verdict')
         verdict.wait_for(timeout=PY_TIMEOUT)
@@ -129,3 +135,30 @@ def test_seaborn_installe_a_la_demande(page):
     console = run_atelier(page, "import seaborn as sns\nimport pandas as pd\nprint(sns.__version__)\nsns.histplot(pd.read_csv('data/penguins.csv'), x='body_mass_g')\n")
     expect(console).to_contain_text("0.13.2")
     expect(console.locator("img.fig")).to_have_count(1)
+
+
+def test_terminal_git(page):
+    page.goto(page.base + "#git-01")
+    term = page.locator(".gterm-in")
+    for cmd in ["git status", "git init", "git add README.md", 'git commit -m "docs: ajouter le README"']:
+        term.fill(cmd)
+        term.press("Enter")
+    out = page.locator(".gterm-out")
+    expect(out).to_contain_text("fatal: not a git repository")
+    expect(out).to_contain_text("Initialized empty Git repository")
+    expect(out).to_contain_text("(root-commit)")
+    expect(page.locator(".g-node")).to_have_count(1)
+    expect(page.locator(".gterm-files")).to_contain_text("non suivi")  # app.py n'est pas encore ajouté
+    term.press("ArrowUp")
+    assert term.input_value().startswith("git commit")
+    page.click('[data-act="check"]')
+    expect(page.locator(".verdict.no")).to_be_visible()  # il manque le second commit
+    term.fill("git add app.py")
+    term.press("Enter")
+    term.fill('git commit -m "feat: premier script"')
+    term.press("Enter")
+    page.click('[data-act="check"]')
+    expect(page.locator(".verdict.ok")).to_be_visible()
+    page.reload()  # l'historique tapé est rejoué au rechargement
+    expect(page.locator(".g-node")).to_have_count(2)
+    assert page.errors == []

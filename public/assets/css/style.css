@@ -16,6 +16,7 @@
   --py: #3563C9;
   --cpp: #1E7F95;
   --data: #0E8566;
+  --git: #C2462B;
   --devops: #C9661A;
   --cloud: #2C7CC4;
   --ml: #A33A8C;
@@ -41,7 +42,7 @@
     --bg: #0E1020; --surface: #171A2D; --surface-2: #20243A; --ink: #E8E9F3; --muted: #9EA2BD; --line: #2A2E48;
     --accent: #FF7A4A; --accent-soft: #3A2219; --on-accent: #1A0C06;
     --ok: #45C48E; --ok-soft: #12322A; --bad: #FF7B72; --bad-soft: #3A1B1E;
-    --py: #7EA4FF; --cpp: #5BC2D6; --data: #4CCFA8; --devops: #F09A52; --cloud: #6DB4F5; --ml: #E07FCB;
+    --py: #7EA4FF; --cpp: #5BC2D6; --data: #4CCFA8; --git: #F27A5E; --devops: #F09A52; --cloud: #6DB4F5; --ml: #E07FCB;
     --code-bg: #0A0C18; --code-bg-2: #12152A; --code-line: #23284A;
     --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 4px 16px rgba(0, 0, 0, .25);
     color-scheme: dark;
@@ -51,7 +52,7 @@
   --bg: #0E1020; --surface: #171A2D; --surface-2: #20243A; --ink: #E8E9F3; --muted: #9EA2BD; --line: #2A2E48;
   --accent: #FF7A4A; --accent-soft: #3A2219; --on-accent: #1A0C06;
   --ok: #45C48E; --ok-soft: #12322A; --bad: #FF7B72; --bad-soft: #3A1B1E;
-  --py: #7EA4FF; --cpp: #5BC2D6; --data: #4CCFA8; --devops: #F09A52; --cloud: #6DB4F5; --ml: #E07FCB;
+  --py: #7EA4FF; --cpp: #5BC2D6; --data: #4CCFA8; --git: #F27A5E; --devops: #F09A52; --cloud: #6DB4F5; --ml: #E07FCB;
   --code-bg: #0A0C18; --code-bg-2: #12152A; --code-line: #23284A;
   --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 4px 16px rgba(0, 0, 0, .25);
   color-scheme: dark;
@@ -405,3 +406,56 @@ details.setup[open] > summary::after { content: "–"; }
 details.setup > summary .block-h h2 { font-size: 17px; }
 details.setup > summary .n svg { width: 15px; height: 15px; }
 details.setup > .prose { padding: 0 22px 20px; }
+
+/* ---------- Terminal Git simulé ---------- */
+.gterm { display: flex; flex-direction: column; background: var(--code-bg); color: var(--code-fg); }
+.gterm-screen { height: 270px; overflow-y: auto; padding: 12px 14px 8px; font-family: var(--f-mono); font-size: 13.5px; line-height: 1.5; cursor: text; }
+.gterm-out { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; }
+.gterm-cmd { color: var(--code-fg); font-weight: 600; }
+.gterm-dollar, .gterm-ps1 { color: var(--tk-str); }
+.gterm-err { color: #FF8F87; }
+.gterm-dim { color: var(--code-dim); }
+.gterm-line { display: flex; align-items: baseline; gap: 8px; margin-top: 2px; }
+.gterm-ps1 { white-space: nowrap; font-size: 12.5px; }
+.gterm-in { flex: 1; min-width: 0; background: transparent; border: 0; outline: none; color: var(--code-fg); font: inherit; caret-color: #FFB08F; padding: 2px 0; }
+.gterm-in::placeholder { color: var(--code-dim); }
+@media (pointer: coarse) { .gterm-in { font-size: 16px; } }
+@media (max-width: 520px) { .gterm-ps1 { display: none; } .gterm-line::before { content: "$"; color: var(--tk-str); } }
+.gterm-side { border-top: 1px solid var(--code-line); background: var(--code-bg-2); padding: 10px 14px 12px; display: flex; flex-direction: column; gap: 8px; }
+.gterm-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.gterm-side .eyebrow { color: var(--code-dim); font-size: 11px; }
+.gterm-branch { font-family: var(--f-mono); font-size: 12px; color: var(--tk-fn); }
+.gterm-graph { overflow-x: auto; overflow-y: hidden; min-height: 70px; }
+.gterm-empty { margin: 8px 0; font-size: 13px; font-family: var(--f-mono); }
+.gterm-files { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+.gterm-files li { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.gterm-files code { background: transparent; color: var(--code-fg); padding: 0; font-size: 13px; }
+.gtag { font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 99px; }
+.gtag.ok { background: rgba(69, 196, 142, .18); color: #6EE0AE; }
+.gtag.warn { background: rgba(242, 198, 109, .16); color: var(--tk-num); }
+.gtag.bad { background: rgba(255, 123, 114, .18); color: #FF8F87; }
+.gtag.dim { background: var(--code-line); color: var(--code-dim); }
+.g-svg { display: block; }
+.g-edge { fill: none; stroke: var(--code-dim); stroke-width: 2; }
+.g-edge.merge { stroke-dasharray: 4 3; }
+.g-node { fill: var(--code-bg); stroke: var(--tk-fn); stroke-width: 2.5; }
+.g-node.merge { stroke: var(--tk-pre); }
+.g-node.head { fill: #FF7A4A; stroke: #FF7A4A; }
+.g-hash { fill: var(--code-dim); font-family: var(--f-mono); font-size: 10.5px; }
+.g-ref rect { fill: var(--code-line); }
+.g-ref text { fill: var(--code-fg); font-family: var(--f-mono); font-size: 10.5px; font-weight: 600; }
+.g-ref.head rect { fill: #FF7A4A; }
+.g-ref.head text { fill: #1A0C06; }
+.g-ref.remote rect { fill: transparent; stroke: var(--tk-fn); stroke-dasharray: 3 2; }
+.g-ref.remote text { fill: var(--tk-fn); }
+.g-ref.tag rect { fill: var(--tk-num); }
+.g-ref.tag text { fill: #2A1E00; }
+.snippet .res .gterm-cmd { font-weight: 600; }
+
+/* Critères de vérification (défis Git) */
+.crit { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; font-size: 14px; }
+.crit li { display: flex; gap: 8px; align-items: flex-start; }
+.crit li svg { width: 15px; height: 15px; flex-shrink: 0; margin-top: 3px; }
+.crit li.ok svg { color: var(--ok); }
+.crit li.no svg { color: var(--bad); }
+.crit li.ok span { color: var(--muted); }

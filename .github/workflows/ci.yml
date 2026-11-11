@@ -35,6 +35,9 @@ jobs:
       - name: Vérifier g++
         run: g++ --version
 
+      - name: Tests unitaires (simulateur Git)
+        run: npm run test:unit
+
       - name: Installer les bibliothèques Python (versions de Pyodide)
         run: pip install -r requirements.txt
 
@@ -54,10 +57,17 @@ jobs:
           cache: pip
           cache-dependency-path: requirements-dev.txt
 
-      - name: Installer Playwright et Chromium
+      # Le runner fournit déjà Google Chrome et ses bibliothèques : on s'en sert
+      # pour ne pas dépendre des miroirs apt d'Ubuntu (pannes vues au sprint 3.1).
+      - name: Installer Playwright (Chrome du runner)
         run: |
           pip install -r requirements-dev.txt
-          python -m playwright install --with-deps chromium
+          if command -v google-chrome >/dev/null; then
+            echo "CHROME_PATH=$(command -v google-chrome)" >> "$GITHUB_ENV"
+            google-chrome --version
+          else
+            python -m playwright install --with-deps chromium
+          fi
 
       - name: Parcours élève dans un vrai navigateur (CDN réels)
         run: python -m pytest -q tests/e2e
