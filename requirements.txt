@@ -1,0 +1,8 @@
+# Bibliothèques utilisées par la CI pour valider les exercices.
+# Mêmes versions que Pyodide 0.29.5 (le Python du navigateur), sauf matplotlib :
+# la 3.8.4 de Pyodide n'a pas de wheel pour CPython 3.13, on prend la 3.9 la plus proche.
+numpy==2.2.5
+pandas==2.3.3
+scipy==1.14.1
+scikit-learn==1.7.0
+matplotlib==3.9.4

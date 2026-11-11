@@ -11,6 +11,16 @@ npm run dev        # http://localhost:5173
 
 Le site est statique : `public/` est servi tel quel, sans étape de build.
 
+## Tests
+
+```bash
+npm run validate            # contenu : tout
+npm run validate -- py-04   # une seule leçon
+pip install -r requirements.txt -r requirements-dev.txt
+python -m playwright install chromium
+npm run test:e2e            # parcours élève dans un vrai navigateur
+```
+
 ## Valider le contenu
 
 ```bash
@@ -44,12 +54,18 @@ Une leçon est un objet dans `public/content/courses/<cours>.js` :
 
 - `id`, `title`, `xp`
 - `theory` : HTML. `@@code@@` donne du code en ligne. Un bloc `~~~py` ... `~~~` est exécutable. Options du bloc : `norun`, ou `stdin:…` pour fournir une entrée.
+- `section` (facultatif) : nom du chapitre affiché sur la page du cours
+- `setup` (facultatif) : panneau « Sur ta machine », même syntaxe que `theory`. Blocs `~~~ps` (PowerShell) et `~~~bash` affichés sans exécution
 - `quiz` : liste de `{ q, options, answer, explain }`
 - `challenge` : `{ prompt, starter, solution, hint, ... }`
   - Python : `expected` (sortie exacte), plus `tests` optionnel, du code ajouté après celui de l'élève.
   - C++ : `tests`, une liste de `{ input, expected }`.
 
+Pour lire un jeu de données dans un exercice, place le fichier dans `public/datasets/` (et complète son README), puis lis-le via `"data/<fichier>"`.
+
 Lance ensuite `npm run validate`.
+
+Un nouveau cours se déclare avec `route` (son adresse, ex. `data`) et `badge` (2 ou 3 caractères), puis s'importe dans `public/content/index.js`.
 
 ## Moteurs d'exécution
 

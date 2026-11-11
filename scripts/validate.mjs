@@ -12,7 +12,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 import vm from "node:vm";
-import { COURSES, ROADMAPS } from "../public/content/index.js";
+import { COURSES, ROADMAPS, INSTALL } from "../public/content/index.js";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const require = createRequire(import.meta.url);
@@ -81,6 +81,12 @@ function cppCheck(ch, code, runner) {
 
 /* ---------- Structure ---------- */
 const ids = new Set();
+const routes = new Set(["home", "roadmaps", "atelier", "installer"]);
+for (const c of COURSES) {
+  if (!c.route || !c.badge) fail(c.id, "cours sans route ou badge");
+  if (routes.has(c.route)) fail(c.id, "route en double : " + c.route);
+  routes.add(c.route);
+}
 for (const c of COURSES) for (const l of c.lessons) {
   if (ids.has(l.id)) fail(l.id, "id de leçon en double");
   ids.add(l.id);
@@ -97,6 +103,7 @@ for (const r of ROADMAPS) for (const s of r.stages) for (const n of s.nodes) {
   for (const lid of n.lessons || []) if (!COURSES.some((c) => c.lessons.some((l) => l.id === lid))) fail(n.id, "leçon liée introuvable : " + lid);
   for (const [, url] of n.links) if (!/^https:\/\//.test(url)) fail(n.id, "lien non https : " + url);
 }
+for (const sec of INSTALL.sections) if (!sec.id || !sec.title || !sec.body) fail("installer", "section incomplète");
 ok();
 
 /* ---------- Exécution ---------- */
@@ -104,6 +111,7 @@ for (const c of COURSES) for (const l of c.lessons) {
   if (only && l.id !== only) continue;
   for (const b of l.theory.matchAll(/~~~(\w+)([^\n]*)\n([\s\S]*?)\n~~~/g)) {
     const [, lang, opts, code] = b;
+    if (lang !== "py" && lang !== "cpp") continue; // terminal, powershell… : non exécutés
     const stdin = ((/stdin:(.*)$/.exec(opts) || [])[1] || "").trim();
     if (lang === "py") {
       const r = runPy(code, stdin);

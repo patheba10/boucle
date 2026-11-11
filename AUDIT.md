@@ -35,10 +35,10 @@ Priorités : **P0** bloquant pour l'objectif, **P1** fort impact, **P2** confort
 | 14 | Boucle infinie Python : impossible à arrêter. | P1 | **Fait** : arrêt à 10 s, redémarrage du worker |
 | 15 | C++ limité à un sous-ensemble (pas de `string`, `vector`, classes). Brancher un vrai compilateur (API de compilation ou clang en WebAssembly). | P1 | À faire |
 | 16 | Progression uniquement dans le navigateur : perdue si les données du site sont effacées, pas de multi-appareil. Ajouter export/import, puis synchronisation de compte. | P1 | À faire |
-| 17 | Premier lancement de Python lent (environ 10 Mo). Précharger en arrière-plan dès l'ouverture d'une leçon Python. | P2 | À faire |
+| 17 | Premier lancement de Python lent (environ 10 Mo). Précharger en arrière-plan dès l'ouverture d'une leçon Python. | P2 | **Fait** (sprint 2.1) |
 | 18 | Éditeur minimal : pas d'autocomplétion, pas de touche Tab sur mobile. Évaluer CodeMirror 6, ou ajouter une barre de symboles sur mobile. | P2 | À faire |
 | 19 | Pas de mode hors-ligne. En faire une PWA (manifest + service worker). | P2 | À faire |
-| 20 | Pas de tests de l'interface. Ajouter des tests Playwright en CI. | P2 | À faire |
+| 20 | Pas de tests de l'interface. Ajouter des tests Playwright en CI. | P2 | **Fait** (sprint 2.1) : 10 tests e2e |
 | 21 | En-têtes de sécurité de base seulement. Ajouter une Content-Security-Policy. | P2 | À faire |
 | 22 | Le C++ tourne sur le fil principal (par tranches, donc l'interface reste réactive, mais pas isolée). | P3 | À faire |
 | 23 | Aucune mesure d'usage. Vercel Web Analytics suffirait. | P3 | À faire |

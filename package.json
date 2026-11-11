@@ -6,7 +6,8 @@
   "description": "Plateforme d'apprentissage : Python, C++, data, Git, hardware et roadmaps métier.",
   "scripts": {
     "dev": "python3 -m http.server 5173 --directory public",
-    "validate": "node scripts/validate.mjs"
+    "validate": "node scripts/validate.mjs",
+    "test:e2e": "python3 -m pytest -q tests/e2e"
   },
   "engines": {
     "node": ">=20"

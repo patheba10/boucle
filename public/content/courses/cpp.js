@@ -2,7 +2,7 @@
 const R = String.raw;
 
 export default {
-  id: "cpp", name: "C++", tag: "$ g++", lang: "cpp",
+  id: "cpp", route: "cpp", badge: "C++", name: "C++", tag: "$ g++", lang: "cpp",
   blurb: "La mémoire, les types et les pointeurs. Un interpréteur pédagogique tourne dans le navigateur.",
   note: "Les défis tournent dans un interpréteur C++ pédagogique : iostream, types de base, boucles, fonctions, tableaux, pointeurs et récursion. string, vector, références et classes sont vus en théorie, à pratiquer avec g++ sur ta machine.",
   lessons: [
