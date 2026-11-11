@@ -15,7 +15,7 @@ MAX_OUT = 60_000
 
 def _prepare_matplotlib(code):
     """Force un backend sans écran et neutralise plt.show() : les figures sont récupérées après coup."""
-    if "matplotlib" not in code and "seaborn" not in code:
+    if "matplotlib" not in code and "seaborn" not in code and ".plot(" not in code:
         return
     try:
         import matplotlib
