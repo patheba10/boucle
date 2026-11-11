@@ -4,6 +4,8 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.4.0] — 2026-11-11
+
 ### Ajouté
 - Chapitre **pandas** (8 leçons) : Series et DataFrame, lecture et exploration de CSV, sélection et filtres, nettoyage, groupby, jointures, dates et séries temporelles, maximum par groupe (#3).
 - Jeux de données réels : manchots de Palmer (CC0), météo de Seattle 2012-2015 (NOAA, domaine public), plus deux tables fictives clients et commandes (#3).
