@@ -24,7 +24,7 @@ export default [
         links: [["Docker : bien démarrer", "https://docs.docker.com/get-started/"]] },
       { id: "do-cicd", title: "CI/CD", desc: "Pipelines qui testent, construisent et déploient à chaque push. Cache, matrices, secrets, environnements, déploiement continu.",
         skills: ["GitHub Actions / GitLab CI", "tests automatisés", "build et push d'images", "gestion des secrets"], project: "Pipeline GitHub Actions : lint → tests → build Docker → push vers un registre → déploiement.",
-        links: [["GitHub Actions", "https://docs.github.com/fr/actions"]] }
+        lessons: ["ci-02", "ci-04", "ci-06"], links: [["GitHub Actions", "https://docs.github.com/fr/actions"]] }
     ]},
     { title: "Infrastructure", nodes: [
       { id: "do-iac", title: "Infrastructure as Code", desc: "Décrire l'infrastructure dans du code versionné : plan, apply, state distant, modules réutilisables.",

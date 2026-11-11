@@ -1,6 +1,6 @@
 # Boucle
 
-Plateforme d'apprentissage façon Coddy : théorie, quiz et défis corrigés automatiquement, avec du code qui s'exécute directement dans le navigateur. Cours Python et C++, roadmaps DevOps, Cloud et ML. Le plan complet est dans [PLAN.md](PLAN.md), l'architecture dans [ARCHITECTURE.md](ARCHITECTURE.md) et l'auto-évaluation dans [AUDIT.md](AUDIT.md).
+Plateforme d'apprentissage façon Coddy : théorie, quiz et défis corrigés automatiquement, avec du code qui s'exécute directement dans le navigateur. Cours Python, data, Git et GitHub, CI/CD avec GitHub Actions et C++, roadmaps DevOps, Cloud et ML. Le plan complet est dans [PLAN.md](PLAN.md), l'architecture dans [ARCHITECTURE.md](ARCHITECTURE.md) et l'auto-évaluation dans [AUDIT.md](AUDIT.md).
 
 ## Lancer en local
 
@@ -19,7 +19,7 @@ npm run validate -- py-04   # une seule leçon
 pip install -r requirements.txt -r requirements-dev.txt
 python -m playwright install chromium
 npm run test:e2e            # parcours élève dans un vrai navigateur
-npm run test:unit           # simulateur Git
+npm run test:unit           # simulateur Git et moteur des workflows
 ```
 
 ## Valider le contenu
@@ -62,7 +62,11 @@ Une leçon est un objet dans `public/content/courses/<cours>.js` :
   - Python : `expected` (sortie exacte), plus `tests` optionnel, du code ajouté après celui de l'élève.
   - C++ : `tests`, une liste de `{ input, expected }`.
   - Git (cours dont `lang` vaut `"git"`) : `setup` (commandes de mise en place, silencieuses), `checks` (état attendu, critères listés dans `evaluate` de `lib/gitsim.js`), `solution` (une suite de commandes possible).
+  - Workflow GitHub Actions (`lang` vaut `"yaml"`) : `starter` et `solution` (fichiers YAML), `checks` (critères listés dans `evaluate` de `lib/workflow.js`, dont `scenarios` : un événement simulé et les jobs qui doivent tourner ou être sautés), `events` facultatif (onglets de simulation ; par défaut, ceux des scénarios), `file` facultatif (nom affiché).
+- `lang` (facultatif) sur une leçon : remplace le langage du cours pour cette leçon.
+- `practice` (facultatif, leçons sans défi) : `{ title, body }`, panneau de pratique à droite.
 - Blocs `~~~git` : exécutés dans un dépôt simulé neuf ; une ligne préfixée par `!` doit échouer.
+- Blocs `~~~yaml` : bouton « Analyser » (problèmes et simulation). Ils doivent passer le lint, sauf avec l'option `erreurs` (extrait volontairement faux). Dans les fichiers du cours CI/CD, le gabarit `Y` permet d'écrire `\${{ … }}`.
 
 Pour lire un jeu de données dans un exercice, place le fichier dans `public/datasets/` (et complète son README), puis lis-le via `"data/<fichier>"`.
 
@@ -74,6 +78,8 @@ Un nouveau cours se déclare avec `route` (son adresse, ex. `data`) et `badge` (
 
 - Python : [Pyodide](https://pyodide.org) 0.29.5, chargé depuis jsDelivr. Les paquets (numpy, pandas, scikit-learn, matplotlib…) se chargent à la demande selon les `import`.
 - C++ : [JSCPP](https://github.com/felixhao28/JSCPP) 2.0.6, un interpréteur pédagogique (iostream, types de base, fonctions, tableaux, pointeurs).
+- Git : simulateur maison (`lib/gitsim.js`).
+- GitHub Actions : moteur maison (`lib/workflow.js`) qui lit le YAML avec [js-yaml](https://github.com/nodeca/js-yaml) 4.1.0 (copié dans `assets/js/vendor/`, licence MIT), signale les erreurs et simule les événements.
 
 ## Déploiement
 
