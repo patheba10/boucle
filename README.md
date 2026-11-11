@@ -59,6 +59,6 @@ Lance ensuite `npm run validate`.
 ## Déploiement
 
 - **Vercel** : chaque push sur `main` redéploie automatiquement.
-- **GitHub Pages** : après la validation, la CI pousse `public/` dans le dépôt public `patheba10/boucle-site` (branche `gh-pages`). Le dépôt `boucle` reste privé. Il faut le secret `BOUCLE_SITE_TOKEN` : un jeton GitHub à accès fin, limité à `boucle-site`, avec la permission Contents en lecture-écriture. Sans ce secret, l'étape de publication est simplement ignorée.
+- **GitHub Pages** : après la validation, la CI publie `public/` sur https://patheba10.github.io/boucle/ (Settings → Pages → Source : GitHub Actions).
 
-Les chemins du site sont relatifs pour fonctionner aussi sous `https://patheba10.github.io/boucle-site/`.
+Les chemins du site sont relatifs pour fonctionner aussi sous `https://patheba10.github.io/boucle/`.

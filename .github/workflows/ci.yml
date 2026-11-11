@@ -44,30 +44,21 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    env:
-      SITE_TOKEN: ${{ secrets.BOUCLE_SITE_TOKEN }}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Vérifier le jeton de publication
-        id: token
-        run: |
-          if [ -z "$SITE_TOKEN" ]; then
-            echo "::warning::Secret BOUCLE_SITE_TOKEN absent : publication GitHub Pages ignorée."
-            echo "ok=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "ok=true" >> "$GITHUB_OUTPUT"
-          fi
+      - uses: actions/configure-pages@v5
 
-      - name: Pousser public/ vers le dépôt public boucle-site
-        if: steps.token.outputs.ok == 'true'
-        uses: peaceiris/actions-gh-pages@v4
+      - uses: actions/upload-pages-artifact@v3
         with:
-          personal_token: ${{ secrets.BOUCLE_SITE_TOKEN }}
-          external_repository: patheba10/boucle-site
-          publish_branch: gh-pages
-          publish_dir: ./public
-          force_orphan: true
-          user_name: "github-actions[bot]"
-          user_email: "41898299+github-actions[bot]@users.noreply.github.com"
-          commit_message: "Publication depuis boucle"
+          path: ./public
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
