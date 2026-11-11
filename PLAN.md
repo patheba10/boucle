@@ -24,13 +24,26 @@ Exécutable dans le navigateur avec les vrais paquets.
 
 Amélioration technique jointe : préchargement de Python, jeux de données embarqués.
 
-## Étape 3 — Git et GitHub
+## Étape 3 — Git, GitHub et CI/CD
 
-1. Terminal Git simulé dans le navigateur, avec exercices vérifiés sur l'état du dépôt : `init`, `add`, `commit`, `log`, `diff`, branches, `merge`, conflits, `rebase`, `stash`, `reset` vs `revert`, remotes.
-2. Bonnes pratiques : messages de commit conventionnels, branches de fonctionnalité, revue de code.
-3. GitHub : pull requests, issues, protections de branche, GitHub Actions (on lit la CI de Boucle comme cas réel).
+Backlog : issues #10, #11 et #12 (milestone « Étape 3 »).
 
-Amélioration technique jointe : nouveau format d'exercice « commandes à taper ».
+1. **Git en ligne de commande** (#10) : terminal Git simulé dans le navigateur, avec exercices vérifiés sur l'état du dépôt. Au programme : `init`, `add`, `commit`, `log`, `diff`, branches, `merge`, conflits, `rebase`, `stash`, `reset` vs `revert`, remotes et tags.
+2. **Collaborer sur GitHub** (#11) : pull requests, revue de code, issues, protections de branche, GitHub Flow vs trunk-based, releases et SemVer, sécurité du compte.
+3. **Cours complet CI/CD** (#12), en 12 chapitres :
+   - pourquoi la CI/CD et les métriques DORA ;
+   - GitHub Actions : workflows, jobs, runners, YAML, expressions et contextes ;
+   - tests dans le pipeline ;
+   - matrices, cache, artefacts et `needs` ;
+   - secrets, permissions, OIDC et sécurité de la chaîne d'approvisionnement ;
+   - images Docker et releases ;
+   - déploiements : environnements, blue/green, canary, rollback ;
+   - Terraform dans le pipeline ;
+   - dépannage ;
+   - panorama GitLab CI, Jenkins et Azure DevOps ;
+   - projet final : pipeline complet pour une API.
+
+Amélioration technique jointe : nouveaux formats d'exercice, « commandes à taper » et « écrire un workflow YAML ».
 
 ## Étape 4 — Socle entreprise : SQL, Linux et Bash, API
 
