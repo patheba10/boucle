@@ -4,6 +4,11 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+### Ajouté
+- **Terminal Git simulé** : simulateur Git en JavaScript pur (fusion à trois voies, conflits, rebase interruptible, reset, revert, stash, cherry-pick, tags, dépôt distant), terminal avec historique, graphe des commits et état des fichiers ; vérification par l'état du dépôt (#18).
+- Cours **Git et GitHub**, chapitre « Les bases » : modèle de Git et premier commit, historique et diff, .gitignore et restore (#18).
+- 16 tests unitaires du simulateur en CI (`npm run test:unit`) (#18).
+
 ## [0.5.0] — 2026-11-11
 
 Fin de l'étape 2 : le cours **Data** compte 37 leçons (NumPy, pandas, visualisation, SciPy, scikit-learn, projet guidé).
