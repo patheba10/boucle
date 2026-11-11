@@ -38,7 +38,7 @@ def test_accueil(page):
 
 
 def test_pages_principales_sans_erreur(page):
-    for route in ["python", "cpp", "roadmaps", "devops", "installer", "atelier", "py-01", "cpp-10"]:
+    for route in ["python", "data", "cpp", "roadmaps", "devops", "installer", "atelier", "py-01", "np-01", "cpp-10"]:
         page.goto(page.base + "#" + route)
         expect(page.locator("#app")).not_to_be_empty()
     assert page.errors == []
@@ -94,3 +94,25 @@ def test_installer_libelles_des_blocs(page):
     assert "powershell" in labels and "terminal" in labels
     assert "c++" not in labels
     expect(page.locator(".snippet .run")).to_have_count(0)  # rien d'exécutable sur cette page
+
+
+def test_parite_navigateur_toutes_les_solutions(page):
+    """Chaque solution validée en CI (CPython 64 bits, g++) doit aussi passer dans le navigateur
+    (Pyodide 32 bits, JSCPP). Hors ligne, on saute les cours qui ont besoin de paquets du CDN."""
+    page.goto(page.base)
+    lessons = page.evaluate("""import('./content/index.js').then(m => m.COURSES.flatMap(c =>
+        c.lessons.filter(l => l.challenge).map(l => ({ id: l.id, course: c.id }))))""")
+    if OFFLINE:
+        lessons = [l for l in lessons if l["course"] != "data"]
+    assert lessons, "aucun défi trouvé"
+    echecs = []
+    for lesson in lessons:
+        page.goto(page.base + "#" + lesson["id"])
+        page.click('[data-act="sol"]')
+        page.click('[data-act="sol"]')
+        page.click('[data-act="check"]')
+        verdict = page.locator('[data-slot="verdict"] .verdict')
+        verdict.wait_for(timeout=PY_TIMEOUT)
+        if "ok" not in (verdict.get_attribute("class") or ""):
+            echecs.append(lesson["id"] + " : " + page.locator(".console").inner_text()[:200])
+    assert not echecs, "Solutions refusées dans le navigateur :\n" + "\n".join(echecs)
