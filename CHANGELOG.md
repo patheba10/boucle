@@ -4,6 +4,10 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.6.0] — 2026-11-11
+
+Sprint 3.1 : Git en ligne de commande, dans un terminal simulé. Le cours **Git et GitHub** compte 9 leçons en 3 chapitres.
+
 ### Ajouté
 - **Terminal Git simulé** : simulateur Git en JavaScript pur (fusion à trois voies, conflits, rebase interruptible, reset, revert, stash, cherry-pick, tags, dépôt distant), terminal avec historique, graphe des commits et état des fichiers ; vérification par l'état du dépôt (#18).
 - Cours **Git et GitHub**, chapitre « Les bases » : modèle de Git et premier commit, historique et diff, .gitignore et restore (#18).
@@ -14,6 +18,7 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 ### Corrigé
 - pd-08 : le piège `groupby().max()` passait par hasard avec pandas 3 ; le test vérifie maintenant aussi la longueur du bec, différente d'une colonne à l'autre.
 - Test de parité navigateur : il nomme la leçon fautive au lieu d'échouer sur un simple délai dépassé.
+- CI : le job e2e utilise le Chrome du runner ; il ne dépend plus des miroirs apt d'Ubuntu, tombés pendant le sprint (AUDIT #25).
 
 ## [0.5.0] — 2026-11-11
 
