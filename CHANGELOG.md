@@ -8,6 +8,12 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 - **Terminal Git simulé** : simulateur Git en JavaScript pur (fusion à trois voies, conflits, rebase interruptible, reset, revert, stash, cherry-pick, tags, dépôt distant), terminal avec historique, graphe des commits et état des fichiers ; vérification par l'état du dépôt (#18).
 - Cours **Git et GitHub**, chapitre « Les bases » : modèle de Git et premier commit, historique et diff, .gitignore et restore (#18).
 - 16 tests unitaires du simulateur en CI (`npm run test:unit`) (#18).
+- Cours Git, chapitre « Branches » : branches, fusion et résolution de conflit, rebase et historique linéaire (#10).
+- Cours Git, chapitre « Réparer et collaborer » : reset, revert et stash, dépôt distant et push refusé, défi hotfix en production avec cherry-pick et tags SemVer (#10).
+
+### Corrigé
+- pd-08 : le piège `groupby().max()` passait par hasard avec pandas 3 ; le test vérifie maintenant aussi la longueur du bec, différente d'une colonne à l'autre.
+- Test de parité navigateur : il nomme la leçon fautive au lieu d'échouer sur un simple délai dépassé.
 
 ## [0.5.0] — 2026-11-11
 

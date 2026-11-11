@@ -43,6 +43,7 @@ Priorités : **P0** bloquant pour l'objectif, **P1** fort impact, **P2** confort
 | 22 | Le C++ tourne sur le fil principal (par tranches, donc l'interface reste réactive, mais pas isolée). | P3 | À faire |
 | 23 | Aucune mesure d'usage. Vercel Web Analytics suffirait. | P3 | À faire |
 | 24 | `npm run validate` relance un interpréteur Python par exécution : environ 1 min depuis scikit-learn. Garder un interpréteur vivant (serveur JSON en stdin/stdout) diviserait ce temps par 10. | P3 | À faire |
+| 25 | Le job e2e installe les dépendances de Chromium via apt : une panne des miroirs Ubuntu fait échouer la CI sans rapport avec le code (vu au sprint 3.1). Utiliser le Chrome déjà présent sur le runner (`CHROME_PATH`) ou mettre le navigateur en cache. | P2 | **Fait** (sprint 3.1) : le job e2e utilise Google Chrome du runner |
 
 ## Ordre de traitement
 
