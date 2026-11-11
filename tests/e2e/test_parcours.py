@@ -44,7 +44,7 @@ def test_accueil(page):
 
 
 def test_pages_principales_sans_erreur(page):
-    for route in ["python", "data", "git", "cpp", "roadmaps", "devops", "installer", "atelier", "py-01", "np-01", "git-01", "cpp-10"]:
+    for route in ["python", "data", "git", "cicd", "cpp", "roadmaps", "devops", "installer", "atelier", "py-01", "np-01", "git-01", "ci-01", "cpp-10"]:
         page.goto(page.base + "#" + route)
         expect(page.locator("#app")).not_to_be_empty()
     assert page.errors == []
@@ -107,8 +107,8 @@ def test_parite_navigateur_toutes_les_solutions(page):
     (Pyodide 32 bits, JSCPP). Hors ligne, on saute les cours qui ont besoin de paquets du CDN."""
     page.goto(page.base)
     lessons = page.evaluate("""import('./content/index.js').then(m => m.COURSES.flatMap(c =>
-        c.lessons.filter(l => l.challenge).map(l => ({ id: l.id, course: c.id, lang: c.lang,
-            solution: c.lang === "git" ? l.challenge.solution : null }))))""")
+        c.lessons.filter(l => l.challenge).map(l => ({ id: l.id, course: c.id, lang: l.lang || c.lang,
+            solution: (l.lang || c.lang) === "git" ? l.challenge.solution : null }))))""")
     if OFFLINE:
         lessons = [l for l in lessons if l["course"] != "data"]
     assert lessons, "aucun défi trouvé"
@@ -166,3 +166,33 @@ def test_terminal_git(page):
     page.reload()  # l'historique tapé est rejoué au rechargement
     expect(page.locator(".g-node")).to_have_count(2)
     assert page.errors == []
+
+
+def test_workflow_yaml(page):
+    """Défi GitHub Actions : erreurs en direct avec leur ligne, simulation d'événements, verdict."""
+    page.goto(page.base + "#ci-05")
+    live = page.locator(".wf-live")
+    expect(live).to_contain_text("ligne 7")
+    expect(live).to_contain_text("runs-on")
+    page.click('[data-act="sol"]')
+    page.click('[data-act="sol"]')
+    expect(live).to_contain_text("Aucune erreur de structure")
+    expect(live.locator(".wf-job")).to_have_count(2)
+    page.click('[data-act="check"]')
+    expect(page.locator('[data-slot="verdict"] .verdict.ok')).to_be_visible()
+    # Simulation d'un échec : deploy est sauté
+    page.goto(page.base + "#ci-04")
+    page.click('[data-act="sol"]')
+    page.click('[data-act="sol"]')
+    page.locator(".wf-tabs button", has_text="en échec").click()
+    expect(live.locator(".wf-job.skipped")).to_contain_text("build")
+    expect(live.locator(".wf-job.failure")).to_contain_text("tests")
+
+
+def test_extrait_yaml_analyse(page):
+    page.goto(page.base + "#ci-03")
+    page.locator(".snippet .run").first.click()
+    res = page.locator(".snippet .wf-res").first
+    expect(res).to_contain_text("Aucune erreur de structure")
+    res.locator(".wf-tabs button", has_text="un push sur feature").click()
+    expect(res).to_contain_text("ne démarre pas")
