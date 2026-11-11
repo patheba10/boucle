@@ -19,6 +19,7 @@ function startWorker() {
     const job = pending.get(msg.id);
     if (!job) return;
     if (msg.status) { job.onStatus && job.onStatus(statusText(msg.status)); return; }
+    if (msg.preloaded) { pyReady = true; pending.delete(msg.id); job.resolve(); return; }
     if (msg.phase === "running") {
       pyReady = true;
       job.onStatus && job.onStatus("Exécution…");
@@ -52,13 +53,42 @@ function statusText(s) {
   return s;
 }
 
-export function runPy(code, stdin, onStatus) {
+/* Jeux de données : tout chemin "data/<fichier>" cité dans le code est servi depuis public/datasets/
+   et copié dans le système de fichiers de Pyodide avant l'exécution (même convention qu'en CI). */
+const DATA_RX = /["']data\/([\w.-]+\.(?:csv|json|txt|tsv))["']/g;
+const fileCache = new Map();
+async function datasetsFor(code) {
+  const files = {};
+  for (const m of code.matchAll(DATA_RX)) {
+    const name = m[1];
+    if (!fileCache.has(name)) {
+      fileCache.set(name, fetch(new URL("../../../datasets/" + name, import.meta.url)).then((r) => {
+        if (!r.ok) throw new Error("Jeu de données introuvable : data/" + name);
+        return r.text();
+      }).catch((e) => { fileCache.delete(name); throw e; }));
+    }
+    files[name] = await fileCache.get(name);
+  }
+  return files;
+}
+
+export async function runPy(code, stdin, onStatus) {
   if (!worker) startWorker();
+  let files = {};
+  try { files = await datasetsFor(code); } catch (e) { return { out: "", err: "FileNotFoundError: " + e.message, figs: [] }; }
   const id = ++seq;
   return new Promise((resolve, reject) => {
     pending.set(id, { resolve, reject, onStatus, timer: null });
-    worker.postMessage({ id, code, stdin: stdin || "" });
+    worker.postMessage({ id, type: "run", code, stdin: stdin || "", files });
   });
+}
+
+/** Démarre Python en arrière-plan et charge les paquets que `code` importe, sans rien exécuter. */
+export function preloadPy(code) {
+  if (!worker) startWorker();
+  const id = ++seq;
+  pending.set(id, { resolve: () => {}, reject: () => {}, onStatus: null, timer: null, preload: true });
+  worker.postMessage({ id, type: "preload", code: code || "" });
 }
 
 /* ---------- C++ ---------- */
