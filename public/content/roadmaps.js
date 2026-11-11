@@ -10,7 +10,7 @@ export default [
         links: [["Linux Journey", "https://linuxjourney.com/"]] },
       { id: "do-git", title: "Git et collaboration", desc: "Branches, merge vs rebase, résolution de conflits, pull requests, revue de code, conventions de commit.",
         skills: ["branch, merge, rebase", "pull requests", "git log / bisect", ".gitignore"], project: "Publier un dépôt avec une branche protégée et une PR revue avant fusion.",
-        links: [["Pro Git (fr)", "https://git-scm.com/book/fr/v2"]] },
+        lessons: ["git-05", "git-06", "git-10", "git-11", "git-13"], links: [["Pro Git (fr)", "https://git-scm.com/book/fr/v2"]] },
       { id: "do-net", title: "Réseau", desc: "Modèle TCP/IP, DNS, HTTP(S), TLS, ports, pare-feu, load balancing. Indispensable pour déboguer une app qui « ne répond pas ».",
         skills: ["TCP/IP, sous-réseaux CIDR", "DNS", "HTTP, codes de statut", "TLS / certificats", "curl, dig, ss"], project: "Diagnostiquer avec curl -v et dig pourquoi un domaine ne répond pas en HTTPS.",
         links: [["MDN : aperçu HTTP", "https://developer.mozilla.org/fr/docs/Web/HTTP/Overview"]] },
