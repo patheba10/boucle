@@ -4,7 +4,14 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+### Modifié
+- Limite d'exécution Python portée de 10 à 20 s, pour importer scikit-learn et entraîner un modèle en WebAssembly (#6).
+
+### Corrigé
+- Test e2e instable : le helper concluait pendant l'installation de seaborn (#5).
+
 ### Ajouté
+- Chapitre **scikit-learn** (7 leçons) : fit/predict et évaluation sur données non vues, classification et matrice de confusion, précision/rappel/F1 codés à la main, prétraitement et Pipeline, validation croisée et surapprentissage, forêts aléatoires et GridSearchCV, fuite de données (#6).
 - Chapitre **SciPy** (4 leçons) : lois de probabilité, tests d'hypothèse (Welch, intervalles de confiance, comparaisons multiples), corrélation et paradoxe de Simpson sur les manchots, optimisation et ajustement de courbe (#5).
 
 ## [0.4.0] — 2026-11-11

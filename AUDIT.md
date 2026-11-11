@@ -32,7 +32,7 @@ Priorités : **P0** bloquant pour l'objectif, **P1** fort impact, **P2** confort
 | 11 | Code monolithique dans un seul fichier HTML. | P0 | **Fait** : modules ES, un fichier de contenu par cours |
 | 12 | Aucun test : une solution fausse ou un énoncé incohérent passe inaperçu. | P0 | **Fait** : `npm run validate` (CPython, g++, interpréteur navigateur) + CI GitHub Actions |
 | 13 | Hébergement en artifact : interdit les téléchargements à l'exécution, donc pas de paquets Python. | P0 | **Fait** : dépôt GitHub privé + Vercel |
-| 14 | Boucle infinie Python : impossible à arrêter. | P1 | **Fait** : arrêt à 10 s, redémarrage du worker |
+| 14 | Boucle infinie Python : impossible à arrêter. | P1 | **Fait** : arrêt à 20 s, redémarrage du worker |
 | 15 | C++ limité à un sous-ensemble (pas de `string`, `vector`, classes). Brancher un vrai compilateur (API de compilation ou clang en WebAssembly). | P1 | À faire |
 | 16 | Progression uniquement dans le navigateur : perdue si les données du site sont effacées, pas de multi-appareil. Ajouter export/import, puis synchronisation de compte. | P1 | À faire |
 | 17 | Premier lancement de Python lent (environ 10 Mo). Précharger en arrière-plan dès l'ouverture d'une leçon Python. | P2 | **Fait** (sprint 2.1) |
@@ -42,6 +42,7 @@ Priorités : **P0** bloquant pour l'objectif, **P1** fort impact, **P2** confort
 | 21 | En-têtes de sécurité de base seulement. Ajouter une Content-Security-Policy. | P2 | À faire |
 | 22 | Le C++ tourne sur le fil principal (par tranches, donc l'interface reste réactive, mais pas isolée). | P3 | À faire |
 | 23 | Aucune mesure d'usage. Vercel Web Analytics suffirait. | P3 | À faire |
+| 24 | `npm run validate` relance un interpréteur Python par exécution : environ 1 min depuis scikit-learn. Garder un interpréteur vivant (serveur JSON en stdin/stdout) diviserait ce temps par 10. | P3 | À faire |
 
 ## Ordre de traitement
 
