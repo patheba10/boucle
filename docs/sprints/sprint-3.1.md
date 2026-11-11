@@ -26,11 +26,11 @@
 - Le même simulateur en CI et dans le navigateur : aucune différence de comportement à traquer.
 
 **Ce qui a coincé**
-- Un job e2e a échoué pour une raison extérieure (miroir apt d'Ubuntu injoignable sur le runner). Relancer a suffi, mais la CI dépend d'un réseau qu'on ne contrôle pas.
+- Un job e2e a échoué pour une raison extérieure (miroir apt d'Ubuntu injoignable sur le runner). La relance a échoué de la même façon : la CI dépendait d'un réseau qu'on ne contrôle pas.
 - pd-08 : le code piège passait avec pandas 3, installé par erreur en local. Un test qui repose sur une erreur de la bibliothèque est fragile ; il repose maintenant sur une différence de valeurs.
 - Le test de parité n'indiquait pas quelle leçon bloquait.
 
 **On change**
 - Un défi doit échouer à cause de son résultat, jamais à cause d'une exception propre à une version.
 - Les tests nomment toujours l'élément fautif.
-- À étudier (AUDIT) : utiliser le Chrome déjà présent sur le runner pour se passer d'apt dans le job e2e.
+- Le job e2e utilise maintenant le Chrome déjà présent sur le runner : plus d'apt (AUDIT #25).
