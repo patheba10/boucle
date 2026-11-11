@@ -55,3 +55,10 @@ Lance ensuite `npm run validate`.
 
 - Python : [Pyodide](https://pyodide.org) 0.29.5, chargé depuis jsDelivr. Les paquets (numpy, pandas, scikit-learn, matplotlib…) se chargent à la demande selon les `import`.
 - C++ : [JSCPP](https://github.com/felixhao28/JSCPP) 2.0.6, un interpréteur pédagogique (iostream, types de base, fonctions, tableaux, pointeurs).
+
+## Déploiement
+
+- **Vercel** : chaque push sur `main` redéploie automatiquement.
+- **GitHub Pages** : après la validation, la CI pousse `public/` dans le dépôt public `patheba10/boucle-site` (branche `gh-pages`). Le dépôt `boucle` reste privé. Il faut le secret `BOUCLE_SITE_TOKEN` : un jeton GitHub à accès fin, limité à `boucle-site`, avec la permission Contents en lecture-écriture. Sans ce secret, l'étape de publication est simplement ignorée.
+
+Les chemins du site sont relatifs pour fonctionner aussi sous `https://patheba10.github.io/boucle-site/`.
