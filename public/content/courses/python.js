@@ -2,7 +2,7 @@
 const R = String.raw;
 
 export default {
-  id: "py", name: "Python", tag: ">>>", lang: "py",
+  id: "py", route: "python", badge: "py", name: "Python", tag: ">>>", lang: "py",
   blurb: "Des bases à la POO et aux algorithmes. Chaque défi s'exécute dans ton navigateur.",
   lessons: [
   {

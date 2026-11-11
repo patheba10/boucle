@@ -1,11 +1,11 @@
 /* Boucle — routeur et pages. */
-import { COURSES, ROADMAPS } from "../../content/index.js";
+import { COURSES, ROADMAPS, INSTALL } from "../../content/index.js";
 import { I } from "./lib/icons.js";
 import { esc, $, $$, inl, norm, color, today, toast as rawToast } from "./lib/util.js";
 import { S, save, resetAll, markDay, streak, level, ls, XP_PER_LEVEL } from "./lib/state.js";
 import { highlight } from "./lib/highlight.js";
 import { editorHTML, mountEditor } from "./lib/editor.js";
-import { run, isPyReady } from "./lib/engines.js";
+import { run, isPyReady, preloadPy } from "./lib/engines.js";
 import { check, consoleHTML, statusHTML, loadFailHTML } from "./lib/checker.js";
 
 const toast = (msg) => rawToast(msg, I.bolt);
@@ -28,7 +28,15 @@ function courseProgress(c) { const d = c.lessons.filter(l => lessonState(l).done
 function nextLesson(c) { return (c || null) ? c.lessons.find(l => !lessonState(l).done) : null; }
 function rmProgress(r) { const ids = r.stages.flatMap(s => s.nodes.map(n => n.id)); const d = ids.filter(id => S.roadmap[id]).length; return { d, n: ids.length, pct: Math.round(100 * d / ids.length) }; }
 
+/** Tout le code Python d'une leçon (pour précharger les paquets qu'elle importe). */
+function lessonCode(l) {
+  const blocks = [...l.theory.matchAll(/~~~py[^\n]*\n([\s\S]*?)\n~~~/g)].map(m => m[1]);
+  const ch = l.challenge || {};
+  return blocks.concat([ch.starter || "", ch.solution || "", ch.tests || ""]).join("\n");
+}
+
 /* ===================== Théorie (texte + extraits exécutables) ===================== */
+const LANG_LABEL = { py: "python", cpp: "c++", bash: "terminal", ps: "powershell", text: "texte" };
 function theoryHTML(src, lang, canRun) {
   const parts = src.split(/~~~(\w+)([^\n]*)\n([\s\S]*?)\n~~~/);
   let h = "";
@@ -36,9 +44,9 @@ function theoryHTML(src, lang, canRun) {
     if (parts[i].trim()) h += inl(parts[i]);
     if (i + 3 < parts.length) {
       const l = parts[i + 1], opts = parts[i + 2], code = parts[i + 3];
-      const runnable = canRun && !/norun/.test(opts);
+      const runnable = canRun && (l === "py" || l === "cpp") && !/norun/.test(opts);
       const stdin = (/stdin:(.*)$/.exec(opts) || [])[1];
-      h += '<div class="snippet" data-lang="' + l + '"' + (stdin ? ' data-stdin="' + esc(stdin.trim()) + '"' : "") + '><div class="snippet-bar"><span class="lbl">' + (l === "py" ? "python" : "c++") + (stdin ? " · entrée : " + esc(stdin.trim()) : "") + "</span>" +
+      h += '<div class="snippet" data-lang="' + l + '"' + (stdin ? ' data-stdin="' + esc(stdin.trim()) + '"' : "") + '><div class="snippet-bar"><span class="lbl">' + (LANG_LABEL[l] || l) + (stdin ? " · entrée : " + esc(stdin.trim()) : "") + "</span>" +
         (runnable ? '<button class="run" type="button">' + I.play + "Exécuter</button>" : "") + "</div><pre>" + highlight(code, l) + '</pre><textarea hidden>' + esc(code) + "</textarea></div>";
     }
   }
@@ -61,9 +69,10 @@ function bindSnippets(root) {
 /* ===================== Rendu des pages ===================== */
 const app = () => $("#app");
 function setNav(route) {
+  const lesson = byId(route);
   $$(".nav a").forEach(a => {
     const t = a.getAttribute("href").slice(1);
-    const on = t === route || (t === "python" && route.startsWith("py-")) || (t === "cpp" && route.startsWith("cpp-")) || (t === "roadmaps" && ["devops", "cloud", "ml"].includes(route));
+    const on = t === route || (lesson && lesson.c.route === t) || (t === "roadmaps" && ROADMAPS.some(r => r.id === route));
     if (on) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
   });
 }
@@ -85,7 +94,7 @@ function pageHome() {
   let nx = nextLesson(lastC); let nxC = lastC;
   if (!nx) { for (const c of COURSES) { const n = nextLesson(c); if (n) { nx = n; nxC = c; break; } } }
   const dp = dailyPick(); const dDone = lessonState(dp.l).chDone;
-  const name = dp.c.id === "py" ? "Python" : "C++";
+  const name = dp.c.name;
   return '<section class="hero">' +
     '<div class="card hero-main"><svg class="hero-loop" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M8 20.5a7 7 0 1 1 7-7v5a7 7 0 1 0 7-7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>' +
       '<span class="eyebrow">Python · C++ · DevOps · Cloud · ML</span>' +
@@ -99,8 +108,8 @@ function pageHome() {
       '<div class="kv"><div><b>' + S.xp + "</b><span>XP au total</span></div><div><b>" + streak() + "</b><span>jours de série</span></div><div><b>" + doneL + "/" + ALL.length + "</b><span>leçons finies</span></div></div>" +
     "</div></section>" +
     '<section class="card daily"><div class="daily-ic">' + I.target + '</div><div class="daily-txt"><b>Défi du jour</b><p>' + name + " · " + esc(dp.l.title) + (dDone ? " · déjà réussi, bravo." : " · un défi tiré au sort chaque jour.") + '</p></div><a class="btn ' + (dDone ? "" : "primary") + '" href="#' + dp.l.id + '">' + (dDone ? "Revoir" : "Relever le défi") + "</a></section>" +
-    '<section style="display:flex;flex-direction:column;gap:14px"><div class="sec-h"><h2>Cours</h2></div><div class="grid2">' +
-      COURSES.map(c => { const p = courseProgress(c); return '<a class="card course-card" href="#' + (c.id === "py" ? "python" : "cpp") + '" style="--c:' + color(c.id) + '"><div class="course-head"><span class="badge-lang">' + (c.id === "py" ? "py" : "C++") + "</span><div><h3>" + c.name + '</h3><span class="mono">' + esc(c.tag) + " " + c.lessons.length + " leçons</span></div></div><p>" + esc(c.blurb) + '</p><div class="bar"><i style="width:' + p.pct + '%"></i></div><div class="meta-row"><span>' + p.d + " / " + p.n + " terminées</span><span>" + p.pct + " %</span></div></a>"; }).join("") +
+    '<section style="display:flex;flex-direction:column;gap:14px"><div class="sec-h"><h2>Cours</h2><a href="#installer">Installer ton environnement</a></div><div class="grid-courses">' +
+      COURSES.map(c => { const p = courseProgress(c); return '<a class="card course-card" href="#' + c.route + '" style="--c:' + color(c.id) + '"><div class="course-head"><span class="badge-lang">' + esc(c.badge) + "</span><div><h3>" + c.name + '</h3><span class="mono">' + esc(c.tag) + " " + c.lessons.length + " leçons</span></div></div><p>" + esc(c.blurb) + '</p><div class="bar"><i style="width:' + p.pct + '%"></i></div><div class="meta-row"><span>' + p.d + " / " + p.n + " terminées</span><span>" + p.pct + " %</span></div></a>"; }).join("") +
     "</div></section>" +
     '<section style="display:flex;flex-direction:column;gap:14px"><div class="sec-h"><h2>Roadmaps métier</h2><a href="#roadmaps">Tout voir</a></div><div class="grid3">' +
       ROADMAPS.map(r => { const p = rmProgress(r); return '<a class="card rm-card" href="#' + r.id + '" style="--c:' + color(r.id) + '"><span class="k">' + esc(r.kicker) + "</span><h3>" + r.name + "</h3><p>" + esc(r.intro) + '</p><div class="bar"><i style="width:' + p.pct + '%"></i></div><div class="meta-row"><span>' + p.d + " / " + p.n + " étapes acquises</span><span>" + p.pct + " %</span></div></a>"; }).join("") +
@@ -111,16 +120,17 @@ function pageCourse(c) {
   const p = courseProgress(c); const nx = nextLesson(c);
   return '<div style="--c:' + color(c.id) + ';display:flex;flex-direction:column;gap:24px">' +
     '<div class="crumbs"><a href="#home">Accueil</a><span>/</span><span>' + c.name + "</span></div>" +
-    '<section class="course-hero"><span class="badge-lang">' + (c.id === "py" ? "py" : "C++") + '</span><div class="txt"><h1>' + c.name + '</h1><p class="lead">' + esc(c.blurb) + "</p></div>" +
+    '<section class="course-hero"><span class="badge-lang">' + esc(c.badge) + '</span><div class="txt"><h1>' + c.name + '</h1><p class="lead">' + esc(c.blurb) + "</p></div>" +
       '<div class="course-prog"><span class="eyebrow">Progression</span><b>' + p.d + " / " + p.n + '</b><div class="bar"><i style="width:' + p.pct + '%"></i></div></div></section>' +
     (c.note ? '<div class="note">' + I.info + "<span>" + esc(c.note) + "</span></div>" : "") +
     '<ol class="path">' + c.lessons.map((l, i) => {
+      const sec = l.section && (i === 0 || c.lessons[i - 1].section !== l.section) ? '<li class="sec"><h2>' + esc(l.section) + "</h2></li>" : "";
       const st = lessonState(l); const cls = st.done ? "done" : (nx && nx.id === l.id ? "next" : (st.started ? "part" : ""));
       const chips = (l.theoryOnly ? '<span class="chip">Théorie + quiz</span>' : "") +
         '<span class="chip' + (st.quizDone ? " ok" : "") + '">' + (st.quizDone ? I.check : "") + "Quiz</span>" +
         (l.challenge ? '<span class="chip' + (st.chDone ? " ok" : "") + '">' + (st.chDone ? I.check : "") + "Défi</span>" : "") +
         '<span class="chip acc">' + l.xp + " XP</span>";
-      return '<li class="' + cls + '"><span class="node">' + (st.done ? I.check : i + 1) + '</span><a class="card lesson-row" href="#' + l.id + '"><div class="t"><b>' + esc(l.title) + "</b><span>" + (cls === "next" ? "Prochaine leçon" : st.done ? "Terminée" : st.started ? "Commencée" : "À faire") + '</span></div><div class="chips">' + chips + "</div></a></li>";
+      return sec + '<li class="' + cls + '"><span class="node">' + (st.done ? I.check : i + 1) + '</span><a class="card lesson-row" href="#' + l.id + '"><div class="t"><b>' + esc(l.title) + "</b><span>" + (cls === "next" ? "Prochaine leçon" : st.done ? "Terminée" : st.started ? "Commencée" : "À faire") + '</span></div><div class="chips">' + chips + "</div></a></li>";
     }).join("") + "</ol></div>";
 }
 
@@ -159,20 +169,22 @@ function pageLesson(x) {
       '<pre class="out">g++ -std=c++17 -Wall main.cpp -o main\n./main</pre><div class="prose"><p>Sur Windows, MSYS2 ou WSL fournissent g++. Les compilateurs en ligne comme Compiler Explorer fonctionnent aussi.</p></div><p><a class="btn sm" href="https://godbolt.org/" target="_blank" rel="noopener">Ouvrir Compiler Explorer</a></p></section>';
   }
   return '<div style="--c:' + color(c.id) + ';display:flex;flex-direction:column;gap:22px">' +
-    '<div class="lesson-head"><div class="crumbs"><a href="#home">Accueil</a><span>/</span><a href="#' + (c.id === "py" ? "python" : "cpp") + '">' + c.name + "</a><span>/</span><span>Leçon " + (i + 1) + "</span></div>" +
+    '<div class="lesson-head"><div class="crumbs"><a href="#home">Accueil</a><span>/</span><a href="#' + c.route + '">' + c.name + "</a><span>/</span><span>Leçon " + (i + 1) + "</span></div>" +
       "<h1>" + esc(l.title) + '</h1><div class="steps"><a href="#theorie" data-jump="theorie">' + I.book + 'Théorie</a><a href="#quiz" data-jump="quiz" class="' + (st.quizDone ? "ok" : "") + '">' + (st.quizDone ? I.check : "") + "Quiz</a>" +
       (ch ? '<a href="#defi" data-jump="defi" class="' + (st.chDone ? "ok" : "") + '">' + (st.chDone ? I.check : "") + "Défi</a>" : "") + "</div></div>" +
     '<div class="lesson-grid"><div class="lesson-col">' +
       '<section class="card block" id="theorie"><div class="block-h"><span class="n">1</span><h2>Théorie</h2></div><div class="prose">' + theoryHTML(l.theory, lang, true) + "</div></section>" +
+      (l.setup ? '<details class="card block setup"><summary><span class="block-h"><span class="n">' + I.info + '</span><h2>Sur ta machine</h2></span></summary><div class="prose">' + theoryHTML(l.setup, "bash", false) + "</div></details>" : "") +
       '<section class="card block" id="quiz"><div class="block-h"><span class="n">2</span><h2>Quiz</h2><span class="chip' + (st.quizDone ? " ok" : " acc") + '">' + (st.quizDone ? I.check + "Réussi" : "+" + (ch ? Math.round(l.xp * 0.4) : l.xp) + " XP") + "</span></div>" + quizHTML(l) + "</section>" +
     '</div><div class="lesson-col sticky">' + right + "</div></div>" +
-    '<nav class="lesson-nav">' + (prev ? '<a class="btn" href="#' + prev.id + '">' + I.back + esc(prev.title) + "</a>" : '<a class="btn" href="#' + (c.id === "py" ? "python" : "cpp") + '">' + I.back + "Sommaire</a>") +
+    '<nav class="lesson-nav">' + (prev ? '<a class="btn" href="#' + prev.id + '">' + I.back + esc(prev.title) + "</a>" : '<a class="btn" href="#' + c.route + '">' + I.back + "Sommaire</a>") +
       (next ? '<a class="btn primary" href="#' + next.id + '">' + esc(next.title) + I.arrow + "</a>" : '<a class="btn primary" href="#roadmaps">Voir les roadmaps' + I.arrow + "</a>") + "</nav></div>";
 }
 
 function bindLesson(x) {
   const { c, l } = x; const lang = c.lang; const L = ls(l.id); const ch = l.challenge;
   bindSnippets(app());
+  if (lang === "py") preloadPy(lessonCode(l));
   $$("[data-jump]").forEach(a => a.addEventListener("click", e => { e.preventDefault(); const t = document.getElementById(a.dataset.jump); if (t) t.scrollIntoView({ behavior: "smooth", block: "start" }); }));
   const qXP = ch ? Math.round(l.xp * 0.4) : l.xp, nQ = (l.quiz || []).length;
   $$(".quiz").forEach(qd => {
@@ -295,6 +307,12 @@ function bindRoadmap(r) {
   }));
 }
 
+function pageInstaller() {
+  return '<div class="crumbs"><a href="#home">Accueil</a><span>/</span><span>Installer</span></div>' +
+    '<section style="display:flex;flex-direction:column;gap:10px"><h1 style="font-size:clamp(30px,4vw,42px);font-weight:800">' + esc(INSTALL.title) + '</h1><p class="lead">' + inl(INSTALL.intro) + "</p></section>" +
+    INSTALL.sections.map((sec, i) => '<section class="card block" id="' + sec.id + '"><div class="block-h"><span class="n">' + (i + 1) + "</span><h2>" + esc(sec.title) + '</h2></div><div class="prose">' + theoryHTML(sec.body, "bash", false) + "</div></section>").join("");
+}
+
 const STARTERS = {
   py: '# Bac à sable Python : écris, exécute, expérimente.\nnoms = ["Ada", "Linus", "Grace"]\nfor i, nom in enumerate(noms, start=1):\n    print(f"{i}. {nom} ({len(nom)} lettres)")\n',
   cpp: '#include <iostream>\nusing namespace std;\n\nint main() {\n    int n;\n    cin >> n;\n    for (int i = 1; i <= n; i++) {\n        cout << i << " au carre = " << i * i << endl;\n    }\n    return 0;\n}\n'
@@ -313,6 +331,7 @@ function pageAtelier() {
 }
 function bindAtelier() {
   const A = S.atelier; const lang = A.lang; let tSave;
+  if (lang === "py") preloadPy("");
   const ed = mountEditor($('[data-ed="ed-atelier"]'), v => { clearTimeout(tSave); tSave = setTimeout(() => { A[lang] = v; save(); }, 300); }, () => go());
   const sIn = $("#atelier-stdin"); sIn.addEventListener("input", () => { A.stdin = sIn.value; save(); });
   const btn = $('[data-act="run"]'), cons = $(".console");
@@ -332,7 +351,9 @@ function bindAtelier() {
 function render() {
   const route = (location.hash || "#home").slice(1) || "home";
   const el = app(); let bind = null;
-  if (route === "python" || route === "cpp") el.innerHTML = pageCourse(COURSES.find(c => c.id === (route === "python" ? "py" : "cpp")));
+  const course = COURSES.find(c => c.route === route);
+  if (course) { el.innerHTML = pageCourse(course); }
+  else if (route === "installer") { el.innerHTML = pageInstaller(); bind = () => bindSnippets(app()); }
   else if (route === "roadmaps") el.innerHTML = pageRoadmaps();
   else if (route === "atelier") { el.innerHTML = pageAtelier(); bind = bindAtelier; }
   else if (ROADMAPS.some(r => r.id === route)) { const r = ROADMAPS.find(r => r.id === route); el.innerHTML = pageRoadmap(r); bind = () => bindRoadmap(r); }

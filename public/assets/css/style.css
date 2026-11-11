@@ -385,3 +385,22 @@ pre.out { margin: 0; padding: 12px 14px; background: var(--surface-2); border-ra
 
 /* Figures matplotlib renvoyées par Python */
 .console img.fig, .snippet .res img.fig { display: block; max-width: 100%; height: auto; margin: 10px 0 4px; border-radius: 6px; background: #fff; }
+
+/* Cours : grille adaptable au nombre de cours */
+.grid-courses { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px; }
+
+/* Chapitres dans le parcours d'un cours */
+.path li.sec { padding-left: 0; padding-bottom: 10px; padding-top: 14px; }
+.path li.sec::before { display: none; }
+.path li.sec:first-child { padding-top: 0; }
+.path li.sec h2 { font-size: 20px; color: var(--c); }
+
+/* Panneau « Sur ta machine » */
+details.setup { padding: 0; }
+details.setup > summary { list-style: none; cursor: pointer; padding: 16px 22px; border-radius: var(--r); }
+details.setup > summary::-webkit-details-marker { display: none; }
+details.setup > summary::after { content: "+"; float: right; font-weight: 800; color: var(--muted); margin-top: -26px; font-size: 20px; }
+details.setup[open] > summary::after { content: "–"; }
+details.setup > summary .block-h h2 { font-size: 17px; }
+details.setup > summary .n svg { width: 15px; height: 15px; }
+details.setup > .prose { padding: 0 22px 20px; }
