@@ -7,6 +7,8 @@ import { highlight } from "./lib/highlight.js";
 import { editorHTML, mountEditor } from "./lib/editor.js";
 import { run, isPyReady, preloadPy } from "./lib/engines.js";
 import { check, consoleHTML, statusHTML, loadFailHTML } from "./lib/checker.js";
+import { gitTermHTML, mountGitTerm, runSnippetHTML } from "./lib/gitterm.js";
+import { evaluate as evaluateGit } from "./lib/gitsim.js";
 
 const toast = (msg) => rawToast(msg, I.bolt);
 function gain(n, msg) { S.xp += n; markDay(); save(); updateStats(); toast("+" + n + " XP · " + msg); }
@@ -36,7 +38,7 @@ function lessonCode(l) {
 }
 
 /* ===================== Théorie (texte + extraits exécutables) ===================== */
-const LANG_LABEL = { py: "python", cpp: "c++", bash: "terminal", ps: "powershell", text: "texte" };
+const LANG_LABEL = { py: "python", cpp: "c++", git: "terminal git", bash: "terminal", ps: "powershell", text: "texte", yaml: "yaml" };
 function theoryHTML(src, lang, canRun) {
   const parts = src.split(/~~~(\w+)([^\n]*)\n([\s\S]*?)\n~~~/);
   let h = "";
@@ -44,7 +46,7 @@ function theoryHTML(src, lang, canRun) {
     if (parts[i].trim()) h += inl(parts[i]);
     if (i + 3 < parts.length) {
       const l = parts[i + 1], opts = parts[i + 2], code = parts[i + 3];
-      const runnable = canRun && (l === "py" || l === "cpp") && !/norun/.test(opts);
+      const runnable = canRun && (l === "py" || l === "cpp" || l === "git") && !/norun/.test(opts);
       const stdin = (/stdin:(.*)$/.exec(opts) || [])[1];
       h += '<div class="snippet" data-lang="' + l + '"' + (stdin ? ' data-stdin="' + esc(stdin.trim()) + '"' : "") + '><div class="snippet-bar"><span class="lbl">' + (LANG_LABEL[l] || l) + (stdin ? " · entrée : " + esc(stdin.trim()) : "") + "</span>" +
         (runnable ? '<button class="run" type="button">' + I.play + "Exécuter</button>" : "") + "</div><pre>" + highlight(code, l) + '</pre><textarea hidden>' + esc(code) + "</textarea></div>";
@@ -58,6 +60,7 @@ function bindSnippets(root) {
     b.addEventListener("click", async () => {
       const lang = sn.dataset.lang, code = $("textarea", sn).value;
       let res = $(".res", sn); if (!res) { res = document.createElement("pre"); res.className = "res"; sn.appendChild(res); }
+      if (lang === "git") { res.innerHTML = runSnippetHTML(code); return; }
       b.disabled = true; res.innerHTML = statusHTML(firstLoad(lang));
       try { const r = await run(lang, code, sn.dataset.stdin || "", t => { res.innerHTML = statusHTML(t); }); res.innerHTML = consoleHTML(r, lang); }
       catch (e) { res.innerHTML = loadFailHTML(lang, e); }
@@ -153,7 +156,17 @@ function pageLesson(x) {
   const file = lang === "py" ? "main.py" : "main.cpp";
   const nQuiz = (l.quiz || []).length;
   let right = "";
-  if (ch) {
+  if (ch && lang === "git") {
+    right = '<section class="card block" id="defi"><div class="block-h"><span class="n">3</span><h2>Défi</h2><span class="chip' + (st.chDone ? " ok" : " acc") + '">' + (st.chDone ? I.check + "Réussi" : "+" + Math.round(l.xp * 0.6) + " XP") + "</span></div>" +
+      '<div class="prose">' + inl(ch.prompt) + "</div>" +
+      '<div class="ide gide" style="--c:' + color(c.id) + '"><div class="ide-bar"><span class="file"><i></i>terminal</span>' +
+        '<button class="tb" type="button" data-act="hint">' + I.bulb + "Indice</button>" +
+        '<button class="tb" type="button" data-act="sol">' + I.eye + "Solution</button>" +
+        '<button class="tb" type="button" data-act="reset">' + I.reset + "Recommencer</button></div>" +
+        gitTermHTML("gt-" + l.id) +
+        '<div class="ide-actions"><button class="btn sm primary" type="button" data-act="check">' + I.check + 'Vérifier</button><span class="kbd">↑ ↓ : commandes précédentes</span></div>' +
+      "</div><div data-slot=\"hint\"></div><div data-slot=\"verdict\"></div></section>";
+  } else if (ch) {
     right = '<section class="card block" id="defi"><div class="block-h"><span class="n">3</span><h2>Défi</h2><span class="chip' + (st.chDone ? " ok" : " acc") + '">' + (st.chDone ? I.check + "Réussi" : "+" + Math.round(l.xp * 0.6) + " XP") + "</span></div>" +
       '<div class="prose">' + inl(ch.prompt) + "</div>" +
       '<div class="ide" style="--c:' + color(c.id) + '"><div class="ide-bar"><span class="file"><i></i>' + file + "</span>" +
@@ -207,6 +220,7 @@ function bindLesson(x) {
     }));
   });
   if (!ch) return;
+  if (lang === "git") { bindGitChallenge(x, L); return; }
   const root = $('[data-ed="ed-' + l.id + '"]'); const cons = $(".console");
   let tSave;
   const ed = mountEditor(root, v => { clearTimeout(tSave); tSave = setTimeout(() => { S.code[l.id] = v; save(); }, 300); }, () => doRun());
@@ -245,6 +259,38 @@ function bindLesson(x) {
       if (!L.ch && !L.sol) { L.sol = true; save(); }
       ed.set(ch.solution); armed = false; solBtn.innerHTML = I.eye + "Solution";
       $('[data-slot="hint"]').innerHTML = '<div class="hint-box"><b>Solution chargée.</b> Lis-la ligne par ligne, puis clique sur Vérifier.' + (L.ch ? "" : " Le défi rapportera la moitié des XP.") + "</div>";
+    } else {
+      armed = true; solBtn.innerHTML = I.eye + "Confirmer (½ XP)";
+      setTimeout(() => { if (armed) { armed = false; solBtn.innerHTML = I.eye + "Solution"; } }, 4000);
+    }
+  });
+}
+
+/* Défi Git : on vérifie l'état du dépôt simulé, pas les commandes tapées. */
+function bindGitChallenge(x, L) {
+  const { l } = x; const ch = l.challenge;
+  let saved = [];
+  try { saved = S.code[l.id] ? JSON.parse(S.code[l.id]) : []; } catch (e) { saved = []; }
+  const term = mountGitTerm($('[data-gterm="gt-' + l.id + '"]'), {
+    setup: ch.setup || [], history: saved,
+    onCommand: (cmds) => { S.code[l.id] = JSON.stringify(cmds); save(); },
+  });
+  const slot = $('[data-slot="verdict"]');
+  $('[data-act="check"]').addEventListener("click", () => {
+    const res = evaluateGit(term.sim, ch.checks);
+    const ok = res.every(r => r.ok);
+    slot.innerHTML = '<div class="verdict ' + (ok ? "ok" : "no") + '"><div class="verdict-h">' + (ok ? I.check + "Bravo, le dépôt est exactement dans l'état attendu." : I.x + "Pas encore : " + res.filter(r => !r.ok).length + " critère(s) sur " + res.length + " à remplir.") + '</div><ul class="crit">' +
+      res.map(r => '<li class="' + (r.ok ? "ok" : "no") + '">' + (r.ok ? I.check : I.x) + "<span>" + esc(r.label) + "</span></li>").join("") + "</ul></div>";
+    if (ok && !L.ch) { L.ch = true; gain(Math.round(Math.round(l.xp * 0.6) * (L.sol ? 0.5 : 1)), L.sol ? "défi réussi (solution vue)" : "défi réussi"); refreshSteps(x); }
+  });
+  $('[data-act="reset"]').addEventListener("click", () => { term.reset(); slot.innerHTML = ""; });
+  $('[data-act="hint"]').addEventListener("click", () => { $('[data-slot="hint"]').innerHTML = '<div class="hint-box"><b>Indice.</b> ' + inl(esc(ch.hint)) + "</div>"; });
+  const solBtn = $('[data-act="sol"]'); let armed = false;
+  solBtn.addEventListener("click", () => {
+    if (L.ch || L.sol || armed) {
+      if (!L.ch && !L.sol) { L.sol = true; save(); }
+      armed = false; solBtn.innerHTML = I.eye + "Solution";
+      $('[data-slot="hint"]').innerHTML = '<div class="hint-box"><b>Une solution possible</b> (d\'autres chemins mènent au même état) :<pre class="out">' + esc(ch.solution.join("\n")) + "</pre>Tape-la toi-même dans le terminal pour l'ancrer." + (L.ch ? "" : " Le défi rapportera la moitié des XP.") + "</div>";
     } else {
       armed = true; solBtn.innerHTML = I.eye + "Confirmer (½ XP)";
       setTimeout(() => { if (armed) { armed = false; solBtn.innerHTML = I.eye + "Solution"; } }, 4000);
