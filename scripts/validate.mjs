@@ -13,6 +13,7 @@ import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 import vm from "node:vm";
 import { COURSES, ROADMAPS, INSTALL } from "../public/content/index.js";
+import { runScript, evaluate as evaluateGit } from "../public/assets/js/lib/gitsim.js";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const require = createRequire(import.meta.url);
@@ -96,6 +97,7 @@ for (const c of COURSES) for (const l of c.lessons) {
     if (!q.explain) fail(l.id, "quiz " + i + " : explication manquante");
   });
   if (!l.challenge && !l.theoryOnly) fail(l.id, "ni défi ni theoryOnly");
+  if (l.challenge && c.lang === "git") for (const k of ["prompt", "setup", "checks", "solution", "hint"]) if (!l.challenge[k]) fail(l.id, "défi Git sans " + k);
 }
 for (const r of ROADMAPS) for (const s of r.stages) for (const n of s.nodes) {
   if (ids.has(n.id)) fail(n.id, "id en double");
@@ -111,6 +113,12 @@ for (const c of COURSES) for (const l of c.lessons) {
   if (only && l.id !== only) continue;
   for (const b of l.theory.matchAll(/~~~(\w+)([^\n]*)\n([\s\S]*?)\n~~~/g)) {
     const [, lang, opts, code] = b;
+    if (lang === "git") {
+      const lines = code.split("\n").filter((x) => x.trim() && !x.trim().startsWith("#"));
+      const { transcript } = runScript([], lines.map((x) => x.replace(/^!\s*/, "")));
+      transcript.forEach((t, k) => { const attendu = !lines[k].startsWith("!"); t.ok === attendu ? ok() : fail(l.id, "extrait Git : « " + t.cmd + " » " + (attendu ? "échoue : " + t.out.split("\n")[0] : "devait échouer")); });
+      continue;
+    }
     if (lang !== "py" && lang !== "cpp") continue; // terminal, powershell… : non exécutés
     const stdin = ((/stdin:(.*)$/.exec(opts) || [])[1] || "").trim();
     if (lang === "py") {
@@ -124,6 +132,15 @@ for (const c of COURSES) for (const l of c.lessons) {
   }
   const ch = l.challenge;
   if (!ch) continue;
+  if (c.lang === "git") {
+    try {
+      const fin = evaluateGit(runScript(ch.setup, ch.solution).sim, ch.checks).filter((r) => !r.ok);
+      fin.length ? fail(l.id, "la solution ne remplit pas : " + fin.map((r) => r.label).join(" ; ")) : ok();
+      evaluateGit(runScript(ch.setup, []).sim, ch.checks).every((r) => r.ok) ? fail(l.id, "l'état de départ remplit déjà tous les critères") : ok();
+    } catch (e) { fail(l.id, String(e.message || e)); }
+    process.stdout.write(".");
+    continue;
+  }
   if (c.lang === "py") {
     const s = pyCheck(ch, ch.solution);
     s.pass ? ok() : fail(l.id, "la solution échoue : " + (s.err || JSON.stringify(s.got)));
