@@ -4,6 +4,10 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.5.0] — 2026-11-11
+
+Fin de l'étape 2 : le cours **Data** compte 37 leçons (NumPy, pandas, visualisation, SciPy, scikit-learn, projet guidé).
+
 ### Modifié
 - Limite d'exécution Python portée de 10 à 20 s, pour importer scikit-learn et entraîner un modèle en WebAssembly (#6).
 
