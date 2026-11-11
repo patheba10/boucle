@@ -5,7 +5,7 @@ import { highlight } from "./highlight.js";
 export function editorHTML(id, lang, code) {
   return '<div class="ed" data-ed="' + id + '" data-lang="' + lang + '"><div class="ed-gutter" aria-hidden="true"></div>' +
     '<div class="ed-scroll"><div class="ed-stack"><pre class="ed-hl" aria-hidden="true"></pre>' +
-    '<textarea id="' + id + '" aria-label="Éditeur de code ' + (lang === "py" ? "Python" : "C++") +
+    '<textarea id="' + id + '" aria-label="Éditeur de code ' + ({ py: "Python", cpp: "C++", yaml: "YAML" }[lang] || lang) +
     '" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off">' + esc(code) + "</textarea></div></div></div>";
 }
 
@@ -29,13 +29,15 @@ export function mountEditor(root, onChange, onRun) {
   ta.addEventListener("input", () => { paint(); if (onChange) onChange(ta.value); });
   ta.addEventListener("keydown", (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); if (onRun) onRun(); return; }
-    if (e.key === "Tab" && !e.shiftKey) { e.preventDefault(); insert("    "); return; }
+    if (e.key === "Tab" && !e.shiftKey) { e.preventDefault(); insert(lang === "yaml" ? "  " : "    "); return; }
     if (e.key === "Enter" && !e.shiftKey && !e.altKey) {
       const before = ta.value.slice(0, ta.selectionStart);
       const line = before.slice(before.lastIndexOf("\n") + 1);
       let indent = (/^[ \t]*/.exec(line) || [""])[0];
       const trimmed = line.replace(/\s+$/, "");
       if ((lang === "py" && trimmed.endsWith(":")) || (lang === "cpp" && trimmed.endsWith("{"))) indent += "    ";
+      // YAML : on rentre de 2 après « clé: », et on s'aligne sur les clés d'un élément « - ».
+      if (lang === "yaml") { if (/^\s*-\s/.test(line)) indent += "  "; if (/:$/.test(trimmed) || /:\s*[|>][-+]?$/.test(trimmed)) indent += "  "; }
       e.preventDefault();
       insert("\n" + indent);
     }

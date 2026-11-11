@@ -4,6 +4,11 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+### Ajouté
+- **Exercices de workflows GitHub Actions** : éditeur YAML, erreurs en direct avec leur ligne (lint inspiré d'actionlint), simulation d'événements (PR, push sur une branche ou un tag, lancement manuel, échec d'un job) et graphe du pipeline ; critères déclaratifs et extraits « Analyser » dans la théorie (#22).
+- Cours **CI/CD avec GitHub Actions**, chapitres 1 à 3 sur 12 : pourquoi la CI/CD et les métriques DORA, workflows, jobs, étapes et runners, événements et filtres, jobs parallèles et `needs`, YAML sans pièges, expressions, contextes et conditions (#12).
+- Panneau « Pratique » pour les leçons sans défi, et langage d'exercice réglable par leçon.
+
 ## [0.6.0] — 2026-11-11
 
 Sprint 3.1 : Git en ligne de commande, dans un terminal simulé. Le cours **Git et GitHub** compte 9 leçons en 3 chapitres.

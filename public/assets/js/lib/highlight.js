@@ -1,4 +1,4 @@
-/* Coloration syntaxique légère pour Python et C++ (sortie HTML échappée). */
+/* Coloration syntaxique légère pour Python, C++ et YAML (sortie HTML échappée). */
 import { esc } from "./util.js";
 
 const KW = {
@@ -17,7 +17,23 @@ const RX = {
   cpp: /(\/\/[^\n]*|\/\*[\s\S]*?(?:\*\/|$))|(^[ \t]*#[^\n]*)|("(?:\\.|[^"\\\n])*"?|'(?:\\.|[^'\\\n])*'?)|(\b\d+(?:\.\d+)?[fFlLuU]?\b)|([A-Za-z_]\w*)/gm
 };
 
+/* YAML : commentaires, expressions ${{ }}, chaînes, clés, booléens et nombres. */
+const YAML = /((?:^|(?<=\s))#[^\n]*)|(\$\{\{[\s\S]*?\}\})|("(?:\\.|[^"\\\n])*"?|'(?:''|[^'\n])*'?)|((?<=^[ \t]*(?:- +)*)[\w.\-/"']+(?=[ \t]*:(?:[ \t]|$)))|(\b(?:true|false|null)\b|(?<![\w.])\d+(?:\.\d+)?(?![\w.]))/gm;
+const YAML_CLS = [null, "com", "pre", "str", "kw", "num"];
+function highlightYaml(code) {
+  YAML.lastIndex = 0;
+  let out = "", last = 0, m;
+  while ((m = YAML.exec(code))) {
+    if (m[0] === "") { YAML.lastIndex++; continue; }
+    out += esc(code.slice(last, m.index)); last = YAML.lastIndex;
+    const g = m.findIndex((x, i) => i > 0 && x !== undefined);
+    out += '<span class="tk-' + YAML_CLS[g] + '">' + esc(m[0]) + "</span>";
+  }
+  return out + esc(code.slice(last));
+}
+
 export function highlight(code, lang) {
+  if (lang === "yaml") return highlightYaml(code);
   const rx = RX[lang];
   if (!rx) return esc(code);
   rx.lastIndex = 0;

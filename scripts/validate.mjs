@@ -4,7 +4,9 @@
    - les extraits de théorie s'exécutent sans erreur ;
    - la solution du défi passe tous les tests, le code de départ échoue.
    Python : CPython + le harnais du navigateur (public/assets/py/harness.py).
-   C++    : g++ (vrai compilateur) ET JSCPP (l'interpréteur du navigateur). */
+   C++    : g++ (vrai compilateur) ET JSCPP (l'interpréteur du navigateur).
+   Git    : simulateur du navigateur (lib/gitsim.js).
+   YAML   : moteur des workflows du navigateur (lib/workflow.js). */
 import { spawnSync } from "node:child_process";
 import { mkdtempSync, writeFileSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -14,6 +16,7 @@ import { createRequire } from "node:module";
 import vm from "node:vm";
 import { COURSES, ROADMAPS, INSTALL } from "../public/content/index.js";
 import { runScript, evaluate as evaluateGit } from "../public/assets/js/lib/gitsim.js";
+import { lint as lintWorkflow, evaluate as evaluateWorkflow } from "../public/assets/js/lib/workflow.js";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const require = createRequire(import.meta.url);
@@ -97,7 +100,10 @@ for (const c of COURSES) for (const l of c.lessons) {
     if (!q.explain) fail(l.id, "quiz " + i + " : explication manquante");
   });
   if (!l.challenge && !l.theoryOnly) fail(l.id, "ni défi ni theoryOnly");
-  if (l.challenge && c.lang === "git") for (const k of ["prompt", "setup", "checks", "solution", "hint"]) if (!l.challenge[k]) fail(l.id, "défi Git sans " + k);
+  const lang = l.lang || c.lang;
+  if (l.challenge && lang === "git") for (const k of ["prompt", "setup", "checks", "solution", "hint"]) if (!l.challenge[k]) fail(l.id, "défi Git sans " + k);
+  if (l.challenge && lang === "yaml") for (const k of ["prompt", "starter", "checks", "solution", "hint"]) if (l.challenge[k] == null) fail(l.id, "défi YAML sans " + k);
+  if (l.practice && (!l.practice.title || !l.practice.body)) fail(l.id, "pratique sans titre ou sans contenu");
 }
 for (const r of ROADMAPS) for (const s of r.stages) for (const n of s.nodes) {
   if (ids.has(n.id)) fail(n.id, "id en double");
@@ -119,6 +125,15 @@ for (const c of COURSES) for (const l of c.lessons) {
       transcript.forEach((t, k) => { const attendu = !lines[k].startsWith("!"); t.ok === attendu ? ok() : fail(l.id, "extrait Git : « " + t.cmd + " » " + (attendu ? "échoue : " + t.out.split("\n")[0] : "devait échouer")); });
       continue;
     }
+    if (lang === "yaml") {
+      if (/norun/.test(opts)) continue;
+      const { doc, issues } = lintWorkflow(code);
+      const voulu = /erreurs/.test(opts); // extrait volontairement faux (exercice de diagnostic)
+      if (voulu) issues.length ? ok() : fail(l.id, "extrait YAML marqué « erreurs » mais aucun problème détecté");
+      else if (!doc || issues.length) fail(l.id, "extrait YAML : " + (issues[0] ? "ligne " + issues[0].line + " : " + issues[0].msg : "illisible"));
+      else ok();
+      continue;
+    }
     if (lang !== "py" && lang !== "cpp") continue; // terminal, powershell… : non exécutés
     const stdin = ((/stdin:(.*)$/.exec(opts) || [])[1] || "").trim();
     if (lang === "py") {
@@ -132,7 +147,19 @@ for (const c of COURSES) for (const l of c.lessons) {
   }
   const ch = l.challenge;
   if (!ch) continue;
-  if (c.lang === "git") {
+  const clang = l.lang || c.lang;
+  if (clang === "yaml") {
+    try {
+      const fin = evaluateWorkflow(ch.solution, ch.checks).filter((r) => !r.ok);
+      fin.length ? fail(l.id, "la solution ne remplit pas : " + fin.map((r) => r.label).join(" ; ")) : ok();
+      const w = lintWorkflow(ch.solution).issues.filter((i) => i.level === "warn");
+      w.length ? fail(l.id, "la solution déclenche un avertissement : ligne " + w[0].line + " : " + w[0].msg) : ok();
+      evaluateWorkflow(ch.starter, ch.checks).every((r) => r.ok) ? fail(l.id, "le code de départ remplit déjà tous les critères") : ok();
+    } catch (e) { fail(l.id, String(e.message || e)); }
+    process.stdout.write(".");
+    continue;
+  }
+  if (clang === "git") {
     try {
       const fin = evaluateGit(runScript(ch.setup, ch.solution).sim, ch.checks).filter((r) => !r.ok);
       fin.length ? fail(l.id, "la solution ne remplit pas : " + fin.map((r) => r.label).join(" ; ")) : ok();
@@ -141,7 +168,7 @@ for (const c of COURSES) for (const l of c.lessons) {
     process.stdout.write(".");
     continue;
   }
-  if (c.lang === "py") {
+  if (clang === "py") {
     const s = pyCheck(ch, ch.solution);
     s.pass ? ok() : fail(l.id, "la solution échoue : " + (s.err || JSON.stringify(s.got)));
     pyCheck(ch, ch.starter).pass ? fail(l.id, "le code de départ passe déjà les tests") : ok();

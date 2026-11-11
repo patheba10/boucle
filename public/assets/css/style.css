@@ -17,6 +17,7 @@
   --cpp: #1E7F95;
   --data: #0E8566;
   --git: #C2462B;
+  --cicd: #5B4FD6;
   --devops: #C9661A;
   --cloud: #2C7CC4;
   --ml: #A33A8C;
@@ -42,7 +43,7 @@
     --bg: #0E1020; --surface: #171A2D; --surface-2: #20243A; --ink: #E8E9F3; --muted: #9EA2BD; --line: #2A2E48;
     --accent: #FF7A4A; --accent-soft: #3A2219; --on-accent: #1A0C06;
     --ok: #45C48E; --ok-soft: #12322A; --bad: #FF7B72; --bad-soft: #3A1B1E;
-    --py: #7EA4FF; --cpp: #5BC2D6; --data: #4CCFA8; --git: #F27A5E; --devops: #F09A52; --cloud: #6DB4F5; --ml: #E07FCB;
+    --py: #7EA4FF; --cpp: #5BC2D6; --data: #4CCFA8; --git: #F27A5E; --cicd: #A49BFF; --devops: #F09A52; --cloud: #6DB4F5; --ml: #E07FCB;
     --code-bg: #0A0C18; --code-bg-2: #12152A; --code-line: #23284A;
     --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 4px 16px rgba(0, 0, 0, .25);
     color-scheme: dark;
@@ -52,7 +53,7 @@
   --bg: #0E1020; --surface: #171A2D; --surface-2: #20243A; --ink: #E8E9F3; --muted: #9EA2BD; --line: #2A2E48;
   --accent: #FF7A4A; --accent-soft: #3A2219; --on-accent: #1A0C06;
   --ok: #45C48E; --ok-soft: #12322A; --bad: #FF7B72; --bad-soft: #3A1B1E;
-  --py: #7EA4FF; --cpp: #5BC2D6; --data: #4CCFA8; --git: #F27A5E; --devops: #F09A52; --cloud: #6DB4F5; --ml: #E07FCB;
+  --py: #7EA4FF; --cpp: #5BC2D6; --data: #4CCFA8; --git: #F27A5E; --cicd: #A49BFF; --devops: #F09A52; --cloud: #6DB4F5; --ml: #E07FCB;
   --code-bg: #0A0C18; --code-bg-2: #12152A; --code-line: #23284A;
   --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 4px 16px rgba(0, 0, 0, .25);
   color-scheme: dark;
@@ -459,3 +460,42 @@ details.setup > .prose { padding: 0 22px 20px; }
 .crit li.ok svg { color: var(--ok); }
 .crit li.no svg { color: var(--bad); }
 .crit li.ok span { color: var(--muted); }
+
+/* ===== Workflows GitHub Actions : problèmes, simulation, graphe ===== */
+.wf-live, .snippet .wf-res { padding: 12px 14px 14px; border-top: 1px solid var(--code-line); color: var(--code-fg); font-family: var(--f-body); font-size: 13.5px; white-space: normal; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.wf-ok { color: var(--tk-str); font-weight: 600; }
+.wf-issues { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.wf-issues li { display: flex; gap: 10px; align-items: baseline; line-height: 1.45; }
+.wf-issues .ln { flex: none; font-family: var(--f-mono); font-size: 11.5px; padding: 1px 7px; border-radius: 5px; background: rgba(255, 143, 135, .14); color: #FF8F87; }
+.wf-issues li.warn .ln { background: rgba(242, 198, 109, .16); color: var(--tk-num); }
+.wf-sim { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.wf-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.wf-tabs button { background: transparent; border: 1px solid var(--code-line); color: var(--code-dim); border-radius: 999px; padding: 4px 11px; font: 600 12.5px var(--f-body); cursor: pointer; }
+.wf-tabs button[aria-selected="true"] { color: var(--code-fg); border-color: var(--tk-fn); background: rgba(142, 197, 255, .1); }
+.wf-why { margin: 0; color: var(--tk-num); }
+.wf-graph-wrap { overflow-x: auto; max-width: 100%; }
+.wf-graph { display: block; font-family: var(--f-mono); }
+.wf-graph marker path { fill: var(--code-dim); }
+.wf-edge { fill: none; stroke: var(--code-dim); stroke-width: 1.6; }
+.wf-edge.skipped, .wf-edge.off { stroke-dasharray: 4 3; opacity: .6; }
+.wf-job rect { fill: var(--code-bg-2); stroke: var(--code-line); stroke-width: 1.5; }
+.wf-job .nm { fill: var(--code-fg); font-size: 12.5px; font-weight: 700; }
+.wf-job .st { fill: var(--code-dim); font-size: 11px; }
+.wf-job .ic { font-size: 15px; font-weight: 700; fill: var(--code-dim); }
+.wf-job.success rect { stroke: var(--tk-str); }
+.wf-job.success .ic { fill: var(--tk-str); }
+.wf-job.failure rect { stroke: #FF8F87; }
+.wf-job.failure .ic { fill: #FF8F87; }
+.wf-job.skipped rect, .wf-job.off rect { stroke-dasharray: 5 4; }
+.wf-job.skipped .nm, .wf-job.off .nm { fill: var(--code-dim); }
+.wf-skip { margin: 0; padding-left: 18px; color: var(--code-dim); font-size: 13px; }
+.wf-skip b { color: var(--code-fg); font-family: var(--f-mono); font-weight: 600; }
+.wf-steps-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+.wf-steps { background: var(--code-bg-2); border: 1px solid var(--code-line); border-radius: 8px; padding: 8px 10px; min-width: 0; }
+.wf-steps b { font-family: var(--f-mono); font-size: 12px; }
+.wf-steps ol { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 3px; font-family: var(--f-mono); font-size: 11.5px; }
+.wf-steps li { display: flex; gap: 6px; overflow-wrap: anywhere; }
+.wf-steps li span { flex: none; width: 10px; }
+.wf-steps li.success span { color: var(--tk-str); }
+.wf-steps li.failure { color: #FF8F87; }
+.wf-steps li.skipped { color: var(--code-dim); text-decoration: line-through; }

@@ -62,11 +62,21 @@ ES modules natifs, sans framework ni étape de build.
 
 **Git.** `lib/gitsim.js` est un simulateur Git écrit en JavaScript pur, sans DOM. Il gère la copie de travail, l'index, les commits, les branches, la fusion à trois voies avec conflits, le rebase interruptible, reset, revert, stash, cherry-pick, les tags et un dépôt distant `origin`. Le navigateur (`lib/gitterm.js` : terminal, graphe des commits, état des fichiers) et la CI (validateur, tests unitaires `node:test`) exécutent le même code. Les hachages dépendent seulement du contenu et d'une horloge logique : un exercice donne toujours les mêmes identifiants.
 
+**Workflows GitHub Actions.** `lib/workflow.js` lit le YAML avec js-yaml 4.1.0 (schéma YAML 1.2, comme GitHub : `on` reste une clé), copié dans `assets/js/vendor/` pour que la CI et le navigateur exécutent le même octet (un test unitaire compare la copie au paquet npm épinglé). Il fournit :
+
+- un **lint** inspiré d'actionlint : clés et événements inconnus avec suggestion (« run-on » → « runs-on »), `runs-on` ou `steps` manquants, `needs` vers un job absent ou circulaire, action sans version, permissions invalides, expressions `${{ }}` mal formées, contextes inconnus ou indisponibles (`env` dans le `if` d'un job), nombres qui perdent leur zéro (`3.10` lu 3.1), injection de valeurs non fiables dans `run` ;
+- un **évaluateur d'expressions** (opérateurs, comparaisons sans casse, `startsWith`, `contains`, `format`, `success()`, `failure()`, `always()`…) ;
+- une **simulation** : pour un événement (push sur une branche ou un tag, pull request, lancement manuel…), il applique les filtres `branches`, `tags`, `paths` et `types`, puis calcule quels jobs tournent, dans quel ordre (niveaux de `needs`) et quelles étapes s'exécutent, y compris quand on simule l'échec d'un job ;
+- des **critères déclaratifs**, comme pour Git.
+
+`lib/wfview.js` affiche les problèmes avec leur ligne, les onglets d'événements et le graphe des jobs. Il n'y a pas de vrai runner : on vérifie la structure et le comportement attendu du pipeline, ce qu'on fait aussi en revue de code.
+
 ### 4. Vérification d'un défi
 
 1. **Python.** Le code de l'élève est exécuté, suivi d'un marqueur puis du code de test caché. Seule la sortie produite après le marqueur est comparée à `expected`, après normalisation des espaces. On teste donc le comportement d'une fonction, et pas seulement ce qui est affiché.
 2. **Git.** On vérifie l'**état** du dépôt simulé après les commandes de l'élève, avec des critères déclaratifs : branche courante, messages, contenu des fichiers, propreté, commit de fusion, historique linéaire, branche poussée… Chaque critère s'affiche en français. Plusieurs suites de commandes peuvent mener au bon état, comme en vrai.
-3. **C++.** Le programme est exécuté une fois par test, chaque test ayant sa propre entrée standard. Une sortie codée en dur ne passe donc pas.
+3. **Workflow YAML.** Le fichier est analysé, puis chaque scénario simule un événement : « sur une PR vers main, lint et tests tournent, deploy est sauté ». Les critères portent aussi sur la structure (déclencheurs, `needs`, actions et versions, matrice, permissions minimales).
+4. **C++.** Le programme est exécuté une fois par test, chaque test ayant sa propre entrée standard. Une sortie codée en dur ne passe donc pas.
 
 ### 5. Qualité et déploiement
 
@@ -104,7 +114,8 @@ La CI GitHub Actions lance cette validation à chaque push, puis publie `public/
 | Niveau | Outil | Ce qui est vérifié |
 |--------|-------|--------------------|
 | Simulateur Git | `npm run test:unit` (node:test) | 16 scénarios : commits, .gitignore, diff, branches, fusions et conflits, rebase interrompu, reset, revert, stash, cherry-pick, tags, push rejeté puis pull |
+| Moteur des workflows | `npm run test:unit` (node:test) | 14 tests : erreurs YAML traduites, lint, expressions, filtres de branches et de chemins, simulation (PR, push, tag, échec en cascade, étape `if: failure()`), critères, numéros de ligne |
 | Contenu | `npm run validate` | Chaque extrait, chaque solution (doit passer) et chaque code de départ (doit échouer), avec CPython, g++ et JSCPP |
-| Bout en bout | `npm run test:e2e` (pytest + Playwright) | Accueil, pages principales sans erreur JS, défis Python et C++, jeux de données, boucle infinie, NumPy + figure, absence de débordement sur mobile |
+| Bout en bout | `npm run test:e2e` (pytest + Playwright) | Accueil, pages principales sans erreur JS, chaque solution de défi dans le vrai navigateur, jeux de données, boucle infinie, NumPy + figure, terminal Git, défi et extrait YAML, absence de débordement sur mobile |
 
 La publication n'a lieu que si les deux niveaux passent.

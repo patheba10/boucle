@@ -9,6 +9,8 @@ import { run, isPyReady, preloadPy } from "./lib/engines.js";
 import { check, consoleHTML, statusHTML, loadFailHTML } from "./lib/checker.js";
 import { gitTermHTML, mountGitTerm, runSnippetHTML } from "./lib/gitterm.js";
 import { evaluate as evaluateGit } from "./lib/gitsim.js";
+import { evaluate as evaluateWorkflow } from "./lib/workflow.js";
+import { reportHTML } from "./lib/wfview.js";
 
 const toast = (msg) => rawToast(msg, I.bolt);
 function gain(n, msg) { S.xp += n; markDay(); save(); updateStats(); toast("+" + n + " XP · " + msg); }
@@ -46,10 +48,10 @@ function theoryHTML(src, lang, canRun) {
     if (parts[i].trim()) h += inl(parts[i]);
     if (i + 3 < parts.length) {
       const l = parts[i + 1], opts = parts[i + 2], code = parts[i + 3];
-      const runnable = canRun && (l === "py" || l === "cpp" || l === "git") && !/norun/.test(opts);
+      const runnable = canRun && (l === "py" || l === "cpp" || l === "git" || l === "yaml") && !/norun/.test(opts);
       const stdin = (/stdin:(.*)$/.exec(opts) || [])[1];
       h += '<div class="snippet" data-lang="' + l + '"' + (stdin ? ' data-stdin="' + esc(stdin.trim()) + '"' : "") + '><div class="snippet-bar"><span class="lbl">' + (LANG_LABEL[l] || l) + (stdin ? " · entrée : " + esc(stdin.trim()) : "") + "</span>" +
-        (runnable ? '<button class="run" type="button">' + I.play + "Exécuter</button>" : "") + "</div><pre>" + highlight(code, l) + '</pre><textarea hidden>' + esc(code) + "</textarea></div>";
+        (runnable ? '<button class="run" type="button">' + I.play + (l === "yaml" ? "Analyser" : "Exécuter") + "</button>" : "") + "</div><pre>" + highlight(code, l) + '</pre><textarea hidden>' + esc(code) + "</textarea></div>";
     }
   }
   return h;
@@ -59,8 +61,9 @@ function bindSnippets(root) {
     const b = $(".run", sn); if (!b) return;
     b.addEventListener("click", async () => {
       const lang = sn.dataset.lang, code = $("textarea", sn).value;
-      let res = $(".res", sn); if (!res) { res = document.createElement("pre"); res.className = "res"; sn.appendChild(res); }
+      let res = $(".res", sn); if (!res) { res = document.createElement(lang === "yaml" ? "div" : "pre"); res.className = "res" + (lang === "yaml" ? " wf-res" : ""); sn.appendChild(res); }
       if (lang === "git") { res.innerHTML = runSnippetHTML(code); return; }
+      if (lang === "yaml") { mountReport(res, () => code, null); return; }
       b.disabled = true; res.innerHTML = statusHTML(firstLoad(lang));
       try { const r = await run(lang, code, sn.dataset.stdin || "", t => { res.innerHTML = statusHTML(t); }); res.innerHTML = consoleHTML(r, lang); }
       catch (e) { res.innerHTML = loadFailHTML(lang, e); }
@@ -148,7 +151,7 @@ function quizHTML(l) {
 }
 
 function pageLesson(x) {
-  const { c, l, i } = x; const lang = c.lang; const st = lessonState(l); const L = ls(l.id);
+  const { c, l, i } = x; const lang = l.lang || c.lang; const st = lessonState(l); const L = ls(l.id);
   S.last = l.id; save();
   const prev = c.lessons[i - 1], next = c.lessons[i + 1];
   const ch = l.challenge;
@@ -166,6 +169,17 @@ function pageLesson(x) {
         gitTermHTML("gt-" + l.id) +
         '<div class="ide-actions"><button class="btn sm primary" type="button" data-act="check">' + I.check + 'Vérifier</button><span class="kbd">↑ ↓ : commandes précédentes</span></div>' +
       "</div><div data-slot=\"hint\"></div><div data-slot=\"verdict\"></div></section>";
+  } else if (ch && lang === "yaml") {
+    right = '<section class="card block" id="defi"><div class="block-h"><span class="n">3</span><h2>Défi</h2><span class="chip' + (st.chDone ? " ok" : " acc") + '">' + (st.chDone ? I.check + "Réussi" : "+" + Math.round(l.xp * 0.6) + " XP") + "</span></div>" +
+      '<div class="prose">' + inl(ch.prompt) + "</div>" +
+      '<div class="ide" style="--c:' + color(c.id) + '"><div class="ide-bar"><span class="file"><i></i>' + esc(ch.file || ".github/workflows/ci.yml") + "</span>" +
+        '<button class="tb" type="button" data-act="hint">' + I.bulb + "Indice</button>" +
+        '<button class="tb" type="button" data-act="sol">' + I.eye + "Solution</button>" +
+        '<button class="tb" type="button" data-act="reset">' + I.reset + "Réinitialiser</button></div>" +
+        editorHTML("ed-" + l.id, "yaml", code) +
+        '<div class="ide-actions"><button class="btn sm primary" type="button" data-act="check">' + I.check + 'Vérifier</button><span class="kbd">Le pipeline se redessine pendant que tu écris</span></div>' +
+        '<div class="wf-live" aria-live="polite"></div>' +
+      "</div><div data-slot=\"hint\"></div><div data-slot=\"verdict\"></div></section>";
   } else if (ch) {
     right = '<section class="card block" id="defi"><div class="block-h"><span class="n">3</span><h2>Défi</h2><span class="chip' + (st.chDone ? " ok" : " acc") + '">' + (st.chDone ? I.check + "Réussi" : "+" + Math.round(l.xp * 0.6) + " XP") + "</span></div>" +
       '<div class="prose">' + inl(ch.prompt) + "</div>" +
@@ -177,7 +191,9 @@ function pageLesson(x) {
         '<div class="ide-actions"><button class="btn sm" type="button" data-act="run">' + I.play + 'Exécuter</button><button class="btn sm primary" type="button" data-act="check">' + I.check + 'Vérifier</button><span class="kbd">Ctrl + Entrée pour exécuter</span></div>' +
         '<div class="console" aria-live="polite"><span class="lbl">Console</span><span class="dim">Exécute ton code pour voir la sortie ici.' + (lang === "cpp" ? " Pour « Exécuter », l'entrée du premier test est utilisée." : "") + "</span></div>" +
       "</div><div data-slot=\"hint\"></div><div data-slot=\"verdict\"></div></section>";
-  } else {
+  } else if (l.practice) {
+    right = '<section class="card block"><div class="block-h"><span class="n">3</span><h2>' + esc(l.practice.title || "Pratique") + '</h2></div><div class="prose">' + theoryHTML(l.practice.body, "bash", false) + "</div></section>";
+  } else if (lang === "cpp") {
     right = '<section class="card block"><div class="block-h"><span class="n">3</span><h2>Pratique sur ta machine</h2></div><div class="prose"><p>Cette leçon utilise des parties du C++ que l\'interpréteur du navigateur ne gère pas. Copie les exemples dans un fichier @@main.cpp@@ et compile-les :</p></div>'.replace(/@@([^@]+)@@/g, "<code>$1</code>") +
       '<pre class="out">g++ -std=c++17 -Wall main.cpp -o main\n./main</pre><div class="prose"><p>Sur Windows, MSYS2 ou WSL fournissent g++. Les compilateurs en ligne comme Compiler Explorer fonctionnent aussi.</p></div><p><a class="btn sm" href="https://godbolt.org/" target="_blank" rel="noopener">Ouvrir Compiler Explorer</a></p></section>';
   }
@@ -195,7 +211,7 @@ function pageLesson(x) {
 }
 
 function bindLesson(x) {
-  const { c, l } = x; const lang = c.lang; const L = ls(l.id); const ch = l.challenge;
+  const { c, l } = x; const lang = l.lang || c.lang; const L = ls(l.id); const ch = l.challenge;
   bindSnippets(app());
   if (lang === "py") preloadPy(lessonCode(l));
   $$("[data-jump]").forEach(a => a.addEventListener("click", e => { e.preventDefault(); const t = document.getElementById(a.dataset.jump); if (t) t.scrollIntoView({ behavior: "smooth", block: "start" }); }));
@@ -221,6 +237,7 @@ function bindLesson(x) {
   });
   if (!ch) return;
   if (lang === "git") { bindGitChallenge(x, L); return; }
+  if (lang === "yaml") { bindYamlChallenge(x, L); return; }
   const root = $('[data-ed="ed-' + l.id + '"]'); const cons = $(".console");
   let tSave;
   const ed = mountEditor(root, v => { clearTimeout(tSave); tSave = setTimeout(() => { S.code[l.id] = v; save(); }, 300); }, () => doRun());
@@ -279,8 +296,7 @@ function bindGitChallenge(x, L) {
   $('[data-act="check"]').addEventListener("click", () => {
     const res = evaluateGit(term.sim, ch.checks);
     const ok = res.every(r => r.ok);
-    slot.innerHTML = '<div class="verdict ' + (ok ? "ok" : "no") + '"><div class="verdict-h">' + (ok ? I.check + "Bravo, le dépôt est exactement dans l'état attendu." : I.x + "Pas encore : " + res.filter(r => !r.ok).length + " critère(s) sur " + res.length + " à remplir.") + '</div><ul class="crit">' +
-      res.map(r => '<li class="' + (r.ok ? "ok" : "no") + '">' + (r.ok ? I.check : I.x) + "<span>" + esc(r.label) + "</span></li>").join("") + "</ul></div>";
+    slot.innerHTML = critHTML(res, "Bravo, le dépôt est exactement dans l'état attendu.");
     if (ok && !L.ch) { L.ch = true; gain(Math.round(Math.round(l.xp * 0.6) * (L.sol ? 0.5 : 1)), L.sol ? "défi réussi (solution vue)" : "défi réussi"); refreshSteps(x); }
   });
   $('[data-act="reset"]').addEventListener("click", () => { term.reset(); slot.innerHTML = ""; });
@@ -291,6 +307,57 @@ function bindGitChallenge(x, L) {
       if (!L.ch && !L.sol) { L.sol = true; save(); }
       armed = false; solBtn.innerHTML = I.eye + "Solution";
       $('[data-slot="hint"]').innerHTML = '<div class="hint-box"><b>Une solution possible</b> (d\'autres chemins mènent au même état) :<pre class="out">' + esc(ch.solution.join("\n")) + "</pre>Tape-la toi-même dans le terminal pour l'ancrer." + (L.ch ? "" : " Le défi rapportera la moitié des XP.") + "</div>";
+    } else {
+      armed = true; solBtn.innerHTML = I.eye + "Confirmer (½ XP)";
+      setTimeout(() => { if (armed) { armed = false; solBtn.innerHTML = I.eye + "Solution"; } }, 4000);
+    }
+  });
+}
+
+function critHTML(res, okMsg) {
+  const ok = res.every(r => r.ok);
+  return '<div class="verdict ' + (ok ? "ok" : "no") + '"><div class="verdict-h">' + (ok ? I.check + okMsg : I.x + "Pas encore : " + res.filter(r => !r.ok).length + " critère(s) sur " + res.length + " à remplir.") + '</div><ul class="crit">' +
+    res.map(r => '<li class="' + (r.ok ? "ok" : "no") + '">' + (r.ok ? I.check : I.x) + "<span>" + esc(r.label) + "</span></li>").join("") + "</ul></div>";
+}
+
+/* Rapport d'un workflow (problèmes + simulation), redessiné à la demande. */
+function mountReport(root, getText, events) {
+  let sel = 0;
+  const paint = () => {
+    root.innerHTML = reportHTML(getText(), events, sel);
+    $$("[data-ev]", root).forEach(b => b.addEventListener("click", () => { sel = +b.dataset.ev; paint(); }));
+  };
+  paint();
+  return paint;
+}
+
+/* Défi YAML : on analyse le workflow et on simule des événements, sans runner. */
+function bindYamlChallenge(x, L) {
+  const { l } = x; const ch = l.challenge;
+  // Événements à simuler : ceux du défi, sinon ceux des scénarios vérifiés (échecs simulés compris).
+  const events = ch.events || (ch.checks.scenarios || []).map(s => (s.fail ? Object.assign({}, s.event, { fail: s.fail }) : s.event)).filter((e, i, a) => a.findIndex(o => JSON.stringify(o) === JSON.stringify(e)) === i);
+  let tSave, tPaint, paint;
+  const ed = mountEditor($('[data-ed="ed-' + l.id + '"]'), v => {
+    clearTimeout(tSave); tSave = setTimeout(() => { S.code[l.id] = v; save(); }, 300);
+    clearTimeout(tPaint); tPaint = setTimeout(() => paint(), 350);
+  }, () => doCheck());
+  paint = mountReport($(".wf-live"), () => ed.get(), events.length ? events : null);
+  const slot = $('[data-slot="verdict"]');
+  function doCheck() {
+    const res = evaluateWorkflow(ed.get(), ch.checks); const ok = res.every(r => r.ok);
+    slot.innerHTML = critHTML(res, "Bravo, ton workflow fait exactement ce qui est demandé.");
+    if (ok && !L.ch) { L.ch = true; gain(Math.round(Math.round(l.xp * 0.6) * (L.sol ? 0.5 : 1)), L.sol ? "défi réussi (solution vue)" : "défi réussi"); refreshSteps(x); }
+    else if (!ok) { L.fails = (L.fails || 0) + 1; save(); }
+  }
+  $('[data-act="check"]').addEventListener("click", doCheck);
+  $('[data-act="reset"]').addEventListener("click", () => { ed.set(ch.starter); delete S.code[l.id]; save(); slot.innerHTML = ""; paint(); });
+  $('[data-act="hint"]').addEventListener("click", () => { $('[data-slot="hint"]').innerHTML = '<div class="hint-box"><b>Indice.</b> ' + inl(esc(ch.hint)) + "</div>"; });
+  const solBtn = $('[data-act="sol"]'); let armed = false;
+  solBtn.addEventListener("click", () => {
+    if (L.ch || L.sol || armed) {
+      if (!L.ch && !L.sol) { L.sol = true; save(); }
+      ed.set(ch.solution); paint(); armed = false; solBtn.innerHTML = I.eye + "Solution";
+      $('[data-slot="hint"]').innerHTML = '<div class="hint-box"><b>Solution chargée.</b> Lis-la bloc par bloc, puis clique sur Vérifier.' + (L.ch ? "" : " Le défi rapportera la moitié des XP.") + "</div>";
     } else {
       armed = true; solBtn.innerHTML = I.eye + "Confirmer (½ XP)";
       setTimeout(() => { if (armed) { armed = false; solBtn.innerHTML = I.eye + "Solution"; } }, 4000);
