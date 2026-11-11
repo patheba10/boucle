@@ -10,7 +10,9 @@ On avance étape par étape : chaque étape se termine par un commit, une CI ver
 - Validation automatique de tout le contenu (`npm run validate`) en local et en CI.
 - Audit (`AUDIT.md`) et ce plan.
 
-## Étape 2 — Python pour la data
+## Étape 2 — Python pour la data ✅
+
+Livrée en 3 sprints (v0.3.0 à v0.5.0) : 32 leçons dans le cours **Data**, 4 jeux de données réels, un projet portfolio.
 
 Exécutable dans le navigateur avec les vrais paquets.
 

@@ -4,9 +4,9 @@
 
 | Story | Points | Statut |
 |-------|--------|--------|
-| #5 US-2d SciPy | 3 | En revue |
-| #6 US-2e scikit-learn | 8 | À faire |
-| #7 US-2f Projet guidé | 5 | À faire |
+| #5 US-2d SciPy | 3 | Terminé (PR #15) |
+| #6 US-2e scikit-learn | 8 | Terminé (PR #16) |
+| #7 US-2f Projet guidé | 5 | En revue |
 
 **Capacité** : 16 points.
 

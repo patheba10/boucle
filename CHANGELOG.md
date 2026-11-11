@@ -11,6 +11,7 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 - Test e2e instable : le helper concluait pendant l'installation de seaborn (#5).
 
 ### Ajouté
+- **Projet guidé** en 5 étapes vérifiées : prédire le sexe d'un manchot (cadrage, exploration, baseline et validation mélangée, pipeline, évaluation finale et prédiction des inconnus), avec un guide pour le publier comme projet portfolio sur GitHub (#7).
 - Chapitre **scikit-learn** (7 leçons) : fit/predict et évaluation sur données non vues, classification et matrice de confusion, précision/rappel/F1 codés à la main, prétraitement et Pipeline, validation croisée et surapprentissage, forêts aléatoires et GridSearchCV, fuite de données (#6).
 - Chapitre **SciPy** (4 leçons) : lois de probabilité, tests d'hypothèse (Welch, intervalles de confiance, comparaisons multiples), corrélation et paradoxe de Simpson sur les manchots, optimisation et ajustement de courbe (#5).
 
