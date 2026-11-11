@@ -318,18 +318,18 @@ print(df.pivot_table(index="island", columns="species", values="body_mass_g", ag
       { q: R`Que renvoie @@df.groupby("g")["x"].idxmax()@@ ?`, options: ["La valeur maximale de x par groupe", "L'étiquette d'index de la ligne où x est maximal, pour chaque groupe", "Le numéro du groupe le plus grand", "Un booléen par ligne"], answer: 1, explain: "On passe ensuite ces étiquettes à df.loc pour récupérer les lignes complètes." }
     ],
     challenge: {
-      prompt: R`<p>Écris @@plus_lourd_par_ile(df)@@ qui renvoie, pour chaque île, la ligne du manchot <strong>le plus lourd</strong> : un DataFrame indexé par île (ordre alphabétique) avec les colonnes @@species@@, @@sex@@ et @@body_mass_g@@.</p>`,
-      starter: "import pandas as pd\n\ndef plus_lourd_par_ile(df):\n    return df.groupby(\"island\")[[\"species\", \"sex\", \"body_mass_g\"]].max()\n",
+      prompt: R`<p>Écris @@plus_lourd_par_ile(df)@@ qui renvoie, pour chaque île, la ligne du manchot <strong>le plus lourd</strong> : un DataFrame indexé par île (ordre alphabétique) avec les colonnes @@species@@, @@sex@@, @@bill_length_mm@@ et @@body_mass_g@@.</p>`,
+      starter: "import pandas as pd\n\ndef plus_lourd_par_ile(df):\n    return df.groupby(\"island\")[[\"species\", \"sex\", \"bill_length_mm\", \"body_mass_g\"]].max()\n",
       solution: R`import pandas as pd
 
 def plus_lourd_par_ile(df):
     idx = df.groupby("island")["body_mass_g"].idxmax()
-    return df.loc[idx, ["island", "species", "sex", "body_mass_g"]].set_index("island").sort_index()`,
+    return df.loc[idx, ["island", "species", "sex", "bill_length_mm", "body_mass_g"]].set_index("island").sort_index()`,
       tests: R`r = plus_lourd_par_ile(pd.read_csv("data/penguins.csv"))
 print(r.index.tolist(), list(r.columns))
 for ile, ligne in r.iterrows():
-    print(ile, ligne["species"], ligne["sex"], ligne["body_mass_g"])`,
-      expected: "['Biscoe', 'Dream', 'Torgersen'] ['species', 'sex', 'body_mass_g']\nBiscoe Gentoo male 6300.0\nDream Chinstrap male 4800.0\nTorgersen Adelie male 4700.0",
+    print(ile, ligne["species"], ligne["sex"], ligne["bill_length_mm"], ligne["body_mass_g"])`,
+      expected: "['Biscoe', 'Dream', 'Torgersen'] ['species', 'sex', 'bill_length_mm', 'body_mass_g']\nBiscoe Gentoo male 49.2 6300.0\nDream Chinstrap male 52.0 4800.0\nTorgersen Adelie male 42.9 4700.0",
       hint: R`groupby("island")["body_mass_g"].idxmax() donne les étiquettes des lignes ; df.loc[idx, colonnes].set_index("island").`
     }
   }
