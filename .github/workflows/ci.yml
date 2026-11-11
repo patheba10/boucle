@@ -35,6 +35,9 @@ jobs:
       - name: Vérifier g++
         run: g++ --version
 
+      - name: Tests unitaires (simulateur Git)
+        run: npm run test:unit
+
       - name: Installer les bibliothèques Python (versions de Pyodide)
         run: pip install -r requirements.txt
 
