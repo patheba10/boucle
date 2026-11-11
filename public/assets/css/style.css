@@ -15,6 +15,7 @@
   --bad-soft: #FBE3E1;
   --py: #3563C9;
   --cpp: #1E7F95;
+  --data: #0E8566;
   --devops: #C9661A;
   --cloud: #2C7CC4;
   --ml: #A33A8C;
@@ -40,7 +41,7 @@
     --bg: #0E1020; --surface: #171A2D; --surface-2: #20243A; --ink: #E8E9F3; --muted: #9EA2BD; --line: #2A2E48;
     --accent: #FF7A4A; --accent-soft: #3A2219; --on-accent: #1A0C06;
     --ok: #45C48E; --ok-soft: #12322A; --bad: #FF7B72; --bad-soft: #3A1B1E;
-    --py: #7EA4FF; --cpp: #5BC2D6; --devops: #F09A52; --cloud: #6DB4F5; --ml: #E07FCB;
+    --py: #7EA4FF; --cpp: #5BC2D6; --data: #4CCFA8; --devops: #F09A52; --cloud: #6DB4F5; --ml: #E07FCB;
     --code-bg: #0A0C18; --code-bg-2: #12152A; --code-line: #23284A;
     --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 4px 16px rgba(0, 0, 0, .25);
     color-scheme: dark;
@@ -50,7 +51,7 @@
   --bg: #0E1020; --surface: #171A2D; --surface-2: #20243A; --ink: #E8E9F3; --muted: #9EA2BD; --line: #2A2E48;
   --accent: #FF7A4A; --accent-soft: #3A2219; --on-accent: #1A0C06;
   --ok: #45C48E; --ok-soft: #12322A; --bad: #FF7B72; --bad-soft: #3A1B1E;
-  --py: #7EA4FF; --cpp: #5BC2D6; --devops: #F09A52; --cloud: #6DB4F5; --ml: #E07FCB;
+  --py: #7EA4FF; --cpp: #5BC2D6; --data: #4CCFA8; --devops: #F09A52; --cloud: #6DB4F5; --ml: #E07FCB;
   --code-bg: #0A0C18; --code-bg-2: #12152A; --code-line: #23284A;
   --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 4px 16px rgba(0, 0, 0, .25);
   color-scheme: dark;
