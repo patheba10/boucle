@@ -1,6 +1,6 @@
 # Boucle
 
-Plateforme d'apprentissage façon Coddy : théorie, quiz et défis corrigés automatiquement, avec du code qui s'exécute directement dans le navigateur. Cours Python et C++, roadmaps DevOps, Cloud et ML. Le plan complet est dans [PLAN.md](PLAN.md), l'auto-évaluation dans [AUDIT.md](AUDIT.md).
+Plateforme d'apprentissage façon Coddy : théorie, quiz et défis corrigés automatiquement, avec du code qui s'exécute directement dans le navigateur. Cours Python et C++, roadmaps DevOps, Cloud et ML. Le plan complet est dans [PLAN.md](PLAN.md), l'architecture dans [ARCHITECTURE.md](ARCHITECTURE.md) et l'auto-évaluation dans [AUDIT.md](AUDIT.md).
 
 ## Lancer en local
 
