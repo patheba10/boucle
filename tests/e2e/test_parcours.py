@@ -15,11 +15,17 @@ def run_atelier(page, code, lang="py", stdin=None):
     if stdin is not None:
         page.fill("#atelier-stdin", stdin)
     page.click('[data-act="run"]')
-    console = page.locator(".console")
-    expect(console).not_to_contain_text("Chargement", timeout=PY_TIMEOUT)
-    expect(console).not_to_contain_text("Démarrage", timeout=PY_TIMEOUT)
-    expect(console).not_to_contain_text("Exécution", timeout=PY_TIMEOUT)
-    return console
+    # Attendre un état final : tant qu'un message de progression est affiché (démarrage, chargement
+    # ou installation de paquets, exécution), le programme n'a pas fini. Le bouton se réactive à la fin.
+    page.wait_for_function(
+        """() => {
+            const btn = document.querySelector('[data-act="run"]');
+            const txt = document.querySelector('.console').innerText;
+            return btn && !btn.disabled && !/Démarrage|Chargement|Installation|Exécution|Paquets chargés/.test(txt);
+        }""",
+        timeout=PY_TIMEOUT,
+    )
+    return page.locator(".console")
 
 
 def check_with_solution(page, lesson_id):
