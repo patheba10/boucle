@@ -54,7 +54,7 @@ ES modules natifs, sans framework ni étape de build.
 
 ### 3. Moteurs d'exécution
 
-**Python.** Un Web Worker charge Pyodide et exécute le code de l'élève hors du fil principal : l'interface ne gèle jamais. `harness.py` capture la sortie, traduit les erreurs (type, ligne) et renvoie les figures Matplotlib en PNG. Les paquets importés sont chargés automatiquement. Une boucle infinie est coupée après 10 s : le worker est détruit puis recréé.
+**Python.** Un Web Worker charge Pyodide et exécute le code de l'élève hors du fil principal : l'interface ne gèle jamais. `harness.py` capture la sortie, traduit les erreurs (type, ligne) et renvoie les figures Matplotlib en PNG. Les paquets importés sont chargés automatiquement. Une boucle infinie est coupée après 20 s (le temps d'importer scikit-learn et d'entraîner un petit modèle en WebAssembly) : le worker est détruit puis recréé.
 
 **C++.** JSCPP interprète un sous-ensemble du C++ (iostream, types de base, fonctions, tableaux, pointeurs). Il s'exécute par tranches de 2 500 pas, ce qui permet de l'arrêter au bout de 6 s.
 

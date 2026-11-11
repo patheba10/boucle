@@ -2,7 +2,7 @@
    - Python : Pyodide dans un Web Worker (vrai CPython, numpy/pandas/scikit-learn/matplotlib chargés à la demande).
    - C++   : JSCPP, interpréteur pédagogique exécuté pas à pas (on peut l'arrêter en cas de boucle infinie). */
 
-const PY_TIMEOUT_MS = 10000;
+const PY_TIMEOUT_MS = 20000; // assez pour importer scikit-learn et entraîner un petit modèle en WebAssembly
 const CPP_TIMEOUT_MS = 6000;
 const MAX_OUT = 60000;
 
