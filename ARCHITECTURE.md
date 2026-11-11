@@ -86,9 +86,20 @@ La CI GitHub Actions lance cette validation à chaque push, puis publie `public/
 | JSCPP pour le C++ | Tourne sans serveur | Sous-ensemble du langage ; à remplacer (voir AUDIT #15) |
 | Hash routing | Fonctionne sur tout hébergeur statique | URLs moins jolies |
 
-## Évolutions prévues pour l'étape 2
+## Données, chapitres et installation locale (sprint 2.1)
 
-- **Jeux de données** : fichiers CSV dans `public/datasets/`. Le worker les copie dans le système de fichiers de Pyodide avant l'exécution, pour que `pd.read_csv("data/…")` fonctionne comme sur une vraie machine. La CI lit les mêmes fichiers.
-- **Versions alignées** : la CI installe les mêmes versions de numpy, pandas, scikit-learn et matplotlib que Pyodide 0.29.5 (`requirements.txt`).
-- **Sections** : un cours peut regrouper ses leçons en chapitres (NumPy, pandas…).
-- **Guides d'installation** : champ `setup` par leçon (panneau « Sur ta machine ») et page `#installer` (Python, venv, VS Code, Jupyter, Git, WSL) pour travailler hors du site.
+- **Jeux de données** : fichiers dans `public/datasets/` (catalogue et licences dans son README). Tout chemin `"data/<fichier>"` cité dans le code est récupéré par `engines.js`, puis copié dans le système de fichiers de Pyodide avant l'exécution. En CI, `run_py.py` exécute le code dans un dossier temporaire où `data/` pointe vers `public/datasets/`. Le même code marche donc partout, y compris sur ta machine si tu recrées un dossier `data/`.
+- **Versions alignées** : `requirements.txt` épingle numpy, pandas, scipy et scikit-learn aux versions de Pyodide 0.29.5. Exception : matplotlib, dont la 3.8.4 n'existe pas pour CPython 3.13 (la CI prend la 3.9.4).
+- **Chapitres** : un champ `section` sur les leçons regroupe le parcours en chapitres.
+- **Installation locale** : champ `setup` par leçon (panneau « Sur ta machine ») et page `#installer`, alimentée par `content/guides/installer.js`.
+- **Préchargement** : à l'ouverture d'une leçon Python, le worker démarre et charge les paquets importés par la leçon avant le premier clic.
+- **Routes de cours** : chaque cours déclare sa `route` (`#python`, `#data`…) et son `badge`. Ajouter un cours ne demande aucune modification du routeur.
+
+## Tests
+
+| Niveau | Outil | Ce qui est vérifié |
+|--------|-------|--------------------|
+| Contenu | `npm run validate` | Chaque extrait, chaque solution (doit passer) et chaque code de départ (doit échouer), avec CPython, g++ et JSCPP |
+| Bout en bout | `npm run test:e2e` (pytest + Playwright) | Accueil, pages principales sans erreur JS, défis Python et C++, jeux de données, boucle infinie, NumPy + figure, absence de débordement sur mobile |
+
+La publication n'a lieu que si les deux niveaux passent.

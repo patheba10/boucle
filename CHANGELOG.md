@@ -6,6 +6,14 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ### Ajouté
 - Processus agile : backlog GitHub Issues, Definition of Ready / Done, modèles de PR et d'issue.
+- Jeux de données lisibles via `data/<fichier>` dans le navigateur et en CI (#1).
+- Chapitres dans les cours, panneau « Sur ta machine », page Installer (Python, venv, VS Code, Jupyter, Git, WSL) (#1).
+- Préchargement de Python à l'ouverture d'une leçon (#1).
+- Tests e2e Playwright en CI ; la publication attend la validation et les tests (#1).
+- `requirements.txt` aligné sur les versions de Pyodide 0.29.5 (#1).
+
+### Modifié
+- Les cours déclarent leur route et leur badge : le routeur n'a plus de cours codé en dur (#1).
 
 ## [0.2.0] — 2026-11-11
 
