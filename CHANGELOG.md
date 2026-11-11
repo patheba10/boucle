@@ -12,6 +12,9 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 - Tests e2e Playwright en CI ; la publication attend la validation et les tests (#1).
 - `requirements.txt` aligné sur les versions de Pyodide 0.29.5 (#1).
 
+- Cours **Python data**, module NumPy : 8 leçons (ndarray, vectorisation, indexation et vues, broadcasting, axes, algèbre linéaire et régression par équations normales, aléatoire reproductible, moyenne mobile en O(n)) (#2).
+- Test e2e de parité : chaque solution doit aussi passer dans le navigateur (Pyodide 32 bits, JSCPP) (#2).
+
 ### Modifié
 - Les cours déclarent leur route et leur badge : le routeur n'a plus de cours codé en dur (#1).
 
