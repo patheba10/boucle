@@ -32,7 +32,7 @@ export async function check(lang, ch, code, onStatus) {
 
 export function explainErr(lang, err, line, userLines) {
   if (err === "TimeLimit") {
-    return { msg: "Arrêt après " + (lang === "py" ? "10" : "6") + " secondes.", tip: "Boucle infinie ? Vérifie que la condition de ta boucle finit par devenir fausse." };
+    return { msg: "Arrêt après " + (lang === "py" ? "20" : "6") + " secondes.", tip: "Boucle infinie ? Vérifie que la condition de ta boucle finit par devenir fausse." };
   }
   if (lang === "py") {
     let where = "";

@@ -72,7 +72,7 @@ def test_jeu_de_donnees_lisible(page):
 
 def test_boucle_infinie_interrompue(page):
     console = run_atelier(page, "while True:\n    pass\n")
-    expect(console).to_contain_text("Arrêt après", timeout=30_000)
+    expect(console).to_contain_text("Arrêt après", timeout=45_000)
 
 
 @pytest.mark.skipif(OFFLINE, reason="les paquets Pyodide viennent du CDN")
