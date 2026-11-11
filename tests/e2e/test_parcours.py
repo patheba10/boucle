@@ -124,7 +124,11 @@ def test_parite_navigateur_toutes_les_solutions(page):
             page.click('[data-act="sol"]')
         page.click('[data-act="check"]')
         verdict = page.locator('[data-slot="verdict"] .verdict')
-        verdict.wait_for(timeout=PY_TIMEOUT)
+        try:
+            verdict.wait_for(timeout=PY_TIMEOUT)
+        except Exception:
+            echecs.append(lesson["id"] + " : aucun verdict affiché")
+            continue
         if "ok" not in (verdict.get_attribute("class") or ""):
             echecs.append(lesson["id"] + " : " + page.locator(".console").inner_text()[:200])
     assert not echecs, "Solutions refusées dans le navigateur :\n" + "\n".join(echecs)
