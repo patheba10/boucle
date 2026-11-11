@@ -92,6 +92,7 @@ La CI GitHub Actions lance cette validation à chaque push, puis publie `public/
 - **Versions alignées** : `requirements.txt` épingle numpy, pandas, scipy et scikit-learn aux versions de Pyodide 0.29.5. Exception : matplotlib, dont la 3.8.4 n'existe pas pour CPython 3.13 (la CI prend la 3.9.4).
 - **Chapitres** : un champ `section` sur les leçons regroupe le parcours en chapitres.
 - **Installation locale** : champ `setup` par leçon (panneau « Sur ta machine ») et page `#installer`, alimentée par `content/guides/installer.js`.
+- **Paquets hors Pyodide** : le worker installe depuis PyPI, avec micropip, les paquets d'une liste blanche épinglée (`MICROPIP` dans `python-worker.js`, aujourd'hui seaborn 0.13.2). La CI installe les mêmes versions via `requirements.txt`.
 - **Préchargement** : à l'ouverture d'une leçon Python, le worker démarre et charge les paquets importés par la leçon avant le premier clic.
 - **Routes de cours** : chaque cours déclare sa `route` (`#python`, `#data`…) et son `badge`. Ajouter un cours ne demande aucune modification du routeur.
 

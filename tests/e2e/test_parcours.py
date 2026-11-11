@@ -116,3 +116,10 @@ def test_parite_navigateur_toutes_les_solutions(page):
         if "ok" not in (verdict.get_attribute("class") or ""):
             echecs.append(lesson["id"] + " : " + page.locator(".console").inner_text()[:200])
     assert not echecs, "Solutions refusées dans le navigateur :\n" + "\n".join(echecs)
+
+
+@pytest.mark.skipif(OFFLINE, reason="seaborn s'installe depuis PyPI avec micropip")
+def test_seaborn_installe_a_la_demande(page):
+    console = run_atelier(page, "import seaborn as sns\nimport pandas as pd\nprint(sns.__version__)\nsns.histplot(pd.read_csv('data/penguins.csv'), x='body_mass_g')\n")
+    expect(console).to_contain_text("0.13.2")
+    expect(console.locator("img.fig")).to_have_count(1)
