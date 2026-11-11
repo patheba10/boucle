@@ -4,8 +4,8 @@
 
 | Story | Points | Statut |
 |-------|--------|--------|
-| #3 US-2b pandas | 8 | En cours |
-| #4 US-2c Visualisation | 5 | À faire |
+| #3 US-2b pandas | 8 | Terminé (PR #13) |
+| #4 US-2c Visualisation | 5 | En revue |
 
 **Capacité** : 13 points.
 

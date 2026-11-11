@@ -30,6 +30,11 @@ async function init() {
 }
 const ready = init();
 
+/* Paquets absents de la distribution Pyodide, installés depuis PyPI avec micropip (versions épinglées,
+   identiques à requirements.txt pour la CI). Seuls ces paquets-là peuvent être installés à la volée. */
+const MICROPIP = { seaborn: "seaborn==0.13.2" };
+const installed = new Set();
+
 async function loadPackages(id, code) {
   try {
     await pyodide.loadPackagesFromImports(code, {
@@ -38,6 +43,24 @@ async function loadPackages(id, code) {
     });
   } catch (e) {
     /* Paquet introuvable : l'import échouera proprement avec un ModuleNotFoundError lisible. */
+  }
+  let wanted = [];
+  try {
+    const found = pyodide.pyimport("pyodide.code").find_imports(code);
+    wanted = found.toJs().filter((name) => MICROPIP[name] && !installed.has(name));
+    found.destroy();
+  } catch (e) { /* code non analysable : l'erreur de syntaxe sera signalée à l'exécution */ }
+  if (!wanted.length) return;
+  try {
+    await pyodide.loadPackage("micropip");
+    const micropip = pyodide.pyimport("micropip");
+    for (const name of wanted) {
+      self.postMessage({ id, status: "Installation de " + name + " depuis PyPI…" });
+      await micropip.install(MICROPIP[name]);
+      installed.add(name);
+    }
+  } catch (e) {
+    self.postMessage({ id, status: "Installation impossible : " + (e && e.message ? e.message.split("\n")[0] : e) });
   }
 }
 
