@@ -1,0 +1,17 @@
+{
+  "name": "boucle",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "Plateforme d'apprentissage : Python, C++, data, Git, hardware et roadmaps métier.",
+  "scripts": {
+    "dev": "python3 -m http.server 5173 --directory public",
+    "validate": "node scripts/validate.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "JSCPP": "2.0.6"
+  }
+}
