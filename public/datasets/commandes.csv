@@ -1,0 +1,16 @@
+commande_id,client_id,date,produit,categorie,quantite,prix_unitaire
+1001,C01,2025-03-02,Clavier,Informatique,1,89.99
+1002,C02,2025-03-05,Écran 27 po,Informatique,2,249.00
+1003,C01,2025-03-18,Souris,Informatique,2,24.50
+1004,C03,2025-04-01,Bureau assis-debout,Mobilier,1,429.00
+1005,C04,2025-04-09,Chaise ergonomique,Mobilier,1,310.00
+1006,C02,2025-04-22,Lampe,Mobilier,3,39.90
+1007,C05,2025-05-03,Casque audio,Audio,1,159.00
+1008,C01,2025-05-15,Webcam,Informatique,1,74.99
+1009,C06,2025-06-01,Enceinte,Audio,2,99.00
+1010,C03,2025-06-12,Clavier,Informatique,1,89.99
+1011,C04,2025-06-20,Casque audio,Audio,1,159.00
+1012,C02,2025-07-04,Chaise ergonomique,Mobilier,1,310.00
+1013,C99,2025-07-10,Souris,Informatique,1,24.50
+1014,C05,2025-07-21,Écran 27 po,Informatique,1,249.00
+1015,C01,2025-08-02,Lampe,Mobilier,1,39.90
