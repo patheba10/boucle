@@ -4,6 +4,8 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.3.0] — 2026-11-11
+
 ### Ajouté
 - Processus agile : backlog GitHub Issues, Definition of Ready / Done, modèles de PR et d'issue.
 - Jeux de données lisibles via `data/<fichier>` dans le navigateur et en CI (#1).
