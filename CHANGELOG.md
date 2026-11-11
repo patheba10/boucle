@@ -4,6 +4,9 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+### Ajouté
+- Chapitre **SciPy** (4 leçons) : lois de probabilité, tests d'hypothèse (Welch, intervalles de confiance, comparaisons multiples), corrélation et paradoxe de Simpson sur les manchots, optimisation et ajustement de courbe (#5).
+
 ## [0.4.0] — 2026-11-11
 
 ### Ajouté
