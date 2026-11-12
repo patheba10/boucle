@@ -4,6 +4,13 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.28.0] — 2026-11-12
+
+Sprint 9.3 : cours **System design**.
+
+### Ajouté
+- Cours **System design** en 9 leçons : méthode d'entretien et estimations, répartiteurs de charge, caches (LRU, expiration, invalidation), réplication, partitionnement et hachage cohérent, files de messages et idempotence, limitation de débit, disponibilité et reprise, étude d'un raccourcisseur d'URL, questions d'entretien. Huit défis où chaque brique est codée et testée (#96).
+
 ## [0.27.0] — 2026-11-12
 
 Sprint 9.2 : patterns d'algorithmes.
