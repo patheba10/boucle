@@ -4,6 +4,17 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.25.0] — 2026-11-12
+
+Sprint 8.4 : outils et TinyML, roadmap Embarqué et IoT. L'étape 7 (hardware et embarqué) est terminée.
+
+### Ajouté
+- C embarqué, chapitre **Outils et TinyML** (4 leçons) : lire une datasheet (BME280), multimètre, oscilloscope et analyseur logique avec décodage UART, KiCad et Wokwi, une couche de réseau de neurones int8 en C comme dans LiteRT for Microcontrollers (#85).
+- Roadmap **Embarqué et IoT** : 9 étapes, de l'électronique au TinyML, reliées aux leçons des cours.
+
+### Modifié
+- La page des roadmaps présente quatre parcours.
+
 ## [0.24.0] — 2026-11-12
 
 Sprint 8.3 : cours **C embarqué**, exécuté dans le navigateur par un interpréteur C écrit pour Boucle.
