@@ -91,7 +91,7 @@ TensorFlow ne tourne pas dans Pyodide : les exercices TensorFlow sont validés e
 
 1. Structures de données et complexité. Fait au sprint 9.1 (#94) : cours « Algorithmique », chapitre 1, 9 leçons ; chaque structure codée à la main et éprouvée sur de grandes entrées.
 2. Patterns d'algorithmes : deux pointeurs, fenêtre glissante, hachage, piles, BFS et DFS, tas, programmation dynamique, recherche binaire. Fait au sprint 9.2 (#95) : chapitre 2 du cours « Algorithmique », 11 leçons dont la méthode d'entretien de code.
-3. System design : load balancer, cache, base SQL vs NoSQL, files de messages (Kafka, SQS), scalabilité.
+3. System design : load balancer, cache, base SQL vs NoSQL, files de messages (Kafka, SQS), scalabilité. Fait au sprint 9.3 (#96) : cours « System design », 9 leçons ; chaque brique (cache LRU, hachage cohérent, seau à jetons…) codée et testée en Python.
 4. Entretiens spécifiques : DevOps / SRE, ML, embarqué.
 5. Comportemental : méthode STAR, préparer ses histoires de projets.
 
