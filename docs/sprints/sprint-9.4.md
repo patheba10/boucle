@@ -14,12 +14,13 @@
 ## Journal
 
 - 12 nov. : banques et cours écrits ; `npm run validate` vérifie les banques (lintCert). Une erreur de guillemets dans la vue des certifications cassait tout le site : seuls les tests de bout en bout l'ont vue (15 échecs). Ajout d'un test unitaire `node --check` sur tout le JavaScript de `public/`, vérifié en réinjectant l'erreur. 1 110 vérifications, 102 tests unitaires, 15 tests de bout en bout.
+- 12 nov. : PR #104, les trois jobs verts. Fusionnée ; version 0.29.0, milestone 8 fermé.
 
 ## Revue de sprint
 
 | Story | Points | Livré |
 |-------|--------|-------|
-| #97 Entretiens par métier et comportemental | 5 | Oui |
+| #97 Entretiens par métier et comportemental | 5 | Oui (PR #104) |
 
 Vélocité : 5 points sur 5. Version 0.29.0. L'étape 8 est terminée : Algorithmique (20 leçons), System design (9), Entretiens (6) et trois entretiens blancs.
 

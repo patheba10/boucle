@@ -4,6 +4,18 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.29.0] — 2026-11-12
+
+Sprint 9.4 : entretiens par métier et comportemental. L'étape 8 (préparation aux entretiens) est terminée.
+
+### Ajouté
+- **Entretiens techniques blancs** : DevOps, SRE et Cloud (30 questions), ML et MLOps (20), embarqué et firmware (20), avec entraînement par domaine et passage chronométré (#97).
+- Cours **Entretiens** en 6 leçons : processus de recrutement, méthode STAR, questions comportementales en français et en anglais, présenter un projet, entretiens par métier, négociation et suivi.
+- Test unitaire de syntaxe de tout le JavaScript du site.
+
+### Modifié
+- La page Certifs présente les certifications et les entretiens blancs en deux sections.
+
 ## [0.28.0] — 2026-11-12
 
 Sprint 9.3 : cours **System design**.
