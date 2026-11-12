@@ -4,6 +4,10 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.11.0] — 2026-11-12
+
+Sprint 4.3 : simulateur Docker et cours **Docker et Compose** (12 leçons).
+
 ### Ajouté
 - Cours **Docker et Compose** en 12 leçons : conteneurs et cycle de vie, images et couches, Dockerfile, cache et `.dockerignore`, images légères et sûres (non root, sans secret, hadolint, multi-étapes), réseaux, volumes et montages, Compose avec `healthcheck`, registres et CI, un incident à trois pannes et dix questions d'entretien (#32).
 - Simulateur Docker dans le terminal Linux : construction avec cache, BuildKit et hadolint, conteneurs, ports, réseaux et DNS, volumes, registre, Compose v2, panneau des conteneurs (#31).
