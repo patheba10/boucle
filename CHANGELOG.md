@@ -4,6 +4,10 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.12.0] — 2026-11-12
+
+Sprint 4.4 : cluster Kubernetes simulé et cours **Kubernetes** (12 leçons).
+
 ### Ajouté
 - Cours **Kubernetes** en 12 leçons : architecture et Pods, Deployments, Services et DNS, mises à jour et retours arrière, ConfigMaps et Secrets, sondes et ressources, dépannage (ImagePullBackOff, CrashLoopBackOff, CreateContainerConfigError, Pending), Ingress, base de données avec PVC, autoscaling, RBAC et Helm, dix questions d'entretien (#34).
 - Cluster Kubernetes simulé et `kubectl` dans le terminal : validation des manifests, réconciliation, déploiements progressifs, pannes réalistes, Services, DNS, `port-forward`, Ingress, HPA, RBAC, panneau des Pods (#33).

@@ -27,3 +27,22 @@
 - 12 nov. (nuit) : cours enregistré (`courses/kubernetes.js`, nav), chapitre 1 validé (k8s-01 à k8s-03). Prévu : k8s-04 rollouts, k8s-05 ConfigMaps et Secrets, k8s-06 sondes et ressources, k8s-07 dépannage, k8s-08 exposition (NodePort, Ingress), k8s-09 base de données et stockage, k8s-10 mise à l'échelle (HPA), k8s-11 RBAC et Helm, k8s-12 entretien.
 - 12 nov. (nuit) : chapitres 2 et 3 validés (k8s-04 à k8s-09) ; ajout de base64, kubectl top et autoscale, ingress-nginx sur le port 80 (`setup.k8s.ingress`), validation des Ingress. Reste : k8s-10 à k8s-12, e2e, docs, PR, release 0.12.0.
 - 12 nov. (nuit) : chapitre 4 (k8s-10 à k8s-12), cours complet validé (692 vérifications), tests unitaires et e2e verts. PR du cours puis release 0.12.0.
+
+## Livré
+
+- Cluster Kubernetes simulé et `kubectl` (PR #45) : validation des manifests, réconciliation, déploiements progressifs, pannes réalistes, Services, DNS, Ingress, HPA, RBAC. 7 tests unitaires.
+- Cours Kubernetes (PR #46) : 12 leçons, 11 défis dont 7 manifests écrits dans l'éditeur, 24 questions de quiz.
+- Version 0.12.0.
+
+## Rétrospective
+
+**Ce qui a marché**
+- Faire tourner les conteneurs des Pods dans le moteur Docker existant : `CrashLoopBackOff`, journaux et dépendances (base de données par le nom du Service) ont fonctionné sans réécrire le comportement des applications.
+- Les tests unitaires ont trouvé deux défauts de fond avant tout contenu : un `apply` répété qui plantait (valeurs par défaut appliquées après la comparaison) et des événements comptés plusieurs fois par commande.
+- La lecture des transcriptions a encore payé : compteur de redémarrages qui s'emballait, journal du mauvais Pod, préfixe `/api` qu'un vrai ingress-nginx ne retire pas.
+
+**Ce qui a coincé**
+- Certaines règles du vrai Kubernetes ne se devinent pas : le chemin complet transmis par l'Ingress, la stratégie `Recreate` pour un disque `ReadWriteOnce`. Il a fallu adapter l'application d'exemple plutôt que simplifier le cluster.
+
+**On change**
+- Pour chaque défi, écrire d'abord la transcription attendue sur un vrai cluster (kind), puis comparer la sortie du simulateur ligne à ligne.
