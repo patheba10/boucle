@@ -16,12 +16,13 @@
 ## Journal
 
 - 12 nov. : cours en 10 leçons et 9 défis ; deux scénarios du feu tricolore recalibrés après calcul (un appui pendant le rouge ne testait rien). 967 vérifications, 94 tests unitaires, 15 tests de bout en bout hors ligne, parité comprise.
+- 12 nov. : PR #88, les trois jobs verts. Fusionnée ; version 0.23.0.
 
 ## Revue de sprint
 
 | Story | Points | Livré |
 |-------|--------|-------|
-| #83 Logique numérique | 5 | Oui |
+| #83 Logique numérique | 5 | Oui (PR #88) |
 
 Vélocité : 5 points sur 5. Version 0.23.0.
 
