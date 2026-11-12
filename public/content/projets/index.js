@@ -2,5 +2,6 @@
 import devops from "./devops.js";
 import cloud from "./cloud.js";
 import ml from "./ml.js";
+import iot from "./iot.js";
 
-export const PROJETS = [...devops, ...cloud, ...ml];
+export const PROJETS = [...devops, ...cloud, ...ml, ...iot];
