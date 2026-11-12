@@ -49,21 +49,26 @@ Backlog : issues #10, #11 et #12 (milestone « Étape 3 »).
 
 Amélioration technique jointe : nouveaux formats d'exercice, « commandes à taper » et « écrire un workflow YAML ».
 
-## Étape 4 — Socle entreprise : SQL, Linux et Bash, API
+## Étape 4 — DevOps
+
+Ordre choisi avec Demba : DevOps, puis Cloud (AWS), puis le reste du socle entreprise. Décision d'architecture : [docs/adr/0001-simulateurs-devops.md](docs/adr/0001-simulateurs-devops.md).
+
+1. **Linux et Bash** (#30) : arborescence, fichiers, permissions et utilisateurs, processus et services (systemd, journaux), traitement de texte (grep, sort, cut, sed, awk), pipes et redirections, variables et scripts Bash, réseau (curl, ss, dig), SSH et cron. Terminal Linux simulé (#29) et défis de scripts testés.
+2. **Docker et Compose** (#32) : images et couches, Dockerfile (cache, multi-étapes, utilisateur non root), conteneurs, ports, volumes, réseaux, Compose, registres, sécurité des images. Simulateur Docker (#31) et lint de Dockerfile.
+3. **Kubernetes** (#34) : architecture, Pods, Deployments et rollouts, Services et Ingress, ConfigMaps et Secrets, sondes, ressources et autoscaling, stockage, RBAC, Helm, dépannage (CrashLoopBackOff, ImagePullBackOff, Pending). Cluster simulé et `kubectl` (#33).
+4. **Exploitation** (#35) : observabilité (métriques, logs, traces, Prometheus et PromQL, Grafana, alertes), SRE (SLI, SLO, budget d'erreur, incidents, post-mortems), gestion de configuration avec Ansible.
+
+## Étape 5 — Cloud : AWS et Terraform
+
+1. Terraform : HCL, providers, ressources, variables et outputs, state distant et verrou, modules, `plan` / `apply`, simulés dans le navigateur.
+2. AWS : modèle de responsabilité partagée, IAM (évaluateur de politiques JSON), réseau (VPC, sous-réseaux, routage, security groups), calcul (EC2, ECS, EKS, Lambda), stockage et bases (S3, EBS, RDS, DynamoDB), CloudWatch, architectures résilientes, coûts. Exercices de conception, et labs guidés sur le niveau gratuit d'AWS.
+3. Préparation aux certifications AWS Cloud Practitioner puis Solutions Architect Associate.
+
+## Étape 5 bis — Socle entreprise : SQL et API
 
 1. SQL : `SELECT`, filtres, jointures, agrégations, sous-requêtes, fonctions fenêtres, index, transactions. Exécuté pour de vrai (SQLite via Python).
-2. Linux et Bash : fichiers, permissions, processus, redirections, pipes, scripts, cron, SSH.
-3. API REST : HTTP, JSON, codes de statut, authentification, FastAPI.
-4. Tests : pytest, tests unitaires vs intégration.
-
-## Étape 5 — Cloud et DevOps en pratique
-
-1. Docker : images, Dockerfile multi-étapes, Compose.
-2. CI/CD : GitHub Actions de bout en bout.
-3. Terraform : syntaxe HCL, providers, ressources, variables, state, modules, `plan` / `apply`.
-4. AWS : IAM, EC2, S3, VPC, Lambda, RDS, DynamoDB, CloudWatch, ECS et EKS. Exercices de conception, plus des labs guidés sur le niveau gratuit d'AWS.
-5. Kubernetes : Pods, Deployments, Services, Ingress, ConfigMaps, Secrets, Helm.
-6. Observabilité et sécurité : Prometheus, Grafana, logs, gestion des secrets, moindre privilège.
+2. API REST : HTTP, JSON, codes de statut, authentification, FastAPI.
+3. Tests : pytest, tests unitaires vs intégration.
 
 ## Étape 6 — Deep learning : TensorFlow et TensorFlow Lite
 
