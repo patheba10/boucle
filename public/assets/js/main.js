@@ -39,7 +39,7 @@ function rmProgress(r) { const ids = r.stages.flatMap(s => s.nodes.map(n => n.id
 function lessonCode(l) {
   const blocks = [...l.theory.matchAll(/~~~py[^\n]*\n([\s\S]*?)\n~~~/g)].map(m => m[1]);
   const ch = l.challenge || {};
-  return blocks.concat([ch.starter || "", ch.solution || "", ch.tests || ""]).join("\n");
+  return blocks.concat([ch.starter || "", ch.solution || "", ch.tests || "", ch.runWith || ""]).join("\n");
 }
 
 /* ===================== Théorie (texte + extraits exécutables) ===================== */
@@ -258,7 +258,7 @@ function bindLesson(x) {
     busy(true); const lbl = '<span class="lbl">Console</span>'; cons.innerHTML = lbl + statusHTML(firstLoad(lang));
     try {
       const stdin = lang === "cpp" ? ch.tests[0].input : lang === "sql" ? ch.db || l.db || c.db || "" : "";
-      const r = await run(lang, ed.get(), stdin, t => { cons.innerHTML = lbl + statusHTML(t); });
+      const r = await run(lang, ed.get() + (ch.runWith ? "\n" + ch.runWith : ""), stdin, t => { cons.innerHTML = lbl + statusHTML(t); });
       cons.innerHTML = '<span class="lbl">Console' + (stdin && lang === "cpp" ? " · entrée : " + esc(stdin.replace(/\n/g, " ⏎ ")) : "") + "</span>" + consoleHTML(r, lang);
     } catch (e) { cons.innerHTML = '<span class="lbl">Console</span>' + loadFailHTML(lang, e); }
     busy(false);
