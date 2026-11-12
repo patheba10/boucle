@@ -71,6 +71,16 @@ ES modules natifs, sans framework ni étape de build.
 
 `lib/wfview.js` affiche les problèmes avec leur ligne, les onglets d'événements et le graphe des jobs. Il n'y a pas de vrai runner : on vérifie la structure et le comportement attendu du pipeline, ce qu'on fait aussi en revue de code.
 
+**Linux.** `lib/shell/` simule une machine Ubuntu 24.04 (voir l'[ADR 0001](docs/adr/0001-simulateurs-devops.md)) :
+
+- `fs.js` : système de fichiers en mémoire avec utilisateurs, groupes, droits Unix et liens symboliques ;
+- `parse.js` : analyseur Bash (listes, pipelines, redirections, here-docs, `if`, `for`, `while`, `case`, fonctions, `[[ ]]`, `(( ))`), qui signale une commande incomplète pour la saisie sur plusieurs lignes ;
+- `shell.js` : interpréteur (expansions, globbing, découpage des mots, `set -euo pipefail`, scripts avec shebang et droit d'exécution, codes de sortie) et critères déclaratifs ;
+- `commands.js` : une centaine de commandes (fichiers, texte, `sed` et `awk`, utilisateurs et `sudo`, processus, `systemctl` et `journalctl`, `apt`, `cron`, réseau simulé, `tar`, `jq`) avec les messages des outils GNU ;
+- `text.js` : regex POSIX, `sed` et `awk` (sous-ensembles).
+
+`lib/shterm.js` affiche le terminal, le dossier courant et les services ; il exécute aussi les extraits de théorie et les tests des défis de scripts. Une commande non simulée le dit clairement.
+
 ### 4. Vérification d'un défi
 
 1. **Python.** Le code de l'élève est exécuté, suivi d'un marqueur puis du code de test caché. Seule la sortie produite après le marqueur est comparée à `expected`, après normalisation des espaces. On teste donc le comportement d'une fonction, et pas seulement ce qui est affiché.
@@ -114,6 +124,7 @@ La CI GitHub Actions lance cette validation à chaque push, puis publie `public/
 | Niveau | Outil | Ce qui est vérifié |
 |--------|-------|--------------------|
 | Simulateur Git | `npm run test:unit` (node:test) | 16 scénarios : commits, .gitignore, diff, branches, fusions et conflits, rebase interrompu, reset, revert, stash, cherry-pick, tags, push rejeté puis pull |
+| Terminal Linux | `npm run test:unit` (node:test) | 9 tests : navigation et messages GNU, redirections et pipes, expansions, droits et sudo, services et journal, processus et cron, scripts, défis de scripts, critères |
 | Moteur des workflows | `npm run test:unit` (node:test) | 17 tests, dont un qui passe la vraie CI de Boucle au lint : erreurs YAML traduites, lint, expressions, filtres de branches et de chemins, simulation (PR, push, tag, échec en cascade, étape `if: failure()`), critères, numéros de ligne |
 | Contenu | `npm run validate` | Chaque extrait, chaque solution (doit passer) et chaque code de départ (doit échouer), avec CPython, g++ et JSCPP |
 | Bout en bout | `npm run test:e2e` (pytest + Playwright) | Accueil, pages principales sans erreur JS, chaque solution de défi dans le vrai navigateur, jeux de données, boucle infinie, NumPy + figure, terminal Git, défi et extrait YAML, absence de débordement sur mobile |
