@@ -105,6 +105,19 @@ def test_revision_espacee(page):
     assert page.errors == []
 
 
+def test_indices_progressifs(page):
+    """L'indice se révèle phrase par phrase, du plus général au plus précis."""
+    page.goto(page.base + "#al-08")
+    bouton = page.locator('[data-act="hint"]')
+    expect(bouton).to_contain_text("Indice (1 / ")
+    bouton.click()
+    expect(page.locator('[data-slot="hint"] .hint-box p')).to_have_count(1)
+    expect(bouton).to_contain_text("Indice suivant (2 / ")
+    bouton.click()
+    expect(page.locator('[data-slot="hint"] .hint-box p')).to_have_count(2)
+    assert page.errors == []
+
+
 def test_examen_blanc_court(page):
     """Entraînement par domaine, puis examen blanc court : réponses, marque, fin, résultat par domaine."""
     page.goto(page.base + "#cert-clf")

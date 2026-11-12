@@ -3,6 +3,7 @@ import { COURSES, ROADMAPS, INSTALL, CERTS, PROJETS, GROUPES } from "../../conte
 import { pageCerts, pageCert, bindCert } from "./lib/examview.js";
 import { pageProjets, pageProjet, bindProjet, projetsDeRoadmap } from "./lib/projets.js";
 import { rater, reussir, aReviser, prochaine, cle as cleRev, decoder } from "./lib/revision.js";
+import { indicesDe, indicesHTML, libelleIndice } from "./lib/indices.js";
 import { I } from "./lib/icons.js";
 import { esc, $, $$, inl, norm, color, today, toast as rawToast } from "./lib/util.js";
 import { S, save, resetAll, markDay, streak, level, ls, XP_PER_LEVEL } from "./lib/state.js";
@@ -117,6 +118,13 @@ function pageCours() {
   const fait = ALL.filter(x => lessonState(x.l).done).length;
   return '<div class="crumbs"><a href="#home">Accueil</a><span>/</span><span>Cours</span></div>' +
     '<section style="display:flex;flex-direction:column;gap:10px"><h1 style="font-size:clamp(30px,4vw,42px);font-weight:800">Cours</h1><p class="lead">' + COURSES.length + " cours, " + ALL.length + " leçons, regroupés par domaine. " + fait + " leçons terminées.</p></section>" + groupesHTML();
+}
+/* ----- Indices progressifs (audit #7) : un clic révèle l'indice suivant ----- */
+function bindIndices(ch) {
+  const b = $('[data-act="hint"]'); const liste = indicesDe(ch); let k = 0;
+  const etiquette = () => { b.lastChild.textContent = libelleIndice(liste, k); };
+  if (b.lastChild && b.lastChild.nodeType === 3) etiquette();
+  b.addEventListener("click", () => { if (k < liste.length) k++; $('[data-slot="hint"]').innerHTML = indicesHTML(liste, k, inl, esc); if (b.lastChild && b.lastChild.nodeType === 3) etiquette(); });
 }
 /* ----- Révision espacée (audit #3) ----- */
 function revisionCarte() {
@@ -330,7 +338,7 @@ function bindLesson(x) {
   btnRun.addEventListener("click", doRun);
   btnCheck.addEventListener("click", doCheck);
   $('[data-act="reset"]').addEventListener("click", () => { ed.set(ch.starter); delete S.code[l.id]; save(); $('[data-slot="verdict"]').innerHTML = ""; });
-  $('[data-act="hint"]').addEventListener("click", () => { $('[data-slot="hint"]').innerHTML = '<div class="hint-box"><b>Indice.</b> ' + inl(esc(ch.hint)) + "</div>"; });
+  bindIndices(ch);
   const solBtn = $('[data-act="sol"]'); let armed = false;
   solBtn.addEventListener("click", () => {
     if (L.ch || L.sol || armed) {
@@ -360,7 +368,7 @@ function bindTermChallenge(x, L, lang) {
     if (ok && !L.ch) { L.ch = true; gain(Math.round(Math.round(l.xp * 0.6) * (L.sol ? 0.5 : 1)), L.sol ? "défi réussi (solution vue)" : "défi réussi"); refreshSteps(x); }
   });
   $('[data-act="reset"]').addEventListener("click", () => { term.reset(); slot.innerHTML = ""; });
-  $('[data-act="hint"]').addEventListener("click", () => { $('[data-slot="hint"]').innerHTML = '<div class="hint-box"><b>Indice.</b> ' + inl(esc(ch.hint)) + "</div>"; });
+  bindIndices(ch);
   const solBtn = $('[data-act="sol"]'); let armed = false;
   solBtn.addEventListener("click", () => {
     if (L.ch || L.sol || armed) {
@@ -388,7 +396,7 @@ function bindScriptChallenge(x, L) {
   }
   $('[data-act="check"]').addEventListener("click", doCheck);
   $('[data-act="reset"]').addEventListener("click", () => { ed.set(ch.starter); delete S.code[l.id]; save(); slot.innerHTML = ""; });
-  $('[data-act="hint"]').addEventListener("click", () => { $('[data-slot="hint"]').innerHTML = '<div class="hint-box"><b>Indice.</b> ' + inl(esc(ch.hint)) + "</div>"; });
+  bindIndices(ch);
   const solBtn = $('[data-act="sol"]'); let armed = false;
   solBtn.addEventListener("click", () => {
     if (L.ch || L.sol || armed) { if (!L.ch && !L.sol) { L.sol = true; save(); } ed.set(ch.solution); armed = false; solBtn.innerHTML = I.eye + "Solution"; $('[data-slot="hint"]').innerHTML = '<div class="hint-box"><b>Solution chargée.</b> Lis-la ligne par ligne, puis clique sur Tester.' + (L.ch ? "" : " Le défi rapportera la moitié des XP.") + "</div>"; }
@@ -433,7 +441,7 @@ function bindYamlChallenge(x, L) {
   }
   $('[data-act="check"]').addEventListener("click", doCheck);
   $('[data-act="reset"]').addEventListener("click", () => { ed.set(ch.starter); delete S.code[l.id]; save(); slot.innerHTML = ""; paint(); });
-  $('[data-act="hint"]').addEventListener("click", () => { $('[data-slot="hint"]').innerHTML = '<div class="hint-box"><b>Indice.</b> ' + inl(esc(ch.hint)) + "</div>"; });
+  bindIndices(ch);
   const solBtn = $('[data-act="sol"]'); let armed = false;
   solBtn.addEventListener("click", () => {
     if (L.ch || L.sol || armed) {

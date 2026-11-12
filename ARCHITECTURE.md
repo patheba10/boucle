@@ -175,6 +175,7 @@ La CI GitHub Actions lance cette validation à chaque push, puis publie `public/
 | Examens blancs | `npm run test:unit` (node:test) | 4 tests : quotas par domaine, tirage déterministe et options mélangées, entraînement par domaine, réponses multiples, score et détail par domaine, contrôle des banques |
 | Moteur SQL | `npm run test:unit` (node:test, CPython) | 4 tests : découpage des instructions et commentaires, tableaux et lignes modifiées, erreurs SQLite et conseils, ordre exigé, colonnes, normalisation des nombres, requête de contrôle et transactions |
 | Harnais Python | `npm run test:unit` (node:test, CPython) | 2 tests : FastAPI et son client de test sans thread ni boucle d'événements (dépendances, en-têtes, validation, routes asynchrones), pytest et test par mutation (mutant détecté ou non, tests en échec sur le bon code, aucun test) |
+| Indices progressifs | `npm run test:unit` | Découpage en phrases sans couper un @@code@@ ni perdre de texte, sur tous les indices du site |
 | Révision espacée | `npm run test:unit` | Calendrier J+1, J+3, J+7, sortie après trois réussites, retour au début après une erreur, dates en UTC |
 | Syntaxe JS | `npm run test:unit` | `node --check` sur tout le JavaScript de `public/` : une erreur de syntaxe dans une vue casse tout le site |
 | minic | `npm run test:unit` (node:test, CPython et gcc) | Parité avec gcc sur trois programmes qui couvrent le langage et mcu.h ; messages d'erreur et ligne ; préprocesseur ; sortie conservée avant une erreur |
