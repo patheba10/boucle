@@ -4,6 +4,13 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.23.0] — 2026-11-12
+
+Sprint 8.2 : cours **Logique numérique**.
+
+### Ajouté
+- Cours **Logique numérique** en 10 leçons : bits et portes, algèbre de Boole et NAND universelle, formes canoniques et Karnaugh, additionneurs et complément à deux, multiplexeurs et encodeur de priorité, bascules, registres à décalage et compteurs, machines à états, ALU et drapeaux ZNCV, questions d'entretien. Neuf défis en Python pur (#83).
+
 ## [0.22.0] — 2026-11-12
 
 Sprint 8.1 : cours **Électronique**, premier cours de l'étape 7 (hardware et embarqué).
