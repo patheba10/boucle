@@ -37,8 +37,18 @@ function highlightLog(code) {
   return code.split("\n").map((l) => /##\[error\]|\bError\b|\berror:|Traceback|FAILED|exit code [1-9]/.test(l) ? '<span class="tk-err">' + esc(l) + "</span>" : /##\[warning\]|\bWarning\b/.test(l) ? '<span class="tk-num">' + esc(l) + "</span>" : /^\s*(Run |##\[group\])/.test(l) ? '<span class="tk-fn">' + esc(l) + "</span>" : esc(l)).join("\n");
 }
 
+/* Bash : commentaires, chaînes, variables, mots-clés, options. */
+const SH = /((?:^|(?<=\s))#[^\n]*)|('[^']*'?|"(?:\\.|[^"\\])*"?)|(\$\{[^}]*\}|\$\(|\$[A-Za-z_]\w*|\$[0-9?#@*$!])|(\b(?:if|then|elif|else|fi|for|in|do|done|while|until|case|esac|function|return|exit|local|export|set|shift|break|continue)\b)|((?<=\s)--?[A-Za-z][\w-]*)/gm;
+const SH_CLS = [null, "com", "str", "pre", "kw", "num"];
+function highlightSh(code) {
+  SH.lastIndex = 0; let out = "", last = 0, m;
+  while ((m = SH.exec(code))) { if (m[0] === "") { SH.lastIndex++; continue; } out += esc(code.slice(last, m.index)); last = SH.lastIndex; const g = m.findIndex((x, i) => i > 0 && x !== undefined); out += '<span class="tk-' + SH_CLS[g] + '">' + esc(m[0]) + "</span>"; }
+  return out + esc(code.slice(last));
+}
+
 export function highlight(code, lang) {
   if (lang === "yaml") return highlightYaml(code);
+  if (lang === "sh") return highlightSh(code);
   if (lang === "log") return highlightLog(code);
   const rx = RX[lang];
   if (!rx) return esc(code);

@@ -17,6 +17,8 @@ import vm from "node:vm";
 import { COURSES, ROADMAPS, INSTALL } from "../public/content/index.js";
 import { runScript, evaluate as evaluateGit } from "../public/assets/js/lib/gitsim.js";
 import { lint as lintWorkflow, evaluate as evaluateWorkflow } from "../public/assets/js/lib/workflow.js";
+import { createShell, evaluate as evaluateShell } from "../public/assets/js/lib/shell/shell.js";
+import { splitCommands, runScriptTests } from "../public/assets/js/lib/shterm.js";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const require = createRequire(import.meta.url);
@@ -102,6 +104,7 @@ for (const c of COURSES) for (const l of c.lessons) {
   if (!l.challenge && !l.theoryOnly) fail(l.id, "ni défi ni theoryOnly");
   const lang = l.lang || c.lang;
   if (l.challenge && lang === "git") for (const k of ["prompt", "setup", "checks", "solution", "hint"]) if (!l.challenge[k]) fail(l.id, "défi Git sans " + k);
+  if (l.challenge && lang === "sh") for (const k of (l.challenge.kind === "script" ? ["prompt", "starter", "solution", "tests", "hint"] : ["prompt", "checks", "solution", "hint"])) if (!l.challenge[k]) fail(l.id, "défi Linux sans " + k);
   if (l.challenge && lang === "yaml") for (const k of ["prompt", "starter", "checks", "solution", "hint"]) if (l.challenge[k] == null) fail(l.id, "défi YAML sans " + k);
   if (l.practice && (!l.practice.title || !l.practice.body)) fail(l.id, "pratique sans titre ou sans contenu");
 }
@@ -123,6 +126,15 @@ for (const c of COURSES) for (const l of c.lessons) {
       const lines = code.split("\n").filter((x) => x.trim() && !x.trim().startsWith("#"));
       const { transcript } = runScript([], lines.map((x) => x.replace(/^!\s*/, "")));
       transcript.forEach((t, k) => { const attendu = !lines[k].startsWith("!"); t.ok === attendu ? ok() : fail(l.id, "extrait Git : « " + t.cmd + " » " + (attendu ? "échoue : " + t.out.split("\n")[0] : "devait échouer")); });
+      continue;
+    }
+    if (lang === "sh") {
+      if (/norun/.test(opts)) continue;
+      const sh = createShell();
+      for (const raw of splitCommands(code)) {
+        const attendu = !raw.startsWith("!"); const r = sh.run(raw.replace(/^!\s*/, ""));
+        (r.code === 0) === attendu ? ok() : fail(l.id, "extrait Linux : « " + raw.split("\n")[0] + " » " + (attendu ? "échoue : " + (r.err || r.out).split("\n")[0] : "devait échouer"));
+      }
       continue;
     }
     if (lang === "yaml") {
@@ -148,6 +160,23 @@ for (const c of COURSES) for (const l of c.lessons) {
   const ch = l.challenge;
   if (!ch) continue;
   const clang = l.lang || c.lang;
+  if (clang === "sh") {
+    try {
+      if (ch.kind === "script") {
+        const sol = runScriptTests(ch, ch.solution).filter((r) => !r.ok);
+        sol.length ? fail(l.id, "la solution échoue : " + sol[0].label + " (" + sol[0].detail + ") → " + JSON.stringify((sol[0].got.out + sol[0].got.err).slice(0, 200))) : ok();
+        runScriptTests(ch, ch.starter).every((r) => r.ok) ? fail(l.id, "le code de départ passe déjà les tests") : ok();
+      } else {
+        const sh = createShell(ch.setup || {});
+        for (const c of ch.solution) { const r = sh.run(c); if (r.code !== 0 && !(ch.allowFail || []).includes(c)) fail(l.id, "solution : « " + c + " » échoue : " + (r.err || r.out).split("\n")[0]); }
+        const fin = evaluateShell(sh, ch.checks).filter((r) => !r.ok);
+        fin.length ? fail(l.id, "la solution ne remplit pas : " + fin.map((r) => r.label).join(" ; ")) : ok();
+        evaluateShell(createShell(ch.setup || {}), ch.checks).every((r) => r.ok) ? fail(l.id, "l'état de départ remplit déjà tous les critères") : ok();
+      }
+    } catch (e) { fail(l.id, String(e.message || e)); }
+    process.stdout.write(".");
+    continue;
+  }
   if (clang === "yaml") {
     try {
       const fin = evaluateWorkflow(ch.solution, ch.checks).filter((r) => !r.ok);

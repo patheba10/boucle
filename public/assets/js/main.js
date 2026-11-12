@@ -11,6 +11,8 @@ import { gitTermHTML, mountGitTerm, runSnippetHTML } from "./lib/gitterm.js";
 import { evaluate as evaluateGit } from "./lib/gitsim.js";
 import { evaluate as evaluateWorkflow } from "./lib/workflow.js";
 import { reportHTML } from "./lib/wfview.js";
+import { shTermHTML, mountShTerm, runShSnippet, runScriptTests } from "./lib/shterm.js";
+import { evaluate as evaluateShell } from "./lib/shell/shell.js";
 
 const toast = (msg) => rawToast(msg, I.bolt);
 function gain(n, msg) { S.xp += n; markDay(); save(); updateStats(); toast("+" + n + " XP · " + msg); }
@@ -40,7 +42,7 @@ function lessonCode(l) {
 }
 
 /* ===================== Théorie (texte + extraits exécutables) ===================== */
-const LANG_LABEL = { py: "python", cpp: "c++", git: "terminal git", bash: "terminal", ps: "powershell", text: "texte", yaml: "yaml", log: "journal", groovy: "jenkinsfile", hcl: "terraform", docker: "dockerfile" };
+const LANG_LABEL = { py: "python", cpp: "c++", git: "terminal git", bash: "terminal", ps: "powershell", text: "texte", yaml: "yaml", sh: "terminal linux", log: "journal", groovy: "jenkinsfile", hcl: "terraform", docker: "dockerfile" };
 function theoryHTML(src, lang, canRun) {
   const parts = src.split(/~~~(\w+)([^\n]*)\n([\s\S]*?)\n~~~/);
   let h = "";
@@ -48,7 +50,7 @@ function theoryHTML(src, lang, canRun) {
     if (parts[i].trim()) h += inl(parts[i]);
     if (i + 3 < parts.length) {
       const l = parts[i + 1], opts = parts[i + 2], code = parts[i + 3];
-      const runnable = canRun && (l === "py" || l === "cpp" || l === "git" || l === "yaml") && !/norun/.test(opts);
+      const runnable = canRun && (l === "py" || l === "cpp" || l === "git" || l === "yaml" || l === "sh") && !/norun/.test(opts);
       const stdin = (/stdin:(.*)$/.exec(opts) || [])[1];
       h += '<div class="snippet" data-lang="' + l + '"' + (stdin ? ' data-stdin="' + esc(stdin.trim()) + '"' : "") + '><div class="snippet-bar"><span class="lbl">' + (LANG_LABEL[l] || l) + (stdin ? " · entrée : " + esc(stdin.trim()) : "") + "</span>" +
         (runnable ? '<button class="run" type="button">' + I.play + (l === "yaml" ? "Analyser" : "Exécuter") + "</button>" : "") + "</div><pre>" + highlight(code, l) + '</pre><textarea hidden>' + esc(code) + "</textarea></div>";
@@ -63,6 +65,7 @@ function bindSnippets(root) {
       const lang = sn.dataset.lang, code = $("textarea", sn).value;
       let res = $(".res", sn); if (!res) { res = document.createElement(lang === "yaml" ? "div" : "pre"); res.className = "res" + (lang === "yaml" ? " wf-res" : ""); sn.appendChild(res); }
       if (lang === "git") { res.innerHTML = runSnippetHTML(code); return; }
+      if (lang === "sh") { res.innerHTML = runShSnippet(code); return; }
       if (lang === "yaml") { mountReport(res, () => code, null); return; }
       b.disabled = true; res.innerHTML = statusHTML(firstLoad(lang));
       try { const r = await run(lang, code, sn.dataset.stdin || "", t => { res.innerHTML = statusHTML(t); }); res.innerHTML = consoleHTML(r, lang); }
@@ -155,30 +158,31 @@ function pageLesson(x) {
   S.last = l.id; save();
   const prev = c.lessons[i - 1], next = c.lessons[i + 1];
   const ch = l.challenge;
-  const code = (S.code[l.id] != null ? S.code[l.id] : (ch ? ch.starter : ""));
+  const term = ch && (lang === "git" || (lang === "sh" && ch.kind !== "script"));
+  const code = (S.code[l.id] != null && !term ? S.code[l.id] : (ch ? ch.starter || "" : ""));
   const file = lang === "py" ? "main.py" : "main.cpp";
   const nQuiz = (l.quiz || []).length;
   let right = "";
-  if (ch && lang === "git") {
+  if (term) {
     right = '<section class="card block" id="defi"><div class="block-h"><span class="n">3</span><h2>Défi</h2><span class="chip' + (st.chDone ? " ok" : " acc") + '">' + (st.chDone ? I.check + "Réussi" : "+" + Math.round(l.xp * 0.6) + " XP") + "</span></div>" +
       '<div class="prose">' + inl(ch.prompt) + "</div>" +
       '<div class="ide gide" style="--c:' + color(c.id) + '"><div class="ide-bar"><span class="file"><i></i>terminal</span>' +
         '<button class="tb" type="button" data-act="hint">' + I.bulb + "Indice</button>" +
         '<button class="tb" type="button" data-act="sol">' + I.eye + "Solution</button>" +
         '<button class="tb" type="button" data-act="reset">' + I.reset + "Recommencer</button></div>" +
-        gitTermHTML("gt-" + l.id) +
+        (lang === "git" ? gitTermHTML("gt-" + l.id) : shTermHTML("st-" + l.id)) +
         '<div class="ide-actions"><button class="btn sm primary" type="button" data-act="check">' + I.check + 'Vérifier</button><span class="kbd">↑ ↓ : commandes précédentes</span></div>' +
       "</div><div data-slot=\"hint\"></div><div data-slot=\"verdict\"></div></section>";
-  } else if (ch && lang === "yaml") {
+  } else if (ch && (lang === "yaml" || lang === "sh")) {
     right = '<section class="card block" id="defi"><div class="block-h"><span class="n">3</span><h2>Défi</h2><span class="chip' + (st.chDone ? " ok" : " acc") + '">' + (st.chDone ? I.check + "Réussi" : "+" + Math.round(l.xp * 0.6) + " XP") + "</span></div>" +
       '<div class="prose">' + inl(ch.prompt) + "</div>" +
-      '<div class="ide" style="--c:' + color(c.id) + '"><div class="ide-bar"><span class="file"><i></i>' + esc(ch.file || ".github/workflows/ci.yml") + "</span>" +
+      '<div class="ide" style="--c:' + color(c.id) + '"><div class="ide-bar"><span class="file"><i></i>' + esc(lang === "sh" ? (ch.file || "script.sh").split("/").pop() : ch.file || ".github/workflows/ci.yml") + "</span>" +
         '<button class="tb" type="button" data-act="hint">' + I.bulb + "Indice</button>" +
         '<button class="tb" type="button" data-act="sol">' + I.eye + "Solution</button>" +
         '<button class="tb" type="button" data-act="reset">' + I.reset + "Réinitialiser</button></div>" +
-        editorHTML("ed-" + l.id, "yaml", code) +
-        '<div class="ide-actions"><button class="btn sm primary" type="button" data-act="check">' + I.check + 'Vérifier</button><span class="kbd">Le pipeline se redessine pendant que tu écris</span></div>' +
-        '<div class="wf-live" aria-live="polite"></div>' +
+        editorHTML("ed-" + l.id, lang, code) +
+        '<div class="ide-actions"><button class="btn sm primary" type="button" data-act="check">' + I.check + (lang === "sh" ? "Tester le script" : "Vérifier") + '</button><span class="kbd">' + (lang === "sh" ? "Le script est lancé avec plusieurs jeux d'arguments" : "Le pipeline se redessine pendant que tu écris") + "</span></div>" +
+        (lang === "yaml" ? '<div class="wf-live" aria-live="polite"></div>' : "") +
       "</div><div data-slot=\"hint\"></div><div data-slot=\"verdict\"></div></section>";
   } else if (ch) {
     right = '<section class="card block" id="defi"><div class="block-h"><span class="n">3</span><h2>Défi</h2><span class="chip' + (st.chDone ? " ok" : " acc") + '">' + (st.chDone ? I.check + "Réussi" : "+" + Math.round(l.xp * 0.6) + " XP") + "</span></div>" +
@@ -236,7 +240,8 @@ function bindLesson(x) {
     }));
   });
   if (!ch) return;
-  if (lang === "git") { bindGitChallenge(x, L); return; }
+  if (lang === "git" || (lang === "sh" && ch.kind !== "script")) { bindTermChallenge(x, L, lang); return; }
+  if (lang === "sh") { bindScriptChallenge(x, L); return; }
   if (lang === "yaml") { bindYamlChallenge(x, L); return; }
   const root = $('[data-ed="ed-' + l.id + '"]'); const cons = $(".console");
   let tSave;
@@ -284,19 +289,18 @@ function bindLesson(x) {
 }
 
 /* Défi Git : on vérifie l'état du dépôt simulé, pas les commandes tapées. */
-function bindGitChallenge(x, L) {
+function bindTermChallenge(x, L, lang) {
   const { l } = x; const ch = l.challenge;
   let saved = [];
   try { saved = S.code[l.id] ? JSON.parse(S.code[l.id]) : []; } catch (e) { saved = []; }
-  const term = mountGitTerm($('[data-gterm="gt-' + l.id + '"]'), {
-    setup: ch.setup || [], history: saved,
-    onCommand: (cmds) => { S.code[l.id] = JSON.stringify(cmds); save(); },
-  });
+  if (!Array.isArray(saved)) saved = [];
+  const opts = { setup: ch.setup || (lang === "git" ? [] : {}), history: saved, onCommand: (cmds) => { S.code[l.id] = JSON.stringify(cmds); save(); } };
+  const term = lang === "git" ? mountGitTerm($('[data-gterm="gt-' + l.id + '"]'), opts) : mountShTerm($('[data-shterm="st-' + l.id + '"]'), opts);
   const slot = $('[data-slot="verdict"]');
   $('[data-act="check"]').addEventListener("click", () => {
-    const res = evaluateGit(term.sim, ch.checks);
+    const res = lang === "git" ? evaluateGit(term.sim, ch.checks) : evaluateShell(term.sh, ch.checks);
     const ok = res.every(r => r.ok);
-    slot.innerHTML = critHTML(res, "Bravo, le dépôt est exactement dans l'état attendu.");
+    slot.innerHTML = critHTML(res, lang === "git" ? "Bravo, le dépôt est exactement dans l'état attendu." : "Bravo, la machine est exactement dans l'état attendu.");
     if (ok && !L.ch) { L.ch = true; gain(Math.round(Math.round(l.xp * 0.6) * (L.sol ? 0.5 : 1)), L.sol ? "défi réussi (solution vue)" : "défi réussi"); refreshSteps(x); }
   });
   $('[data-act="reset"]').addEventListener("click", () => { term.reset(); slot.innerHTML = ""; });
@@ -311,6 +315,28 @@ function bindGitChallenge(x, L) {
       armed = true; solBtn.innerHTML = I.eye + "Confirmer (½ XP)";
       setTimeout(() => { if (armed) { armed = false; solBtn.innerHTML = I.eye + "Solution"; } }, 4000);
     }
+  });
+}
+
+/* Défi de script Bash : écrit dans l'éditeur, lancé avec plusieurs jeux d'arguments. */
+function bindScriptChallenge(x, L) {
+  const { l } = x; const ch = l.challenge; let tSave;
+  const ed = mountEditor($('[data-ed="ed-' + l.id + '"]'), v => { clearTimeout(tSave); tSave = setTimeout(() => { S.code[l.id] = v; save(); }, 300); }, () => doCheck());
+  const slot = $('[data-slot="verdict"]');
+  function doCheck() {
+    const res = runScriptTests(ch, ed.get()); const ok = res.every(r => r.ok);
+    slot.innerHTML = critHTML(res.map(r => ({ ok: r.ok, label: r.label })), "Bravo, ton script passe tous les tests.") +
+      res.filter(r => !r.ok).slice(0, 1).map(r => '<div class="hint-box"><b>Premier test qui échoue :</b> <code>' + esc(r.cmd) + "</code>" + (r.detail ? " (" + esc(r.detail) + ")" : "") + '<pre class="out">' + esc((r.got.out + r.got.err).trim() || "(rien affiché)") + "</pre>" + (r.expected !== undefined ? "Attendu :<pre class=\"out\">" + esc(r.expected.trim()) + "</pre>" : "") + "</div>").join("");
+    if (ok && !L.ch) { L.ch = true; gain(Math.round(Math.round(l.xp * 0.6) * (L.sol ? 0.5 : 1)), L.sol ? "défi réussi (solution vue)" : "défi réussi"); refreshSteps(x); }
+    else if (!ok) { L.fails = (L.fails || 0) + 1; save(); }
+  }
+  $('[data-act="check"]').addEventListener("click", doCheck);
+  $('[data-act="reset"]').addEventListener("click", () => { ed.set(ch.starter); delete S.code[l.id]; save(); slot.innerHTML = ""; });
+  $('[data-act="hint"]').addEventListener("click", () => { $('[data-slot="hint"]').innerHTML = '<div class="hint-box"><b>Indice.</b> ' + inl(esc(ch.hint)) + "</div>"; });
+  const solBtn = $('[data-act="sol"]'); let armed = false;
+  solBtn.addEventListener("click", () => {
+    if (L.ch || L.sol || armed) { if (!L.ch && !L.sol) { L.sol = true; save(); } ed.set(ch.solution); armed = false; solBtn.innerHTML = I.eye + "Solution"; $('[data-slot="hint"]').innerHTML = '<div class="hint-box"><b>Solution chargée.</b> Lis-la ligne par ligne, puis clique sur Tester.' + (L.ch ? "" : " Le défi rapportera la moitié des XP.") + "</div>"; }
+    else { armed = true; solBtn.innerHTML = I.eye + "Confirmer (½ XP)"; setTimeout(() => { if (armed) { armed = false; solBtn.innerHTML = I.eye + "Solution"; } }, 4000); }
   });
 }
 
