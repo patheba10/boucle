@@ -19,3 +19,18 @@
 
 - 16 leçons (ci-07 à ci-22), 14 défis YAML vérifiés et simulés, une leçon de questions d'entretien avec 10 réponses modèles.
 - Le cours CI/CD est complet : 22 leçons en 12 chapitres.
+
+## Rétrospective
+
+**Ce qui a marché**
+- Étendre le moteur avant d'écrire : neuf critères ajoutés en une fois, puis 14 défis passés au validateur, presque tous du premier coup.
+- Le moteur a trouvé un vrai bug dans un exemple du cours : `echo "PR : $TITRE"` sans bloc `|` est un YAML invalide, à cause du « : » suivi d'un espace. C'est devenu un exemple de plus pour le chapitre YAML.
+- Le moteur vérifie maintenant la vraie CI de Boucle à chaque exécution des tests unitaires.
+
+**Ce qui a coincé**
+- Les étapes nommées (`name:`) ne se reconnaissaient plus par leur action dans les scénarios : corrigé, une étape se repère par son nom, son action ou sa commande.
+- Sur mobile, les titres longs des leçons CI/CD faisaient déborder le pied de page. Le test e2e ne parcourait pas ces pages : elles sont ajoutées à la liste.
+
+**On change**
+- Ajouter systématiquement au test des pages au moins une leçon de chaque nouveau chapitre.
+- Relire les PR de Dependabot à leur arrivée : ce sont les premières montées de version de la CI.
