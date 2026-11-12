@@ -15,12 +15,13 @@
 ## Journal
 
 - 12 nov. : 11 leçons, 10 défis. Trois codes de départ quadratiques rendaient la validation trop lente : remplacés par des codes de départ qui échouent vite (règle notée au sprint 9.1). Cinq sorties attendues écrites de tête étaient fausses (par exemple « kubernetes » a 6 lettres distinctes de suite, pas 5) : recalculées par script. Les dix défis passent dans Pyodide en moins de 1,5 s chacun. 1 078 vérifications.
+- 12 nov. : PR #100, les trois jobs verts. Fusionnée ; version 0.27.0.
 
 ## Revue de sprint
 
 | Story | Points | Livré |
 |-------|--------|-------|
-| #95 Patterns d'algorithmes | 8 | Oui |
+| #95 Patterns d'algorithmes | 8 | Oui (PR #100) |
 
 Vélocité : 8 points sur 8. Version 0.27.0.
 
