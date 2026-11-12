@@ -313,6 +313,8 @@ pre.out { margin: 0; padding: 12px 14px; background: var(--surface-2); border-ra
 .case .inp { grid-column: 1 / -1; }
 
 .lesson-nav { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.lesson-nav .btn { white-space: normal; max-width: 100%; min-width: 0; line-height: 1.3; }
+.lesson-nav .btn svg { flex: none; }
 
 /* ---------- Roadmaps ---------- */
 .rm-hero { display: flex; flex-direction: column; gap: 12px; padding: 26px; border-top: 5px solid var(--c); }
@@ -499,3 +501,17 @@ details.setup > .prose { padding: 0 22px 20px; }
 .wf-steps li.success span { color: var(--tk-str); }
 .wf-steps li.failure { color: #FF8F87; }
 .wf-steps li.skipped { color: var(--code-dim); text-decoration: line-through; }
+
+.tk-err { color: #FF8F87; }
+
+/* Tableaux de la théorie, journaux dans un énoncé, questions-réponses */
+.table-wrap { overflow-x: auto; max-width: 100%; margin: 12px 0; }
+.table-wrap table { border-collapse: collapse; font-size: 13.5px; min-width: 560px; }
+.table-wrap th, .table-wrap td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.table-wrap th { font-family: var(--f-display); font-size: 12.5px; color: var(--muted); }
+.log-inline { background: var(--code-bg); color: var(--code-fg); font-family: var(--f-mono); font-size: 12px; line-height: 1.5; padding: 10px 12px; border-radius: 8px; overflow-x: auto; white-space: pre; max-width: 100%; }
+.qa { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+.qa details { border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; background: var(--surface); }
+.qa summary { cursor: pointer; font-weight: 600; line-height: 1.4; }
+.qa details[open] summary { margin-bottom: 8px; }
+.qa details p { margin: 0; }

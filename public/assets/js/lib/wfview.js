@@ -47,7 +47,7 @@ export function pipelineSVG(p) {
       '<rect x="' + x + '" y="' + y + '" width="' + W + '" height="' + H + '" rx="9"/>' +
       '<text class="ic" x="' + (x + 14) + '" y="' + (y + 28) + '">' + ICON[j.status] + "</text>" +
       '<text class="nm" x="' + (x + 30) + '" y="' + (y + 20) + '">' + esc(label) + "</text>" +
-      '<text class="st" x="' + (x + 30) + '" y="' + (y + 36) + '">' + FR[j.status] + (j.matrix > 1 && j.status !== "off" ? " · ×" + j.matrix : "") + "</text></g>";
+      '<text class="st" x="' + (x + 30) + '" y="' + (y + 36) + '">' + FR[j.status] + (j.matrix > 1 && j.status !== "off" ? " · ×" + j.matrix : "") + (j.environment ? " · " + esc(j.environment.length > 10 ? j.environment.slice(0, 9) + "…" : j.environment) : "") + "</text></g>";
   }
   return '<svg class="wf-graph" viewBox="0 0 ' + width + " " + height + '" width="' + width + '" height="' + height + '" role="img" aria-label="Graphe des jobs"><defs><marker id="wf-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 8 4 0 8z"/></marker></defs>' + edges + nodes + "</svg>";
 }

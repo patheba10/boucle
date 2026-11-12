@@ -40,7 +40,7 @@ function lessonCode(l) {
 }
 
 /* ===================== Théorie (texte + extraits exécutables) ===================== */
-const LANG_LABEL = { py: "python", cpp: "c++", git: "terminal git", bash: "terminal", ps: "powershell", text: "texte", yaml: "yaml" };
+const LANG_LABEL = { py: "python", cpp: "c++", git: "terminal git", bash: "terminal", ps: "powershell", text: "texte", yaml: "yaml", log: "journal", groovy: "jenkinsfile", hcl: "terraform", docker: "dockerfile" };
 function theoryHTML(src, lang, canRun) {
   const parts = src.split(/~~~(\w+)([^\n]*)\n([\s\S]*?)\n~~~/);
   let h = "";

@@ -216,3 +216,61 @@ test("locate retrouve la ligne d'un chemin", () => {
   assert.equal(locate(CI, ["jobs", "deploy", "if"]), 32);
   assert.equal(locate(CI, ["on", "pull_request"]), 6);
 });
+
+test("la CI de Boucle passe notre propre lint (actions épinglées sur un SHA)", () => {
+  const t = readFileSync(new URL("../../.github/workflows/ci.yml", import.meta.url), "utf8");
+  assert.deepEqual(lint(t).issues, []);
+  assert.deepEqual(evaluate(t, { pinned: "sha", maxPermissions: { contents: "read", pages: "write", "id-token": "write" } }).filter((r) => !r.ok), []);
+});
+
+test("critères : services, environnement, cache, matrice, concurrence, entrées, texte", () => {
+  const t = `on:
+  push:
+  workflow_dispatch:
+    inputs:
+      version: {required: true}
+jobs:
+  tests:
+    runs-on: \${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ["3.13", "3.14"]
+        exclude:
+          - os: windows-latest
+            python: "3.13"
+    services:
+      postgres:
+        image: postgres:17
+    steps:
+      - uses: actions/setup-python@v7
+        with:
+          python-version: \${{ matrix.python }}
+          cache: pip
+  deploy:
+    needs: tests
+    environment: {name: production, url: https://exemple.ca}
+    concurrency: {group: prod, cancel-in-progress: false}
+    runs-on: ubuntu-latest
+    steps: [{run: "./deploy.sh \${{ inputs.version }}"}]
+`;
+  const res = evaluate(t, { services: { tests: ["postgres"] }, environment: { deploy: "production" }, cache: { tests: "pip" }, matrixSize: { tests: 3 }, failFast: { tests: false }, jobConcurrency: { deploy: { cancel: false } }, dispatchInputs: ["version"], contains: ["postgres:17"], lacks: ["AWS_SECRET_ACCESS_KEY"] });
+  assert.deepEqual(res.filter((r) => !r.ok), []);
+  const p = plan(lint(t).doc, { name: "push", branch: "main" });
+  assert.equal(p.jobs.find((j) => j.id === "deploy").environment, "production");
+});
+
+test("pull_request_target qui exécute le code de la PR : avertissement", () => {
+  const t = `on: pull_request_target
+jobs:
+  t:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: \${{ github.event.pull_request.head.sha }}
+      - run: npm test
+`;
+  assert.ok(lint(t).issues.some((i) => i.level === "warn" && /pwn request/.test(i.msg) && i.line === 8));
+});

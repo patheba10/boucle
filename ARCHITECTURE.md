@@ -114,7 +114,7 @@ La CI GitHub Actions lance cette validation à chaque push, puis publie `public/
 | Niveau | Outil | Ce qui est vérifié |
 |--------|-------|--------------------|
 | Simulateur Git | `npm run test:unit` (node:test) | 16 scénarios : commits, .gitignore, diff, branches, fusions et conflits, rebase interrompu, reset, revert, stash, cherry-pick, tags, push rejeté puis pull |
-| Moteur des workflows | `npm run test:unit` (node:test) | 14 tests : erreurs YAML traduites, lint, expressions, filtres de branches et de chemins, simulation (PR, push, tag, échec en cascade, étape `if: failure()`), critères, numéros de ligne |
+| Moteur des workflows | `npm run test:unit` (node:test) | 17 tests, dont un qui passe la vraie CI de Boucle au lint : erreurs YAML traduites, lint, expressions, filtres de branches et de chemins, simulation (PR, push, tag, échec en cascade, étape `if: failure()`), critères, numéros de ligne |
 | Contenu | `npm run validate` | Chaque extrait, chaque solution (doit passer) et chaque code de départ (doit échouer), avec CPython, g++ et JSCPP |
 | Bout en bout | `npm run test:e2e` (pytest + Playwright) | Accueil, pages principales sans erreur JS, chaque solution de défi dans le vrai navigateur, jeux de données, boucle infinie, NumPy + figure, terminal Git, défi et extrait YAML, absence de débordement sur mobile |
 
