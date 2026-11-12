@@ -1,0 +1,25 @@
+# Sprint 5.1
+
+**Objectif** : Terraform dans le terminal, sur un compte AWS simulé, puis le cours Terraform.
+
+| Story | Points | Statut |
+|-------|--------|--------|
+| #52 US-5.0 Terraform et compte AWS simulés (enabler) | 8 | En cours |
+| #53 US-5a Cours Terraform | 8 | À faire |
+
+**Capacité** : 16 points. Le sprint court sur plusieurs sessions : le journal ci-dessous dit où reprendre.
+
+## Conception
+
+- `lib/aws/account.js` : un compte AWS simulé (id `123456789012`, région `ca-central-1`), un magasin de ressources par type (VPC, sous-réseaux, security groups, instances EC2, buckets S3, rôles et politiques IAM, tables DynamoDB, bases RDS) avec identifiants (`vpc-0a1b…`), ARN et attributs calculés. Il sera partagé avec la CLI `aws` au sprint 5.2.
+- `lib/terraform/hcl.js` : analyseur HCL (blocs, attributs, listes, objets, chaînes avec interpolation `${…}` et heredoc, références `var.`, `local.`, `resource.nom.attr`, `module.`, `data.`, `count.index`, `each.key`), fonctions courantes (`length`, `join`, `format`, `lookup`, `merge`, `cidrsubnet`, `tolist`, `toset`, `upper`, `lower`).
+- `lib/terraform/terraform.js` : `init` (providers, backend), `fmt` (`-check`), `validate`, `plan` (graphe de dépendances, `+`, `~`, `-/+`, `-`, valeurs « known after apply »), `apply`, `destroy`, `output`, `state list|show|rm`, `import`, `-var`, `-var-file`, `terraform.tfvars`, `count` et `for_each`, modules locaux, backend `s3` avec verrou DynamoDB. Schémas des ressources aws : arguments requis et inconnus, types, attributs calculés, arguments qui forcent le remplacement. Sorties au format de Terraform 1.9 (sans couleurs).
+- Critères : ressources présentes dans le compte et dans l'état, plan vide après apply (pas de dérive), outputs.
+
+## Journal
+
+- 12 nov. : milestone « Étape 5 — Cloud » (#52 à #56) et branche `us-5.0/terraform` créées, conception ci-dessus. Prochaine étape : `lib/terraform/hcl.js` et ses tests.
+- 12 nov. : `lib/terraform/hcl.js` écrit et essayé (blocs, expressions, interpolation, for, fonctions, erreurs au format Terraform). Prochaine étape : `lib/aws/account.js` et `lib/terraform/terraform.js`.
+- 12 nov. : `lib/aws/account.js` écrit (compte simulé, schémas des ressources Terraform, vérifications d'API). Prochaine étape : `lib/terraform/terraform.js` (init, validate, plan, apply, destroy, output, state, fmt).
+- 12 nov. : `lib/terraform/terraform.js` écrit et branché (init, validate, fmt, plan, apply, destroy, output, state, import, force-unlock, backend s3 avec verrou, dérive). Premier scénario OK : VPC + sous-réseaux avec count, apply, plan vide, destroy dans l'ordre. Prochaine étape : tests unitaires `tests/unit/terraform.test.mjs`, puis PR #52.
+- 12 nov. : 5 tests unitaires Terraform verts (73 en tout), documentation. PR #52 ensuite, puis le cours Terraform (#53).
