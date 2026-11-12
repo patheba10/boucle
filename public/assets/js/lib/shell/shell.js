@@ -726,6 +726,7 @@ export function createShell(setup = {}) {
     sh.user = save;
     if (r.code !== 0 && !setup.allowFail) throw new Error("mise en place invalide : « " + line + " » → " + (r.err || r.out).trim());
   }
+  for (const h of SETUP_HOOKS) if (h.after) h.after(sh, setup);
   if (setup.cwd) sh.cwd = sh.abs(setup.cwd);
   sh.lastOut = ""; sh.lastCode = 0; sh.status = 0;
   return sh;

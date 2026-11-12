@@ -537,7 +537,7 @@ export class Docker {
     }
     for (const v of spec.env || []) if (!(v in c.env) || c.env[v] === "") {
       if (lang === "node") return exit(1, "Error: la variable d'environnement " + v + " est obligatoire", "    at Object.<anonymous> (" + file + ":3:9)", "", "Node.js v20.18.1");
-      return exit(1, "Traceback (most recent call last):", '  File "' + file + '", line ' + (spec.envLine || 5) + ", in <module>", '    ' + v.toLowerCase() + ' = os.environ["' + v + '"]', "                 ~~~~~~~~~~^^^^^^^^^^^^", "KeyError: '" + v + "'");
+      return exit(1, "Traceback (most recent call last):", '  File "' + file + '", line ' + ((spec.envLine && typeof spec.envLine === "object" ? spec.envLine[v] : spec.envLine) || 5) + ", in <module>", '    ' + v.toLowerCase() + ' = os.environ["' + v + '"]', "                 ~~~~~~~~~~^^^^^^^^^^^^", "KeyError: '" + v + "'");
     }
     if (spec.writes) {
       const u = (c.user || "root").split(":")[0];

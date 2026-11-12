@@ -6,9 +6,10 @@ import git from "./courses/git.js";
 import cicd from "./courses/cicd.js";
 import linux from "./courses/linux.js";
 import docker from "./courses/docker.js";
+import kubernetes from "./courses/kubernetes.js";
 import roadmaps from "./roadmaps.js";
 import installer from "./guides/installer.js";
 
-export const COURSES = [python, data, git, cicd, linux, docker, cpp];
+export const COURSES = [python, data, git, cicd, linux, docker, kubernetes, cpp];
 export const ROADMAPS = roadmaps;
 export const INSTALL = installer;

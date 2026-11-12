@@ -28,7 +28,7 @@ export function podStatus(cl, p) {
   if (cs && cs.state.terminated) return cs.state.terminated.reason;
   return st.phase || "Pending";
 }
-function restarts(cl, p) { const cs = ((p.status || {}).containerStatuses || [])[0]; if (!cs || !cs.restartCount) return "0"; return cs.restartCount + " (" + Math.min(cl.t - (cs.lastState ? cs.lastState.terminated.finishedAt : cl.t) + 12, 59) + "s ago)"; }
+function restarts(cl, p) { const cs = ((p.status || {}).containerStatuses || [])[0]; if (!cs || !cs.restartCount) return "0"; return cs.restartCount + " (" + Math.max(1, Math.min(cl.t - p.metadata.creationTimestamp - 2, cl.t - (cs.lastState ? cs.lastState.terminated.finishedAt : cl.t) + 3)) + "s ago)"; }
 
 /* ===================== analyse des arguments ===================== */
 function parseArgs(args) {
@@ -42,7 +42,7 @@ function parseArgs(args) {
     else if (k === "-l" || k === "--selector") o.l = val();
     else if (k === "-o" || k === "--output") o.o = val();
     else if (/^-o\S/.test(k)) o.o = k.slice(2);
-    else if (k === "-f" || k === "--filename") o.f.push(val());
+    else if (k === "-f" || k === "--filename") { if (args[i + 1] === undefined || args[i + 1].startsWith("-")) o.follow = true; else o.f.push(val()); }
     else if (k === "-A" || k === "--all-namespaces") o.A = true;
     else if (k === "-w" || k === "--watch") o.w = true;
     else if (k === "--previous" || k === "-p") o.previous = true;
@@ -279,12 +279,13 @@ function run(sh, cl, args, io) {
       io.out(items.map((x) => describe(cl, kind, x)).join("\n\n\n")); return 0;
     }
     case "logs": {
-      let [ref] = o._; if (!ref) throw new K8sErr("error: expected 'logs [-f] [-p] (POD | TYPE/NAME) [-c CONTAINER]'.");
+      let [ref] = o._; if (!ref && !o.l) throw new K8sErr("error: expected 'logs [-f] [-p] (POD | TYPE/NAME) [-c CONTAINER]'.");
       let pod;
-      if (ref.includes("/")) { const [w, n] = ref.split("/"); const kind = kindOf(w); const obj = must(cl, kind, n, ns); const sel = kind === "Deployment" ? obj.spec.selector.matchLabels : kind === "Service" ? obj.spec.selector : null; pod = kind === "Pod" ? obj : cl.list("Pod", ns).filter((p) => matches(sel, p.metadata.labels)).sort((a, b) => cl.podReady(b) - cl.podReady(a))[0]; if (!pod) throw new K8sErr("error: timed out waiting for the condition"); if (kind !== "Pod") io.err("Found " + cl.list("Pod", ns).filter((p) => matches(sel, p.metadata.labels)).length + " pods, using pod/" + pod.metadata.name + "\n"); }
-      else if (o.l) { const pods = cl.list("Pod", ns).filter((p) => selectorMatch(o.l, p.metadata.labels)); for (const p of pods) { const c = cl.rt.container(cl.ctrName(p), { must: false }); if (c) io.out(c.logs.join("\n") + (c.logs.length ? "\n" : "")); } return 0; }
-      else pod = must(cl, "Pod", ref, ns);
-      if (o.f) io.err("(logs -f suit le journal en continu ; ici, la commande affiche ce qui est déjà écrit.)\n");
+      if (!ref) { /* sélection par labels, plus bas */ }
+      else if (ref.includes("/")) { const [w, n] = ref.split("/"); const kind = kindOf(w); const obj = must(cl, kind, n, ns); const sel = kind === "Deployment" ? obj.spec.selector.matchLabels : kind === "Service" ? obj.spec.selector : null; pod = kind === "Pod" ? obj : cl.list("Pod", ns).filter((p) => matches(sel, p.metadata.labels)).sort((a, b) => cl.podReady(b) - cl.podReady(a))[0]; if (!pod) throw new K8sErr("error: timed out waiting for the condition"); if (kind !== "Pod") io.err("Found " + cl.list("Pod", ns).filter((p) => matches(sel, p.metadata.labels)).length + " pods, using pod/" + pod.metadata.name + "\n"); }
+      if (!ref && o.l) { const pods = cl.list("Pod", ns).filter((p) => selectorMatch(o.l, p.metadata.labels)); for (const p of pods) { const cs0 = ((p.status || {}).containerStatuses || [])[0]; const c = cl.rt.container(cl.ctrName(p), { must: false }); const lines = o.previous ? (cs0 && cs0.prevLogs) || [] : c ? c.logs : []; if (lines.length) io.out(lines.join("\n") + "\n"); } return 0; }
+      if (!pod) pod = must(cl, "Pod", ref, ns);
+      if (o.f.length || o.follow) io.err("(logs -f suit le journal en continu ; ici, la commande affiche ce qui est déjà écrit.)\n");
       const cs = ((pod.status || {}).containerStatuses || [])[0]; const c = cl.rt.container(cl.ctrName(pod), { must: false });
       if (o.previous) { if (!cs || !cs.prevLogs) throw new K8sErr('Error from server (BadRequest): previous terminated container "' + pod.spec.containers[0].name + '" in pod "' + pod.metadata.name + '" not found'); io.out(cs.prevLogs.join("\n") + "\n"); return 0; }
       if (!c || !cs || (cs.state.waiting && !cs.prevLogs)) throw new K8sErr('Error from server (BadRequest): container "' + pod.spec.containers[0].name + '" in pod "' + pod.metadata.name + '" is waiting to start: ' + (cs && /ImagePull/.test(cs.state.waiting.reason) ? "trying and failing to pull image" : cs && cs.state.waiting.reason === "CreateContainerConfigError" ? "CreateContainerConfigError" : "ContainerCreating"));
@@ -399,7 +400,21 @@ function run(sh, cl, args, io) {
       const allowed = cl.list("RoleBinding", o.n || sns).some((b) => (b.subjects || []).some((s) => s.name === sa) && cl.list("Role", o.n || sns).some((r) => r.metadata.name === b.roleRef.name && (r.rules || []).some((rule) => (rule.verbs || []).some((v) => v === vb || v === "*") && (rule.resources || []).some((x) => x === kindOf(res) && false || KINDS[kindOf(res)] && x === KINDS[kindOf(res)].plural || x === "*"))));
       io.out(allowed ? "yes\n" : "no\n"); return allowed ? 0 : 1;
     }
-    case "top": io.err("error: Metrics API not available\n(metrics-server n'est pas installé sur ce cluster simulé.)\n"); return 1;
+    case "top": {
+      // metrics-server est installé : consommation simulée, stable, proportionnelle aux requests.
+      if (o._[0] === "nodes" || o._[0] === "node" || o._[0] === "no") { io.out(table([["NAME", "CPU(cores)", "CPU(%)", "MEMORY(bytes)", "MEMORY(%)"], [cl.node.name, "312m", "15%", "1530Mi", "38%"]])); return 0; }
+      const pods = cl.list("Pod", o.A ? null : ns).filter((p) => cl.podReady(p) && selectorMatch(o.l, p.metadata.labels));
+      if (!pods.length) { io.err("No resources found in " + ns + " namespace.\n"); return 0; }
+      const load = (p) => { const h = cl.list("HorizontalPodAutoscaler", p.metadata.namespace).find((x) => matches({ app: x.spec.scaleTargetRef.name }, p.metadata.labels)); return h && h.metadata.annotations && h.metadata.annotations["boucle/cpu"] ? +h.metadata.annotations["boucle/cpu"] : 30; };
+      io.out(table([["NAME", "CPU(cores)", "MEMORY(bytes)"], ...pods.map((p) => [p.metadata.name, Math.max(1, Math.round((cl.requests(p.spec).cpu || 10) * load(p) / 100)) + "m", (40 + parseInt(p.metadata.uid.slice(0, 2), 16) % 30) + "Mi"])])); return 0;
+    }
+    case "autoscale": {
+      const { kinds, names } = target(o, cl, false); const d = must(cl, kinds[0], names[0], ns);
+      if (!o.max || o.max === true) throw new K8sErr("error: --max=MAXPODS is required and must be at least 1, max replicas must be >= min replicas");
+      const h = { apiVersion: "autoscaling/v2", kind: "HorizontalPodAutoscaler", metadata: { name: names[0], namespace: ns }, spec: { scaleTargetRef: { apiVersion: "apps/v1", kind: "Deployment", name: names[0] }, minReplicas: +(o.min || 1), maxReplicas: +o.max, metrics: [{ type: "Resource", resource: { name: "cpu", target: { type: "Utilization", averageUtilization: +(o["cpu-percent"] || 80) } } }] } };
+      if (cl.get("HorizontalPodAutoscaler", names[0], ns)) throw new K8sErr('Error from server (AlreadyExists): horizontalpodautoscalers.autoscaling "' + names[0] + '" already exists');
+      cl.put(h); cl.reconcile(); io.out("horizontalpodautoscaler.autoscaling/" + names[0] + " autoscaled\n"); return 0;
+    }
     case "edit": io.err("(kubectl edit ouvre un éditeur : non simulé ici. Modifie le fichier YAML puis kubectl apply -f, ou utilise kubectl set / kubectl scale.)\n"); return 1;
     case "explain": io.err("(kubectl explain n'est pas simulé : la référence des champs est sur kubernetes.io/docs/reference.)\n"); return 1;
     default: throw new K8sErr('error: unknown command "' + verb + '" for "kubectl"\n\nDid you mean this?\n\tget\n\tapply\n\tdescribe');
@@ -442,20 +457,42 @@ COMMANDS.kind = (sh, args, io) => {
 HTTP_HOOKS.push((sh, host, port, path, ip) => {
   const cl = sh.k8s; if (!cl || ip !== "127.0.0.1") return null;
   cl.reconcile();
-  const f = cl.forwards.find((x) => x.lp === port); if (!f) return null;
+  const f = cl.forwards.find((x) => x.lp === port);
+  if (!f && port === 80 && cl.ingress) {
+    // Contrôleur ingress-nginx de kind, publié sur le port 80 de la machine.
+    for (const ing of cl.list("Ingress", null)) for (const rule of ing.spec.rules || []) {
+      if (rule.host && rule.host !== host) continue;
+      for (const p of ((rule.http || {}).paths || [])) {
+        const ok = p.pathType === "Exact" ? path === p.path : path === p.path || path.startsWith(p.path.replace(/\/$/, "") + "/") || p.path === "/";
+        if (!ok) continue;
+        const b = (p.backend || {}).service || {}; const s = cl.get("Service", b.name, ing.metadata.namespace);
+        if (!s) return { status: 503, type: "text/html", body: "<html>\r\n<head><title>503 Service Temporarily Unavailable</title></head>\r\n<body>\r\n<center><h1>503 Service Temporarily Unavailable</h1></center>\r\n<hr><center>nginx</center>\r\n</body>\r\n</html>\r\n", server: "nginx" };
+        const r = cl.svcHttp(s, (b.port || {}).number, path);
+        return r.error ? { status: 503, type: "text/html", body: "<html>\r\n<head><title>503 Service Temporarily Unavailable</title></head>\r\n<body>\r\n<center><h1>503 Service Temporarily Unavailable</h1></center>\r\n<hr><center>nginx</center>\r\n</body>\r\n</html>\r\n", server: "nginx" } : r;
+      }
+    }
+    return { status: 404, type: "text/html", body: "<html>\r\n<head><title>404 Not Found</title></head>\r\n<body>\r\n<center><h1>404 Not Found</h1></center>\r\n<hr><center>nginx</center>\r\n</body>\r\n</html>\r\n", server: "nginx" };
+  }
+  if (!f) return null;
   const pod = cl.get("Pod", f.pod, f.ns);
   if (!pod) return { error: [52, "Empty reply from server"] };
   const c = cl.rt.container(cl.ctrName(pod), { must: false });
   if (!c || !c.listen || c.listen.port !== f.cport || c.listen.host === "127.0.0.1") return { error: [52, "Empty reply from server"] };
   return cl.rt.http(c, f.cport, path);
 });
-SETUP_HOOKS.push((sh, setup) => {
+const k8sHook = (sh, setup) => {
   if (!setup.k8s) return;
   sh.k8s = new Cluster(sh, setup.k8s);
   sh.fs.mkdir(sh.home() + "/.kube", "eleve", { parents: true });
   sh.fs.write(sh.home() + "/.kube/config", "apiVersion: v1\nkind: Config\ncurrent-context: kind-boucle\n", "eleve");
-  for (const [p, text] of Object.entries(setup.k8s.apply || {})) { for (const d of sh.k8s.parse(text, p)) sh.k8s.put(d); sh.k8s.reconcile(); sh.k8s.tick(30); sh.k8s.reconcile(); }
-});
+};
+// Les objets de départ sont créés après les commandes de mise en place (images construites et poussées).
+k8sHook.after = (sh, setup) => {
+  if (!setup.k8s) return;
+  for (const text of [].concat(setup.k8s.apply || [])) { for (const d of sh.k8s.parse(text, "setup.yaml")) sh.k8s.put(d); sh.k8s.reconcile(); sh.k8s.tick(30); sh.k8s.reconcile(); }
+  sh.k8s.tick(60);
+};
+SETUP_HOOKS.push(k8sHook);
 
 /* ----- critères ----- */
 EXTRA_CHECKS.k8s = (sh, v, push) => {
