@@ -2,6 +2,7 @@
 import { COURSES, ROADMAPS, INSTALL, CERTS, PROJETS, GROUPES } from "../../content/index.js";
 import { pageCerts, pageCert, bindCert } from "./lib/examview.js";
 import { pageProjets, pageProjet, bindProjet, projetsDeRoadmap } from "./lib/projets.js";
+import { rater, reussir, aReviser, prochaine, cle as cleRev, decoder } from "./lib/revision.js";
 import { I } from "./lib/icons.js";
 import { esc, $, $$, inl, norm, color, today, toast as rawToast } from "./lib/util.js";
 import { S, save, resetAll, markDay, streak, level, ls, XP_PER_LEVEL } from "./lib/state.js";
@@ -117,6 +118,35 @@ function pageCours() {
   return '<div class="crumbs"><a href="#home">Accueil</a><span>/</span><span>Cours</span></div>' +
     '<section style="display:flex;flex-direction:column;gap:10px"><h1 style="font-size:clamp(30px,4vw,42px);font-weight:800">Cours</h1><p class="lead">' + COURSES.length + " cours, " + ALL.length + " leçons, regroupés par domaine. " + fait + " leçons terminées.</p></section>" + groupesHTML();
 }
+/* ----- Révision espacée (audit #3) ----- */
+function revisionCarte() {
+  const rev = S.revision || {}; const n = aReviser(rev, today()).length; const p = prochaine(rev, today());
+  if (!n && !p) return "";
+  return '<section class="card daily" data-revision-carte><div class="daily-ic">' + I.reset + '</div><div class="daily-txt"><b>Révisions</b><p>' +
+    (n ? n + " question" + (n > 1 ? "s" : "") + " de quiz à revoir aujourd'hui." : "Rien à revoir aujourd'hui. Prochaine révision le " + p.split("-").reverse().join("/") + ".") +
+    "</p></div>" + (n ? '<a class="btn primary" href="#revision">Réviser</a>' : "") + "</section>";
+}
+function pageRevision() {
+  const rev = S.revision; const dues = aReviser(rev, today()).filter(k => byId(decoder(k).lessonId));
+  const tete = '<div class="crumbs"><a href="#home">Accueil</a><span>/</span><span>Révisions</span></div><section style="display:flex;flex-direction:column;gap:10px"><h1 style="font-size:clamp(30px,4vw,42px);font-weight:800">Révisions</h1><p class="lead">Les questions de quiz que tu as ratées reviennent après 1, 3 puis 7 jours. Trois bonnes réponses de suite, et elles sortent de la liste ; une erreur, et elles recommencent.</p></section>';
+  if (!dues.length) { const p = prochaine(rev, today()); return tete + '<section class="card block"><p data-revision-fin>' + (p ? "C'est tout pour aujourd'hui. Prochaine révision le " + p.split("-").reverse().join("/") + "." : "Aucune question à réviser. Les questions ratées dans les quiz apparaîtront ici.") + '</p><div class="row"><a class="btn" href="#home">Retour à l\'accueil</a></div></section>'; }
+  const k = dues[0]; const { lessonId, qi } = decoder(k); const x = byId(lessonId); const q = x.l.quiz[qi];
+  return tete + '<section class="card block"><div class="block-h"><span class="n">' + dues.length + '</span><h2>' + esc(x.c.name) + " · " + esc(x.l.title) + '</h2></div><div class="quiz" data-rev="' + esc(k) + '"><p class="quiz-q">' + inl(q.q) + '</p><div class="opts">' +
+    q.options.map((o, oi) => '<button type="button" class="opt" data-oi="' + oi + '"><span class="l">' + "ABCD"[oi] + "</span><span>" + esc(o) + "</span></button>").join("") + '</div><div data-slot="suite"></div></div><p><a class="int" href="#' + lessonId + '">Revoir la leçon</a></p></section>';
+}
+function bindRevision() {
+  const qd = $("[data-rev]"); if (!qd) return;
+  const k = qd.dataset.rev; const { lessonId, qi } = decoder(k); const q = byId(lessonId).l.quiz[qi];
+  $$(".opt", qd).forEach(b => b.addEventListener("click", () => {
+    const ok = +b.dataset.oi === q.answer;
+    $$(".opt", qd).forEach(o => { o.disabled = true; if (+o.dataset.oi === q.answer) o.classList.add("right"); });
+    if (!ok) b.classList.add("wrong");
+    const e = ok ? reussir(S.revision, k, today()) : rater(S.revision, k, today());
+    markDay(); save(); updateStats();
+    $("[data-slot=suite]", qd).innerHTML = '<p class="explain' + (ok ? "" : " no") + '"><b>' + (ok ? "Exact." : "Non.") + "</b> " + esc(q.explain) + " " + (ok ? (e ? "Prochaine révision le " + e.due.split("-").reverse().join("/") + "." : "Question maîtrisée : elle quitte tes révisions.") : "Elle revient demain.") + '</p><div class="row"><button class="btn primary" type="button" data-rev-suivante>Question suivante</button></div>';
+    $("[data-rev-suivante]").addEventListener("click", () => { render(); window.scrollTo(0, 0); });
+  }));
+}
 function pageHome() {
   const lv = level(), inLv = S.xp % XP_PER_LEVEL;
   const doneL = ALL.filter(x => lessonState(x.l).done).length;
@@ -137,6 +167,7 @@ function pageHome() {
       '<div class="level-num">' + lv + '</div><div class="bar"><i style="width:' + Math.round(100 * inLv / 150) + '%"></i></div>' +
       '<div class="kv"><div><b>' + S.xp + "</b><span>XP au total</span></div><div><b>" + streak() + "</b><span>jours de série</span></div><div><b>" + doneL + "/" + ALL.length + "</b><span>leçons finies</span></div></div>" +
     "</div></section>" +
+    revisionCarte() +
     '<section class="card daily"><div class="daily-ic">' + I.target + '</div><div class="daily-txt"><b>Défi du jour</b><p>' + name + " · " + esc(dp.l.title) + (dDone ? " · déjà réussi, bravo." : " · un défi tiré au sort chaque jour.") + '</p></div><a class="btn ' + (dDone ? "" : "primary") + '" href="#' + dp.l.id + '">' + (dDone ? "Revoir" : "Relever le défi") + "</a></section>" +
     '<section style="display:flex;flex-direction:column;gap:14px"><div class="sec-h"><h2>Cours</h2><a href="#installer">Installer ton environnement</a></div>' + groupesHTML() + "</section>" +
     '<section style="display:flex;flex-direction:column;gap:14px"><div class="sec-h"><h2>Roadmaps métier</h2><a href="#roadmaps">Tout voir</a></div><div class="grid3">' +
@@ -257,7 +288,8 @@ function bindLesson(x) {
           if (allDone) refreshSteps(x);
         }
       } else {
-        b.classList.add("wrong"); b.disabled = true; p.className = "explain no"; p.innerHTML = "<b>Pas tout à fait.</b> Réessaie : relis la théorie juste au-dessus.";
+        b.classList.add("wrong"); b.disabled = true; p.className = "explain no"; p.innerHTML = "<b>Pas tout à fait.</b> Réessaie : relis la théorie juste au-dessus. Cette question reviendra demain dans tes révisions.";
+        rater(S.revision, cleRev(l.id, qi), today()); save();
       }
       qd.appendChild(p);
     }));
@@ -521,6 +553,7 @@ function render() {
   else if (route === "installer") { el.innerHTML = pageInstaller(); bind = () => { snipSetup = {}; bindSnippets(app()); }; }
   else if (route === "roadmaps") el.innerHTML = pageRoadmaps();
   else if (route === "cours") el.innerHTML = pageCours();
+  else if (route === "revision") { el.innerHTML = pageRevision(); bind = bindRevision; }
   else if (route === "certifs") el.innerHTML = pageCerts(S, CERTS, color);
   else if (route === "projets") el.innerHTML = pageProjets(S, PROJETS, ROADMAPS, color);
   else if (PROJETS.some(p => p.id === route)) { const p = PROJETS.find(p => p.id === route); el.innerHTML = pageProjet(S, p, ROADMAPS, byId, color, I); bind = () => bindProjet(S, p, { save, toast, markDay, updateStats }); }

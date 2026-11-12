@@ -114,7 +114,7 @@ function cppCheck(ch, code, runner) {
 
 /* ---------- Structure ---------- */
 const ids = new Set();
-const routes = new Set(["home", "roadmaps", "atelier", "installer", "projets", "certifs", "cours"]);
+const routes = new Set(["home", "roadmaps", "atelier", "installer", "projets", "certifs", "cours", "revision"]);
 for (const c of COURSES) {
   if (!c.route || !c.badge) fail(c.id, "cours sans route ou badge");
   if (routes.has(c.route)) fail(c.id, "route en double : " + c.route);
