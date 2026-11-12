@@ -18,12 +18,13 @@
 - 12 nov. : minic (préprocesseur, types, mémoire octet par octet, structures, unions, pointeurs de fonction, printf, bibliothèque standard utile), mesuré contre gcc sur trois programmes de couverture : sorties identiques. Un bogue trouvé tout de suite : une instruction-expression valant 0 était prise pour un signal de contrôle et terminait la fonction.
 - 12 nov. : cours « C embarqué » en 13 leçons et 12 défis. Trois corrections après comparaison avec gcc : la somme NMEA de l'exemple (0x31, pas 0x1D), une constante trop large refusée par `-Werror`, et un test qui dépendait de l'ordre d'évaluation des arguments (non spécifié en C) ; l'extrait sur la comparaison signé/non signé est marqué `avertissement`.
 - 12 nov. : parité Pyodide vérifiée en local avec la roue pycparser : les 12 défis passent dans le navigateur en 9 s. 1 014 vérifications, 100 tests unitaires, 15 tests de bout en bout hors ligne.
+- 12 nov. : PR #90, les trois jobs verts ; en CI, les 12 défis C passent aussi dans le vrai Pyodide (test de parité en ligne). Fusionnée ; version 0.24.0.
 
 ## Revue de sprint
 
 | Story | Points | Livré |
 |-------|--------|-------|
-| #84 C pour microcontrôleur | 13 | Oui |
+| #84 C pour microcontrôleur | 13 | Oui (PR #90) |
 
 Vélocité : 13 points sur 13. Version 0.24.0.
 

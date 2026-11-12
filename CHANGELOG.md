@@ -4,6 +4,15 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.24.0] — 2026-11-12
+
+Sprint 8.3 : cours **C embarqué**, exécuté dans le navigateur par un interpréteur C écrit pour Boucle.
+
+### Ajouté
+- Cours **C embarqué** en 13 leçons : du Python au C, types à largeur fixe et débordements, masques de bits, pointeurs et chaînes (NMEA), structures et registres mappés en mémoire, anti-rebond, timers et interruptions, PWM et servomoteurs, ADC non bloquant, UART et tampon circulaire, I2C et SPI (TMP102), ordonnancement, énergie et FreeRTOS, questions d'entretien. Douze défis (#84).
+- **minic**, un interpréteur C en Python sur pycparser, et **mcu.h**, un microcontrôleur simulé façon STM32 (GPIO, timer, ADC, liaison série). Blocs `~~~c` exécutables dans la théorie.
+- `npm run validate` compile chaque défi et extrait C avec gcc et exige la même sortie que dans le navigateur ; tests unitaires de parité minic / gcc. Décision expliquée dans l'ADR 0002.
+
 ## [0.23.0] — 2026-11-12
 
 Sprint 8.2 : cours **Logique numérique**.
