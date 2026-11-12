@@ -575,7 +575,7 @@ export function plan(doc, ev, opts = {}) {
         if (broke) failed = true;
         const outcome = !ran ? "skipped" : broke ? "failure" : "success";
         if (st.id != null) stepsCtx[str(st.id)] = { outcome, conclusion: outcome, outputs: {} };
-        steps.push({ label: stepLabel(st), ran, failed: broke });
+        steps.push({ label: stepLabel(st), ran, failed: broke, uses: str(st.uses || ""), run: str(st.run || "") });
       });
     }
     const envName = isObj(job.environment) ? str(job.environment.name) : str(job.environment || "");
@@ -596,6 +596,9 @@ function effPerms(doc, job) {
   return isObj(p) ? p : {};
 }
 function fmtList(a) { return a.length <= 1 ? a.join("") : a.slice(0, -1).join(", ") + " et " + a[a.length - 1]; }
+
+/** Une étape simulée correspond à un repère par son nom, son action ou sa commande. */
+function stepHit(x, l) { return x.label.includes(l) || (x.uses && actionName(x.uses) === l) || x.run.includes(l); }
 
 function scenarioLabel(s) {
   const head = "Sur " + describeEvent(s.event) + (s.fail && s.fail.length ? " avec " + fmtList(s.fail) + " en échec" : "");
@@ -668,8 +671,8 @@ export function evaluate(text, checks) {
             const st = Object.fromEntries(p.jobs.map((j) => [j.id, j]));
             if (s.triggered === false) ok = !p.triggered;
             else ok = p.triggered && (s.run || []).every((j) => st[j] && st[j].status !== "skipped") && (s.skip || []).every((j) => st[j] && st[j].status === "skipped") &&
-              Object.entries(s.stepsRun || {}).every(([j, a]) => st[j] && a.every((l) => st[j].steps.some((x) => x.ran && x.label.includes(l)))) &&
-              Object.entries(s.stepsSkipped || {}).every(([j, a]) => st[j] && a.every((l) => st[j].steps.some((x) => !x.ran && x.label.includes(l))));
+              Object.entries(s.stepsRun || {}).every(([j, a]) => st[j] && a.every((l) => st[j].steps.some((x) => x.ran && stepHit(x, l)))) &&
+              Object.entries(s.stepsSkipped || {}).every(([j, a]) => st[j] && a.every((l) => st[j].steps.some((x) => !x.ran && stepHit(x, l))));
           }
           out.push({ ok, label: s.label || scenarioLabel(s) });
         }
