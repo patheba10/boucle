@@ -5,7 +5,7 @@
 | Story | Points | Statut |
 |-------|--------|--------|
 | #52 US-5.0 Terraform et compte AWS simulés (enabler) | 8 | Terminé |
-| #53 US-5a Cours Terraform | 8 | En cours |
+| #53 US-5a Cours Terraform | 8 | Terminé |
 
 **Capacité** : 16 points. Le sprint court sur plusieurs sessions : le journal ci-dessous dit où reprendre.
 
@@ -25,3 +25,4 @@
 - 12 nov. : 5 tests unitaires Terraform verts (73 en tout), documentation. PR #52 ensuite, puis le cours Terraform (#53).
 - 12 nov. : PR #57 (Terraform simulé) fusionnée. Branche `us-5a/cours-terraform` pour le cours (#53). Critères `tf` : remote, fmt, valid ajoutés.
 - 12 nov. : chapitres 1 et 2 du cours Terraform validés (tf-01 à tf-07). Reste : tf-08 état distant, tf-09 import et dérive, tf-10 équipe et CI, tf-11 entretien ; puis e2e, docs, PR, release 0.14.0.
+- 12 nov. : cours complet (tf-01 à tf-11) validé (738 vérifications), tests unitaires et e2e verts. PR du cours puis release 0.14.0. Sprint suivant : 5.2, CLI aws, IAM et réseau (#54), puis le cours AWS (#55).
