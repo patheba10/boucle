@@ -130,3 +130,51 @@ test("critères : sortie, fichiers, inconnu", () => {
   assert.deepEqual(evaluate(sh, { output: "a.txt", exit: 0 }).map((r) => r.ok), [true, true]);
   assert.throws(() => evaluate(sh, { inconnu: 1 }), /critère de vérification inconnu/);
 });
+
+test("sprint 4.2 : trap, mktemp, find -mtime, unités systemd, ssh-keygen, services de l'exercice", () => {
+  const sh = createShell({
+    procs: [{ pid: 3001, cmd: "python3 fuite.py", cpu: 97.5, mem: 42.1 }],
+    files: { "/var/backups/a.tar.gz": { content: "x", age: 10 }, "/var/backups/b.tar.gz": { content: "y", age: 2 } },
+    services: { api: { ports: [8000], routes: { "/health": [200, '{"status":"ok"}'] } } },
+  });
+  run(sh, "cat > t.sh <<'EOF'\ntmp=$(mktemp)\ntrap 'rm -f \"$tmp\"; echo nettoyé' EXIT\necho données > \"$tmp\"\nexit 3\nEOF");
+  const t = run(sh, "bash t.sh");
+  assert.equal(t.out, "nettoyé\n"); assert.equal(t.code, 3);
+  assert.equal(run(sh, "find /var/backups -name '*.tar.gz' -mtime +7").out, "/var/backups/a.tar.gz\n");
+  assert.match(run(sh, "ps aux --sort=-%cpu | sed -n 2p").out, /fuite\.py/);
+  run(sh, "sudo kill 3001");
+  assert.deepEqual(evaluate(sh, { processes: { absent: ["fuite.py"] } }).map((r) => r.ok), [true]);
+  assert.equal(run(sh, "curl -s localhost:8000/health").out, '{"status":"ok"}');
+  // Une unité systemd écrite à la main
+  run(sh, "printf '#!/bin/bash\\necho tic\\n' > tic.sh && sudo mv tic.sh /usr/local/bin/tic");
+  run(sh, "printf '[Unit]\\nDescription=Tic\\n[Service]\\nExecStart=/usr/local/bin/tic\\n[Install]\\nWantedBy=multi-user.target\\n' | sudo tee /etc/systemd/system/tic.service > /dev/null");
+  const f = run(sh, "sudo systemctl start tic");
+  assert.equal(f.code, 1);
+  assert.match(run(sh, "sudo journalctl -u tic").out, /Failed at step EXEC spawning \/usr\/local\/bin\/tic: Permission denied/);
+  run(sh, "sudo chmod +x /usr/local/bin/tic && sudo systemctl daemon-reload && sudo systemctl enable --now tic");
+  assert.deepEqual(evaluate(sh, { services: { tic: "active" }, enabled: { tic: true } }).filter((r) => !r.ok), []);
+  run(sh, "ssh-keygen -t ed25519 -N '' -f ~/.ssh/id_ed25519");
+  assert.deepEqual(evaluate(sh, { files: { "/home/eleve/.ssh": { type: "d", mode: "700" }, "/home/eleve/.ssh/id_ed25519": { mode: "600" }, "/home/eleve/.ssh/id_ed25519.pub": { contains: "ssh-ed25519 " } } }).filter((r) => !r.ok), []);
+});
+
+test("options : chiffres déclarés, xargs à la POSIX, nginx et services en échec", () => {
+  const sh = createShell({ files: { "/home/eleve/a/s-1.tgz": "x", "/home/eleve/a/s-2.tgz": "x", "/home/eleve/a/s-3.tgz": "x" } });
+  assert.equal(run(sh, "ls -1 a").out, "s-1.tgz\ns-2.tgz\ns-3.tgz\n");
+  // Les options après la commande lancée par xargs lui appartiennent.
+  run(sh, "ls -1 a/s-*.tgz | sort | head -n -2 | xargs -r rm -f");
+  assert.equal(run(sh, "ls a").out, "s-2.tgz  s-3.tgz\n");
+  assert.equal(run(sh, "true | xargs -r rm -f").code, 0);
+  // Sans « ; », root avale la directive suivante : nginx refuse la configuration.
+  run(sh, "sudo apt install -y nginx");
+  run(sh, "printf 'server {\\n\\tlisten 8080;\\n\\troot /var/www/html\\n\\tindex index.html;\\n}\\n' | sudo tee /etc/nginx/sites-enabled/test > /dev/null");
+  const t = run(sh, "sudo nginx -t");
+  assert.equal(t.code, 1);
+  assert.match(t.err, /invalid number of arguments in "root" directive in \/etc\/nginx\/sites-enabled\/test:4/);
+  // Un service en échec dès la mise en place a un journal dans l'ordre.
+  const sv = createShell({ services: { api: { ports: [8000], failed: true, src: "python3", journal: ["ERROR: boom"] } } });
+  const j = run(sv, "sudo journalctl -u api").out.trim().split("\n");
+  assert.match(j[0], /Started api\.service/);
+  assert.match(j[1], /python3\[\d+\]: ERROR: boom/);
+  assert.match(j[j.length - 1], /Failed with result 'exit-code'/);
+  assert.equal(run(sv, "systemctl is-active api").out, "failed\n");
+});
