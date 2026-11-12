@@ -26,7 +26,9 @@ Exécutable dans le navigateur avec les vrais paquets.
 
 Amélioration technique jointe : préchargement de Python, jeux de données embarqués.
 
-## Étape 3 — Git, GitHub et CI/CD
+## Étape 3 — Git, GitHub et CI/CD ✅
+
+Terminée au sprint 3.3 (version 0.8.0) : cours Git et GitHub en 14 leçons, cours CI/CD en 22 leçons.
 
 Backlog : issues #10, #11 et #12 (milestone « Étape 3 »).
 

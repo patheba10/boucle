@@ -4,6 +4,10 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.8.0] — 2026-11-11
+
+Sprint 3.3 : le cours **CI/CD avec GitHub Actions** est complet (22 leçons en 12 chapitres, dont un projet et des questions d'entretien). La CI de Boucle applique ce qu'il enseigne : actions épinglées par SHA et Dependabot.
+
 ### Ajouté
 - Cours **CI/CD avec GitHub Actions**, chapitres 4 à 12 : tests dans le pipeline (services, étude de cas de la CI de Boucle), matrices, cache, artefacts et concurrence, secrets et permissions du `GITHUB_TOKEN`, OIDC et chaîne d'approvisionnement, images Docker et registres, releases automatiques, environnements et approbations, stratégies de déploiement et rollback, Terraform plan/apply, lecture de logs d'échec, débogage et tests instables, panorama GitLab CI / Jenkins / Azure DevOps, projet de pipeline complet et questions d'entretien avec réponses modèles (#12).
 - Moteur des workflows : critères `services`, `environment`, `cache`, `matrixSize`, `failFast`, `jobConcurrency`, `dispatchInputs`, `contains`, `lacks` ; avertissement « pwn request » ; environnement affiché dans le graphe ; blocs `~~~log` colorés.
