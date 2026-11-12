@@ -16,12 +16,13 @@
 ## Journal
 
 - 12 nov. : navigation, page Cours, validation des groupes, couleurs. Vérifié par captures d'écran à 1 200 px et à 400 px. 1 118 vérifications, 102 tests unitaires, 17 tests de bout en bout.
+- 12 nov. : PR #119, les trois jobs verts. Fusionnée ; version 0.33.0.
 
 ## Revue de sprint
 
 | Story | Points | Livré |
 |-------|--------|-------|
-| #115 Navigation regroupée par étapes | 5 | Oui |
+| #115 Navigation regroupée par étapes | 5 | Oui (PR #119) |
 
 Vélocité : 5 points sur 5. Version 0.33.0.
 

@@ -4,6 +4,14 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.33.0] — 2026-11-12
+
+Sprint 11.1 : navigation.
+
+### Modifié
+- Barre de navigation réduite à 7 entrées ; nouvelle page **Cours** qui regroupe les 20 cours en 6 domaines, aussi sur l'accueil (#115).
+- Chaque cours a une couleur, celle de sa famille (les badges de plusieurs cours récents étaient vides).
+
 ## [0.32.0] — 2026-11-12
 
 Sprint 10.3 : projets Embarqué et IoT, roadmaps reliées aux leçons. L'étape 9 est terminée.
