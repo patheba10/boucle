@@ -69,6 +69,7 @@ Ordre choisi avec Demba : DevOps, puis Cloud (AWS), puis le reste du socle entre
 1. SQL (#67, sprint 6.1, 16 leçons) : `SELECT`, filtres, jointures, agrégations, sous-requêtes, fonctions fenêtres, index, transactions. Exécuté pour de vrai (SQLite via Python, dans Pyodide).
 2. API REST : HTTP, JSON, codes de statut, authentification, FastAPI.
 3. Tests : pytest, tests unitaires vs intégration.
+   Points 2 et 3 : cours « API et tests » (#68, sprint 6.2, 11 leçons), FastAPI et pytest exécutés dans le navigateur, défis de tests vérifiés par mutation.
 
 ## Étape 6 — Deep learning : TensorFlow et TensorFlow Lite
 
