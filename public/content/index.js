@@ -18,11 +18,12 @@ import logique from "./courses/logique.js";
 import embarque from "./courses/embarque.js";
 import algo from "./courses/algo.js";
 import sysdesign from "./courses/sysdesign.js";
+import entretiens from "./courses/entretiens.js";
 import roadmaps from "./roadmaps.js";
 import installer from "./guides/installer.js";
 import { CERTS as certs } from "./certifs/index.js";
 
-export const COURSES = [python, data, git, cicd, linux, docker, kubernetes, exploitation, terraform, aws, sql, api, dl, elec, logique, embarque, algo, sysdesign, cpp];
+export const COURSES = [python, data, git, cicd, linux, docker, kubernetes, exploitation, terraform, aws, sql, api, dl, elec, logique, embarque, algo, sysdesign, entretiens, cpp];
 export const ROADMAPS = roadmaps;
 export const INSTALL = installer;
 export const CERTS = certs;
