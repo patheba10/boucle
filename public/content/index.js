@@ -26,6 +26,15 @@ import { PROJETS as projets } from "./projets/index.js";
 
 export const COURSES = [python, data, git, cicd, linux, docker, kubernetes, exploitation, terraform, aws, sql, api, dl, elec, logique, embarque, algo, sysdesign, entretiens, cpp];
 export const ROADMAPS = roadmaps;
+/* Regroupement des cours par domaine, pour la page Cours et l'accueil (chaque cours dans un seul groupe). */
+export const GROUPES = [
+  { titre: "Programmer", desc: "Les langages et les bases de l'informatique.", cours: ["py", "cpp", "algo", "api"] },
+  { titre: "Données et IA", desc: "Analyser des données, les interroger, entraîner et déployer des modèles.", cours: ["data", "sql", "dl"] },
+  { titre: "DevOps et SRE", desc: "Livrer et exploiter : Git, Linux, conteneurs, pipelines, fiabilité.", cours: ["git", "linux", "docker", "kubernetes", "cicd", "exploitation"] },
+  { titre: "Cloud et architecture", desc: "L'infrastructure par le code, AWS et la conception de systèmes.", cours: ["terraform", "aws", "sysdesign"] },
+  { titre: "Hardware et embarqué", desc: "Du transistor au microcontrôleur.", cours: ["elec", "logique", "embarque"] },
+  { titre: "Carrière", desc: "Préparer les entretiens et décrocher le poste.", cours: ["entretiens"] }
+];
 export const INSTALL = installer;
 export const CERTS = certs;
 export const PROJETS = projets;

@@ -45,8 +45,8 @@ Priorités : **P0** bloquant pour l'objectif, **P1** fort impact, **P2** confort
 | 24 | `npm run validate` relance un interpréteur Python par exécution : environ 1 min depuis scikit-learn. Garder un interpréteur vivant (serveur JSON en stdin/stdout) diviserait ce temps par 10. | P3 | À faire |
 | 25 | Le job e2e installe les dépendances de Chromium via apt : une panne des miroirs Ubuntu fait échouer la CI sans rapport avec le code (vu au sprint 3.1). Utiliser le Chrome déjà présent sur le runner (`CHROME_PATH`) ou mettre le navigateur en cache. | P2 | **Fait** (sprint 3.1) : le job e2e utilise Google Chrome du runner |
 | 26 | Le simulateur Git a son propre petit shell (echo, cat, ls…), distinct du terminal Linux. Les unifier éviterait deux comportements différents pour la même commande. | P3 | À faire |
-| 27 | La barre de navigation compte 20 liens : sur un écran de portable, les cours les plus récents (Électronique, Logique, C embarqué) sont hors de vue à droite. Regrouper les cours par étape dans un menu, ou une page « Cours ». | P2 | À faire (vu au sprint 8.4) |
-| 28 | Les cours ajoutés depuis l'étape 5 n'ont pas de couleur propre dans la feuille de style (seuls Python, C++, Data, Git, CI/CD, Linux et les roadmaps en ont). | P3 | À faire (vu au sprint 8.4) |
+| 27 | La barre de navigation compte 20 liens : sur un écran de portable, les cours les plus récents (Électronique, Logique, C embarqué) sont hors de vue à droite. Regrouper les cours par étape dans un menu, ou une page « Cours ». | P2 | **Fait** (A-1) : 7 entrées, et une page Cours qui regroupe les 20 cours en 6 domaines |
+| 28 | Les cours ajoutés depuis l'étape 5 n'ont pas de couleur propre dans la feuille de style (seuls Python, C++, Data, Git, CI/CD, Linux et les roadmaps en ont). | P3 | **Fait** (A-1) : chaque cours prend la couleur de sa famille ; le badge n'est plus vide |
 | 29 | Un test de bout en bout de l'examen blanc échouait parfois sans changement de code. | P3 | **Fait** (sprint 9.1) : la première question d'entraînement est tirée au hasard ; quand elle a plusieurs réponses, un clic ne suffit pas, il faut valider. Le test gère les deux cas |
 
 ## Ordre de traitement
