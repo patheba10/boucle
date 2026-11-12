@@ -15,12 +15,13 @@
 ## Journal
 
 - 12 nov. : module, branchement sur les quatre types de défis (Python, C++, C, SQL ; terminal ; script ; YAML), tests unitaires et de bout en bout. 1 118 vérifications, 107 tests unitaires, 19 tests de bout en bout.
+- 12 nov. : PR #123, les trois jobs verts. Fusionnée ; version 0.35.0.
 
 ## Revue de sprint
 
 | Story | Points | Livré |
 |-------|--------|-------|
-| #117 Indices progressifs | 3 | Oui |
+| #117 Indices progressifs | 3 | Oui (PR #123) |
 
 Vélocité : 3 points sur 3. Version 0.35.0.
 
