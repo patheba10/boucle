@@ -4,6 +4,13 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.35.0] — 2026-11-12
+
+Sprint 11.3 : indices progressifs.
+
+### Modifié
+- Les indices des défis se révèlent un par un, du plus général au plus précis (#117).
+
 ## [0.34.0] — 2026-11-12
 
 Sprint 11.2 : révision espacée.
