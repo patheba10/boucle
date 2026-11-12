@@ -13,11 +13,12 @@ export { CmdErr };
 /** spec : lettres sans valeur, et lettres avec valeur suivies de « : » (ex. "nrk:t:"). */
 function opts(args, spec, long = {}) {
   const takes = new Set(); const flags = new Set();
+  const posix = spec.startsWith("+"); if (posix) spec = spec.slice(1); /* « + » : les options s'arrêtent au premier opérande (xargs CMD -f…) */
   for (let i = 0; i < spec.length; i++) { if (spec[i + 1] === ":") { takes.add(spec[i]); i++; } else flags.add(spec[i]); }
   const o = {}, rest = []; let stop = false;
   for (let i = 0; i < args.length; i++) {
     const a = args[i];
-    if (stop || a === "-" || !a.startsWith("-") || /^-\d+$/.test(a) && !flags.has("0")) { if (/^-\d+$/.test(a) && !stop && spec.includes("N")) { o.N = +a.slice(1); continue; } rest.push(a); continue; }
+    if (stop || a === "-" || !a.startsWith("-") || /^-\d+$/.test(a) && ![...a.slice(1)].every((c) => flags.has(c))) { if (/^-\d+$/.test(a) && !stop && spec.includes("N")) { o.N = +a.slice(1); continue; } rest.push(a); if (posix) stop = true; continue; }
     if (a === "--") { stop = true; continue; }
     if (a.startsWith("--")) { const [k, v] = a.slice(2).split("="); const key = long[k]; if (key === undefined) return { error: "unrecognized option '" + a + "'" }; if (typeof key === "string" && key.endsWith(":")) o[key.slice(0, -1)] = v ?? args[++i]; else o[key] = v ?? true; continue; }
     for (let j = 1; j < a.length; j++) {
@@ -90,7 +91,7 @@ export function syncUsers(sh) {
 export function addService(sh, name, s) {
   const pid = s.pid || 800 + Object.keys(sh.services).length * 7;
   sh.services[name] = Object.assign({ desc: name, enabled: false, active: false, failed: false, ports: [], exec: "/usr/bin/" + name, since: NOW(), pid, user: "root" }, s, { pid });
-  sh.fs.write("/usr/lib/systemd/system/" + name + ".service", "[Unit]\nDescription=" + (s.desc || name) + "\n\n[Service]\nExecStart=" + (s.exec || "/usr/bin/" + name) + "\nRestart=on-failure\n\n[Install]\nWantedBy=multi-user.target\n", "root");
+  if (!s.custom) sh.fs.write("/usr/lib/systemd/system/" + name + ".service", "[Unit]\nDescription=" + (s.desc || name) + "\n\n[Service]\nExecStart=" + (s.exec || "/usr/bin/" + name) + "\nRestart=on-failure\n\n[Install]\nWantedBy=multi-user.target\n", "root");
   if (sh.services[name].active) startProc(sh, name);
   sh.journal = sh.journal || [];
   if (sh.services[name].active) log(sh, name, "systemd[1]", "Started " + name + ".service - " + sh.services[name].desc + ".");
@@ -112,6 +113,7 @@ const CATALOG = {
   jq: () => {}, htop: () => {}, tree: () => {}, "net-tools": () => {}, unzip: () => {}, git: () => {}, "python3": () => {},
 };
 /** Vérifie la configuration nginx (accolades, points-virgules) comme « nginx -t ». */
+const ONE_ARG = new Set(["root", "alias", "proxy_pass", "include", "worker_processes", "client_max_body_size"]);
 export function nginxCheck(sh) {
   const files = ["/etc/nginx/nginx.conf"];
   try { for (const n of sh.fs.list("/etc/nginx/sites-enabled", "root") || []) files.push("/etc/nginx/sites-enabled/" + n); } catch (e) { /* rien */ }
@@ -120,7 +122,11 @@ export function nginxCheck(sh) {
     let depth = 0, text = "", line = 1, start = 1;
     for (const ch of data.replace(/#[^\n]*/g, "")) {
       if (ch === "\n") { line++; if (text.trim()) continue; text = ""; continue; }
-      if (ch === ";") { text = ""; continue; }
+      if (ch === ";") {
+        const [dir, ...a] = text.trim().split(/\s+/);
+        if (ONE_ARG.has(dir) && a.length !== 1) return { ok: false, msg: 'invalid number of arguments in "' + dir + '" directive in ' + f + ":" + line };
+        text = ""; continue;
+      }
       if (ch === "{") { if (!text.trim()) return { ok: false, msg: 'unexpected "{" in ' + f + ":" + line }; depth++; text = ""; continue; }
       if (ch === "}") {
         if (text.trim()) return { ok: false, msg: 'directive "' + text.trim().split(/\s+/)[0] + '" is not terminated by ";" in ' + f + ":" + line };
@@ -133,6 +139,29 @@ export function nginxCheck(sh) {
     if (depth > 0) return { ok: false, msg: 'unexpected end of file, expecting "}" in ' + f + ":" + line };
     void start;
   }
+  return { ok: true };
+}
+
+/* Services décrits par un fichier d'unité dans /etc/systemd/system (écrit par l'élève). */
+function parseUnit(sh, n) {
+  let data; try { data = sh.fs.read("/etc/systemd/system/" + n + ".service", "root"); } catch (e) { return null; }
+  const get = (k) => { const m = new RegExp("^" + k + "=(.*)$", "m").exec(data); return m ? m[1].trim() : ""; };
+  if (!/^\[Service\]/m.test(data)) return { exec: "", desc: get("Description") || n, invalid: "Service has no [Service] section" };
+  return { exec: get("ExecStart"), desc: get("Description") || n, user: get("User") || "root", restart: get("Restart"), wantedBy: get("WantedBy") };
+}
+function loadUnit(sh, n) {
+  const u = parseUnit(sh, n); if (!u) return null;
+  addService(sh, n, { ...u, custom: true, active: false, enabled: false, unitPath: "/etc/systemd/system/" + n + ".service" });
+  return sh.services[n];
+}
+function execCheck(sh, s) {
+  if (s.invalid) return { ok: false, msg: s.invalid };
+  if (!s.exec) return { ok: false, msg: "Service has no ExecStart=, ExecStop=, or SuccessAction=. Refusing." };
+  const bin = s.exec.split(/\s+/)[0];
+  if (!bin.startsWith("/")) return { ok: false, msg: "Neither a valid executable name nor an absolute path: " + bin };
+  let node; try { node = sh.fs.stat(bin, "root"); } catch (e) { return { ok: false, msg: "Failed at step EXEC spawning " + bin + ": No such file or directory" }; }
+  if (!(node.mode & 0o111)) return { ok: false, msg: "Failed at step EXEC spawning " + bin + ": Permission denied" };
+  if (s.user && s.user !== "root" && !sh.fs.users[s.user]) return { ok: false, msg: "Failed to determine user credentials: No such process" };
   return { ok: true };
 }
 
@@ -338,7 +367,7 @@ C("tee", (sh, args, io) => { const { o, rest } = need("tee", opts(args, "a")); f
 C("seq", (sh, args, io) => { const n = args.map(Number); const [a, s, b] = n.length === 1 ? [1, 1, n[0]] : n.length === 2 ? [n[0], 1, n[1]] : n; let out = ""; for (let x = a; s > 0 ? x <= b : x >= b; x += s) out += x + "\n"; io.out(out); return 0; });
 C("rev", (sh, args, io) => { for (const f of inputs(sh, "rev", args, io)) if (!f.error) io.out(lines(f.data).map((l) => [...l].reverse().join("") + "\n").join("")); return 0; });
 C("xargs", (sh, args, io) => {
-  const { o, rest } = need("xargs", opts(args, "n:I:0rt"));
+  const { o, rest } = need("xargs", opts(args, "+n:I:0rt"));
   const items = (io.stdin || "").split(o[0] ? "\0" : /\s+/).filter(Boolean);
   const [cmd = "echo", ...base] = rest; let code = 0;
   const call = (a) => { if (o.t) io.err([cmd, ...a].join(" ") + "\n"); const c = sh.invoke(cmd, a, { ...io, stdin: "" }); if (c) code = 123; };
@@ -463,7 +492,7 @@ C("find", (sh, args, io) => {
       case "-perm": i++; add((n) => (n.mode & 0o777).toString(8) === v.replace(/^0/, "")); break;
       case "-size": { i++; const m = /^([+-]?)(\d+)([ckMG]?)$/.exec(v); const mult = { c: 1, k: 1024, M: 1048576, G: 1073741824, "": 512 }[m[3]]; add((n) => { const s = sh.fs.size(n), lim = +m[2] * mult; return m[1] === "+" ? s > lim : m[1] === "-" ? s < lim : Math.ceil(s / mult) === +m[2]; }); break; }
       case "-newer": i++; { const ref = sh.fs.stat(sh.abs(v), sh.user); add((n) => n.mtime > ref.mtime); } break;
-      case "-mtime": case "-mmin": i++; break;
+      case "-mtime": case "-mmin": { i++; const m = /^([+-]?)(\d+)$/.exec(v); const unit = x === "-mtime" ? 86400000 : 60000; add((n) => { const age = Math.floor((NOW() - n.mtime) / unit); return m[1] === "+" ? age > +m[2] : m[1] === "-" ? age < +m[2] : age === +m[2]; }); break; }
       case "-print": break;
       case "-delete": action = "delete"; break;
       case "-exec": { const end = args.indexOf(";", i) >= 0 ? args.indexOf(";", i) : args.indexOf("+", i); execCmd = args.slice(i, end); i = end + 1; action = "exec"; break; }
@@ -628,7 +657,10 @@ C("passwd", (sh, args, io) => { io.out("passwd: la saisie d'un mot de passe n'es
 /* ----- processus et services ----- */
 C("ps", (sh, args, io) => {
   const all = args.some((a) => /a|e|x/.test(a.replace(/^-/, "")));
-  const ps = all ? sh.procs : sh.procs.filter((p) => p.user === sh.user);
+  let ps = all ? [...sh.procs] : sh.procs.filter((p) => p.user === sh.user);
+  const sort = (args.find((a) => a.startsWith("--sort=")) || "").slice(7);
+  if (sort) { const desc = sort.startsWith("-"); const k = sort.replace(/^[-+]/, "").replace("%", ""); ps.sort((a, b) => (desc ? -1 : 1) * ((a[k] ?? a.pid) - (b[k] ?? b.pid))); }
+  args = args.filter((a) => !a.startsWith("--sort="));
   if (args.some((a) => /u/.test(a))) io.out("USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\n" + ps.map((p) => p.user.padEnd(10) + String(p.pid).padStart(5) + String(p.cpu.toFixed(1)).padStart(5) + String(p.mem.toFixed(1)).padStart(5) + "  12345  6789 ?        Ss   09:00   0:00 " + p.cmd + "\n").join(""));
   else if (args.some((a) => /f/.test(a))) io.out("UID          PID    PPID  C STIME TTY          TIME CMD\n" + ps.map((p) => p.user.padEnd(8) + String(p.pid).padStart(8) + String(p.pid === 1 ? 0 : 1).padStart(8) + "  0 09:00 ?        00:00:00 " + p.cmd + "\n").join(""));
   else io.out("    PID TTY          TIME CMD\n" + ps.filter((p) => p.user === sh.user).map((p) => String(p.pid).padStart(7) + " pts/0    00:00:00 " + p.cmd.split(/[ /]/).filter(Boolean).pop().replace(/^-/, "") + "\n").join("") + "   5012 pts/0    00:00:00 ps\n");
@@ -658,7 +690,7 @@ C("pkill pgrep", (sh, args, io) => {
 COMMANDS.pgrep = (sh, args, io) => { const pat = args.filter((a) => !a.startsWith("-")).pop(); const ms = sh.procs.filter((p) => p.cmd.includes(pat)); io.out(ms.map((p) => p.pid + (args.includes("-l") ? " " + basename(p.cmd.split(" ")[0]) : "") + "\n").join("")); return ms.length ? 0 : 1; };
 C("systemctl", (sh, args, io) => {
   const rest = args.filter((a) => !a.startsWith("--") && a !== "-l"); const [verb, ...units] = rest;
-  const unit = (u) => { const n = String(u || "").replace(/\.service$/, ""); const s = sh.services[n]; return [n, s]; };
+  const unit = (u) => { const n = String(u || "").replace(/\.service$/, ""); return [n, sh.services[n] || loadUnit(sh, n)]; };
   const needRoot = (n, v) => { if (sh.user !== "root") fail("Failed to " + v + " " + n + ".service: Interactive authentication required.\nSee system logs and 'systemctl status " + n + ".service' for details.", 1); };
   const state = (s) => (s.active ? "active" : s.failed ? "failed" : "inactive");
   switch (verb) {
@@ -668,11 +700,11 @@ C("systemctl", (sh, args, io) => {
         if (!s) fail("Failed to " + verb + " " + n + ".service: Unit " + n + ".service not found.", 5);
         if (verb === "stop") { s.active = false; s.failed = false; sh.procs = sh.procs.filter((p) => p.service !== n); log(sh, n, "systemd[1]", "Stopped " + n + ".service - " + s.desc + "."); continue; }
         if (verb === "reload" && !s.active) fail(n + ".service is not active, cannot reload.", 1);
-        const chk = s.check ? s.check(sh) : { ok: true };
-        const busy = (s.ports || []).find((pt) => Object.entries(sh.services).some(([m, o]) => m !== n && o.active && (o.ports || []).includes(pt)));
+        const chk = s.check ? s.check(sh) : s.custom ? execCheck(sh, s) : { ok: true };
+        const busy = (s.ports || []).find((pt) => Object.entries(sh.services).some(([m, o]) => m !== n && o.active && (o.ports || []).includes(pt)) || sh.procs.some((p) => p.port === pt && p.service !== n));
         if (!chk.ok || busy) {
           if (verb !== "reload") { s.active = false; s.failed = true; sh.procs = sh.procs.filter((p) => p.service !== n); }
-          log(sh, n, n + "[" + s.pid + "]", busy ? "bind() to 0.0.0.0:" + busy + " failed (98: Address already in use)" : "[emerg] " + chk.msg, 3);
+          log(sh, n, s.custom ? "(" + basename(String(s.exec).split(" ")[0]) + ")[" + s.pid + "]" : n + "[" + s.pid + "]", busy ? (s.bindMsg ? s.bindMsg.replace("{port}", busy) : "bind() to 0.0.0.0:" + busy + " failed (98: Address already in use)") : (s.custom ? "" : "[emerg] ") + chk.msg, 3);
           log(sh, n, "systemd[1]", n + ".service: Control process exited, code=exited, status=1/FAILURE", 4);
           log(sh, n, "systemd[1]", "Failed to start " + n + ".service - " + s.desc + ".", 3);
           io.err("Job for " + n + ".service failed because the control process exited with error code.\nSee \"systemctl status " + n + ".service\" and \"journalctl -xeu " + n + ".service\" for details.\n");
@@ -684,12 +716,12 @@ C("systemctl", (sh, args, io) => {
       return 0;
     }
     case "enable": case "disable": {
-      for (const u of units) { const [n, s] = unit(u); needRoot(n, verb); if (!s) fail("Failed to " + verb + " unit: Unit file " + n + ".service does not exist.", 1); s.enabled = verb === "enable"; if (args.includes("--now")) COMMANDS.systemctl(sh, [verb === "enable" ? "start" : "stop", n], io); io.err(verb === "enable" ? "Created symlink /etc/systemd/system/multi-user.target.wants/" + n + ".service → /usr/lib/systemd/system/" + n + ".service.\n" : "Removed \"/etc/systemd/system/multi-user.target.wants/" + n + ".service\".\n"); }
+      for (const u of units) { const [n, s] = unit(u); needRoot(n, verb); if (!s) fail("Failed to " + verb + " unit: Unit file " + n + ".service does not exist.", 1); s.enabled = verb === "enable"; if (args.includes("--now")) COMMANDS.systemctl(sh, [verb === "enable" ? "start" : "stop", n], io); io.err(verb === "enable" ? "Created symlink /etc/systemd/system/multi-user.target.wants/" + n + ".service → " + (s.unitPath || "/usr/lib/systemd/system/" + n + ".service") + ".\n" : "Removed \"/etc/systemd/system/multi-user.target.wants/" + n + ".service\".\n"); }
       return 0;
     }
     case "is-active": { const [, s] = unit(units[0]); io.out((s ? state(s) : "inactive") + "\n"); return s && s.active ? 0 : 3; }
     case "is-enabled": { const [, s] = unit(units[0]); io.out((s ? (s.enabled ? "enabled" : "disabled") : "not-found") + "\n"); return s && s.enabled ? 0 : 1; }
-    case "daemon-reload": if (sh.user !== "root") fail("Failed to reload daemon: Interactive authentication required."); return 0;
+    case "daemon-reload": if (sh.user !== "root") fail("Failed to reload daemon: Interactive authentication required."); for (const n of Object.keys(sh.services)) if (sh.services[n].custom) Object.assign(sh.services[n], parseUnit(sh, n) || {}); return 0;
     case "list-units": case undefined: {
       io.out("  UNIT" + " ".repeat(22) + "LOAD   ACTIVE SUB     DESCRIPTION\n" + Object.entries(sh.services).filter(([, s]) => !args.includes("--failed") || s.failed).map(([n, s]) => (s.failed ? "● " : "  ") + (n + ".service").padEnd(26) + "loaded " + state(s).padEnd(6) + " " + (s.active ? "running" : s.failed ? "failed " : "dead   ") + " " + s.desc + "\n").join(""));
       return 0;
@@ -698,7 +730,7 @@ C("systemctl", (sh, args, io) => {
       const [n, s] = unit(units[0]);
       if (!s) { io.err("Unit " + n + ".service could not be found.\n"); return 4; }
       const st = s.active ? "active (running) since Thu 2026-11-12 09:00:00 UTC; 30min ago" : s.failed ? "failed (Result: exit-code) since Thu 2026-11-12 09:30:00 UTC; 2s ago" : "inactive (dead)";
-      let out = (s.active ? "● " : s.failed ? "× " : "○ ") + n + ".service - " + s.desc + "\n     Loaded: loaded (/usr/lib/systemd/system/" + n + ".service; " + (s.enabled ? "enabled" : "disabled") + "; preset: enabled)\n     Active: " + st + "\n";
+      let out = (s.active ? "● " : s.failed ? "× " : "○ ") + n + ".service - " + s.desc + "\n     Loaded: loaded (" + (s.unitPath || "/usr/lib/systemd/system/" + n + ".service") + "; " + (s.enabled ? "enabled" : "disabled") + "; preset: enabled)\n     Active: " + st + "\n";
       if (s.active) out += "   Main PID: " + s.pid + " (" + basename(s.exec.split(" ")[0].replace(/:$/, "")) + ")\n      Tasks: " + (1 + (s.children || []).length) + " (limit: 4558)\n     Memory: 4.2M (peak: 4.6M)\n     CGroup: /system.slice/" + n + ".service\n" + sh.procs.filter((p) => p.service === n).map((p, i, a) => "             " + (i === a.length - 1 ? "└─" : "├─") + p.pid + " \"" + p.cmd + "\"\n").join("");
       const j = sh.journal.filter((e) => e.unit === n).slice(-5);
       if (j.length) out += "\n" + j.map((e) => logDate(e.ts) + " " + sh.host + " " + e.src + ": " + e.msg + "\n").join("");
@@ -759,7 +791,10 @@ function httpFor(sh, url) {
   if (ip === "127.0.0.1") {
     const svc = Object.entries(sh.services).find(([, s]) => s.active && (s.ports || []).includes(port));
     if (!svc) return { error: [7, "Failed to connect to " + host + " port " + port + " after 0 ms: Couldn't connect to server"] };
-    if (svc[0] === "nginx") { let body; try { body = sh.fs.read("/var/www/html" + (path.endsWith("/") ? path + "index.html" : path), "root"); } catch (e) { return { status: 404, type: "text/html", body: "<html>\n<head><title>404 Not Found</title></head>\n<body><center><h1>404 Not Found</h1></center></body>\n</html>\n" }; } return { status: 200, type: "text/html", body }; }
+    if (svc[0] === "nginx") {
+      let root = "/var/www/html";
+      try { for (const n of sh.fs.list("/etc/nginx/sites-enabled", "root") || []) { const m = /^\s*root\s+(\S+);/m.exec(sh.fs.read("/etc/nginx/sites-enabled/" + n, "root")); if (m) { root = m[1]; break; } } } catch (e) { /* défaut */ }
+      let body; try { body = sh.fs.read(root + (path.endsWith("/") ? path + "index.html" : path), "root"); } catch (e) { return { status: 404, type: "text/html", body: "<html>\n<head><title>404 Not Found</title></head>\n<body><center><h1>404 Not Found</h1></center></body>\n</html>\n" }; } return { status: 200, type: "text/html", body }; }
     if (svc[1].http) return svc[1].http(path) || { status: 404, type: "application/json", body: '{"detail":"Not Found"}' };
     return { status: 200, type: "text/plain", body: "OK\n" };
   }
@@ -771,12 +806,12 @@ C("curl", (sh, args, io) => {
   const url0 = rest[0]; if (!url0) fail("curl: try 'curl --help' or 'curl --manual' for more information", 2);
   const url = /^https?:\/\//.test(url0) ? url0 : "http://" + url0;
   const r = httpFor(sh, url);
-  if (r.error) { if (!o.s || o.S) io.err("curl: (" + r.error[0] + ") " + r.error[1] + "\n"); return r.error[0]; }
+  if (r.error) { if (!o.s || o.S) io.err("curl: (" + r.error[0] + ") " + r.error[1] + "\n"); if (o.w) io.out(String(o.w).replace(/%\{http_code\}/g, "000").replace(/\\n/g, "\n")); return r.error[0]; }
   if (o.f && r.status >= 400) { if (!o.s || o.S) io.err("curl: (22) The requested URL returned error: " + r.status + "\n"); return 22; }
   const head = "HTTP/1.1 " + r.status + " " + (REASON[r.status] || "") + "\nServer: " + (r.server || "nginx/1.24.0 (Ubuntu)") + "\nContent-Type: " + (r.type || "text/plain") + "\nContent-Length: " + new TextEncoder().encode(r.body || "").length + "\n\n";
   let out = o.I ? head : (o.i ? head : "") + (r.body || "");
   if (o.w) out += String(o.w).replace(/%\{http_code\}/g, String(r.status)).replace(/\\n/g, "\n");
-  if (o.o) { sh.fs.write(sh.abs(o.o), r.body || "", sh.user); if (o.w) io.out(String(o.w).replace(/%\{http_code\}/g, String(r.status)).replace(/\\n/g, "\n")); return 0; }
+  if (o.o) { if (sh.abs(o.o) !== "/dev/null") sh.fs.write(sh.abs(o.o), r.body || "", sh.user); if (o.w) io.out(String(o.w).replace(/%\{http_code\}/g, String(r.status)).replace(/\\n/g, "\n")); return 0; }
   io.out(out); return 0;
 });
 C("wget", (sh, args, io) => { io.err("wget n'est pas installé ici : utilise curl -O ou curl -o fichier.\n"); return 127; });
@@ -798,11 +833,28 @@ C("ip", (sh, args, io) => {
   io.out("1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN\n    inet 127.0.0.1/8 scope host lo\n2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP\n    link/ether 02:42:ac:11:00:0c brd ff:ff:ff:ff:ff:ff\n    inet 10.0.0.12/24 metric 100 brd 10.0.0.255 scope global dynamic eth0\n"); return 0;
 });
 C("ss", (sh, args, io) => {
-  const rows = Object.entries(sh.services).filter(([, s]) => s.active).flatMap(([n, s]) => (s.ports || []).map((pt) => ["LISTEN", "0", "511", (pt === 5432 ? "127.0.0.1" : "0.0.0.0") + ":" + pt, "0.0.0.0:*", sh.user === "root" || args.join("").includes("p") && sh.user === "root" ? 'users:(("' + basename(s.exec.split(" ")[0]).replace(/:$/, "") + '",pid=' + s.pid + ",fd=6))" : ""]));
+  const showP = args.join("").includes("p");
+  const procName = (cmd) => basename(cmd.split(" ")[0]).replace(/:$/, "");
+  const rows = Object.entries(sh.services).filter(([, s]) => s.active).flatMap(([n, s]) => (s.ports || []).map((pt) => ["LISTEN", "0", "511", (pt === 5432 ? "127.0.0.1" : "0.0.0.0") + ":" + pt, "0.0.0.0:*", showP && sh.user === "root" ? 'users:(("' + procName(s.exec) + '",pid=' + s.pid + ",fd=6))" : ""]))
+    .concat(sh.procs.filter((p) => p.port && !p.service).map((p) => ["LISTEN", "0", "5", "0.0.0.0:" + p.port, "0.0.0.0:*", showP && (sh.user === "root" || p.user === sh.user) ? 'users:(("' + procName(p.cmd) + '",pid=' + p.pid + ",fd=3))" : ""]));
   io.out("State  Recv-Q Send-Q Local Address:Port  Peer Address:Port Process\n" + rows.sort((a, b) => parseInt(a[3].split(":")[1], 10) - parseInt(b[3].split(":")[1], 10)).map((r) => r[0].padEnd(7) + r[1].padStart(6) + r[2].padStart(7) + " " + r[3].padStart(18) + " " + r[4].padStart(18) + " " + r[5] + "\n").join(""));
   return 0;
 });
 C("netstat", (sh, args, io) => { io.err("Command 'netstat' not found, but can be installed with:\nsudo apt install net-tools\n(netstat est obsolète : utilise ss -tlnp)\n"); return 127; });
+C("ssh-keygen", (sh, args, io) => {
+  const { o } = need("ssh-keygen", opts(args, "t:f:N:C:b:qyl"));
+  const type = o.t || "ed25519"; const f = sh.abs(o.f || "~/.ssh/id_" + type);
+  if (sh.fs.exists(f, sh.user)) fail(f + " already exists.\nOverwrite (y/n)? (non simulé : supprime d'abord l'ancienne clé)");
+  sh.fs.mkdir(dirname(f), sh.user, { parents: true });
+  const d = sh.fs.stat(dirname(f), sh.user); if (basename(dirname(f)) === ".ssh") d.mode = 0o700;
+  const fp = "SHA256:" + btoa(f + type).replace(/[^A-Za-z0-9]/g, "").slice(0, 43);
+  const comment = o.C || sh.user + "@" + sh.host;
+  const priv = sh.fs.write(f, "-----BEGIN OPENSSH PRIVATE KEY-----\nb3BlbnNzaC1rZXktdjEAAAAA" + (o.N ? "chiffrée" : "") + "…\n-----END OPENSSH PRIVATE KEY-----\n", sh.user); priv.mode = 0o600;
+  const pub = sh.fs.write(f + ".pub", "ssh-" + type + " AAAAC3NzaC1lZDI1NTE5AAAAI" + btoa(fp).slice(0, 40) + " " + comment + "\n", sh.user); pub.mode = 0o644;
+  io.out("Generating public/private " + type + " key pair.\nYour identification has been saved in " + f + "\nYour public key has been saved in " + f + ".pub\nThe key fingerprint is:\n" + fp + " " + comment + "\n");
+  return 0;
+});
+C("mktemp", (sh, args, io) => { const dir = args.includes("-d"); const p = "/tmp/tmp." + Math.random().toString(36).slice(2, 12).padEnd(10, "x"); if (dir) sh.fs.mkdir(p, sh.user); else { const n = sh.fs.write(p, "", sh.user); n.mode = 0o600; } io.out(p + "\n"); return 0; });
 C("ssh scp", (sh, args, io) => { io.err("La connexion SSH n'est pas simulée ici : refais cet exercice sur ta machine (voir « Sur ta machine »).\n"); return 255; });
 
 /* ----- archives ----- */

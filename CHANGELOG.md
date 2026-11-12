@@ -4,6 +4,13 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+### Ajouté
+- Cours **Linux et Bash**, chapitres 6 à 10 : processus et signaux, services systemd et journaux, variables et environnement, scripts Bash testés avec des arguments, réseau (ports, DNS, HTTP), SSH par clés et durcissement, cron, un incident nginx à résoudre, un script de sauvegarde avec rotation et dix questions d'entretien avec réponses modèles. Le cours compte 21 leçons (#30).
+- Terminal Linux : `find -mtime`, `ps --sort`, unités systemd écrites à la main, `trap`, `mktemp`, `ssh-keygen`, services et processus de mise en place (port occupé, service en échec et son journal), `nginx -t` qui contrôle le nombre d'arguments de `root`, `proxy_pass` et `include` (#29).
+
+### Corrigé
+- `ls -1` et les options faites de chiffres ; `xargs` laisse ses options à la commande qu'il lance (`xargs -r rm -f`).
+
 ## [0.9.0] — 2026-11-11
 
 Sprint 4.1, début de l'étape DevOps : un terminal Linux dans le navigateur et les cinq premiers chapitres du cours **Linux et Bash** (10 leçons).

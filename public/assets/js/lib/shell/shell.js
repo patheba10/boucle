@@ -3,7 +3,7 @@
 import { FS, FsError, errText, normalize, dirname, basename, resetClock } from "./fs.js";
 import { parse, ParseError } from "./parse.js";
 import { globRegex, posixRegex } from "./text.js";
-import { COMMANDS, makeWorld } from "./commands.js";
+import { COMMANDS, makeWorld, addService } from "./commands.js";
 
 class ExitSig { constructor(code) { this.code = code; } }
 class ReturnSig { constructor(code) { this.code = code; } }
@@ -255,7 +255,7 @@ export class Shell {
     // Un script ne voit que les variables exportées.
     for (const k of [...s.vars.keys()]) if (!this.exported.has(k)) s.vars.delete(k);
     s.funcs = new Map(); s.positional = args; s.argv0 = name; s.scriptName = name; s.opts = { e: false, u: false, pipefail: false, x };
-    let code;
+    let code; s.traps = {};
     try { const ast = parse(src); code = s.execList(ast, io); }
     catch (e) {
       if (e instanceof ExitSig) code = e.code;
@@ -263,6 +263,7 @@ export class Shell {
       else if (e instanceof ShErr) { io.err(e.message + "\n"); code = e.status; }
       else throw e;
     }
+    if (s.traps.EXIT || s.traps["0"]) { const t = s.traps.EXIT || s.traps["0"]; s.traps = {}; s.status = code; try { s.execList(parse(t), io); } catch (e) { if (!(e instanceof ExitSig)) throw e; } }
     this.fs = s.fs; this.services = s.services; this.procs = s.procs; this.cron = s.cron;
     return code;
   }
@@ -608,6 +609,12 @@ const BUILTINS = {
   umask(sh, args, io) { if (!args.length) { io.out(sh.fs.umask.toString(8).padStart(4, "0") + "\n"); return 0; } sh.fs.umask = parseInt(args[0], 8); return 0; },
   eval(sh, args, io) { return sh.execList(parse(args.join(" ")), io); },
   wait: () => 0,
+  trap(sh, args) {
+    if (!args.length || args[0] === "-l" || args[0] === "-p") return 0;
+    const [cmd, ...sigs] = args; sh.traps = { ...(sh.traps || {}) };
+    for (const g of sigs) sh.traps[g.replace(/^SIG/, "")] = cmd === "-" ? undefined : cmd;
+    return 0;
+  },
   alias: () => 0,
   exec(sh, args, io) { if (!args.length) return 0; const c = sh.invoke(args[0], args.slice(1), io); throw new ExitSig(c); },
 };
@@ -688,7 +695,26 @@ export function createShell(setup = {}) {
     // Les dossiers créés pour l'occasion dans le dossier personnel appartiennent à l'élève.
     for (let d = dirname(p); d.startsWith(sh.home() + "/"); d = dirname(d)) { const dn = sh.fs.stat(d, "root"); dn.owner = sh.user; dn.group = sh.user; }
     if (s.mode) n.mode = parseInt(s.mode, 8); else if (s.dir) n.mode = 0o755;
+    if (s.age !== undefined) n.mtime = new Date(Date.UTC(2026, 10, 12, 9, 30, 0) - s.age * 86400000);
   }
+  for (const [name, svc] of Object.entries(setup.services || {})) {
+    const routes = svc.routes || {};
+    addService(sh, name, { desc: svc.desc || name, exec: svc.exec || "/usr/bin/" + name, ports: svc.ports || [], active: svc.active !== false, enabled: svc.enabled !== false, user: svc.user || "root", bindMsg: svc.bindMsg,
+      http: (path) => (routes[path] ? { status: routes[path][0], type: "application/json", body: routes[path][1], server: "uvicorn" } : null) });
+    // Journal de mise en place : le service a démarré, a écrit ses lignes, puis systemd a constaté l'échec.
+    const at = () => new Date(Date.UTC(2026, 10, 12, 9, 30, 0) + sh.journal.length * 1000);
+    const push = (src, msg, prio) => sh.journal.push({ unit: name, src, msg, prio, ts: at() });
+    for (const l of svc.journal || []) push((svc.src || name) + "[" + sh.services[name].pid + "]", l, /error|failed|exception/i.test(l) ? 3 : 6);
+    if (svc.failed) {
+      sh.services[name].active = false; sh.services[name].failed = true; sh.procs = sh.procs.filter((p) => p.service !== name);
+      sh.journal = sh.journal.filter((e) => !(e.unit === name && e.src === "systemd[1]"));
+      sh.journal.splice(sh.journal.findIndex((e) => e.unit === name), 0, { unit: name, src: "systemd[1]", msg: "Started " + name + ".service - " + (svc.desc || name) + ".", prio: 6 });
+      push("systemd[1]", name + ".service: Main process exited, code=exited, status=1/FAILURE", 4);
+      push("systemd[1]", name + ".service: Failed with result 'exit-code'.", 4);
+      sh.journal.forEach((e, i) => { if (e.unit === name) e.ts = new Date(Date.UTC(2026, 10, 12, 9, 30, 0) + i * 1000); });
+    }
+  }
+  for (const p of setup.procs || []) sh.procs.push({ cpu: 0, mem: 0.1, user: sh.user, ...p });
   for (const line of setup.commands || []) {
     const asRoot = line.startsWith("#");
     const save = sh.user; if (asRoot) sh.user = "root";
