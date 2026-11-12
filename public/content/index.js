@@ -12,7 +12,9 @@ import terraform from "./courses/terraform.js";
 import aws from "./courses/aws.js";
 import roadmaps from "./roadmaps.js";
 import installer from "./guides/installer.js";
+import { CERTS as certs } from "./certifs/index.js";
 
 export const COURSES = [python, data, git, cicd, linux, docker, kubernetes, exploitation, terraform, aws, cpp];
 export const ROADMAPS = roadmaps;
 export const INSTALL = installer;
+export const CERTS = certs;

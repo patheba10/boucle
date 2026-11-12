@@ -1,5 +1,6 @@
 /* Boucle — routeur et pages. */
-import { COURSES, ROADMAPS, INSTALL } from "../../content/index.js";
+import { COURSES, ROADMAPS, INSTALL, CERTS } from "../../content/index.js";
+import { pageCerts, pageCert, bindCert } from "./lib/examview.js";
 import { I } from "./lib/icons.js";
 import { esc, $, $$, inl, norm, color, today, toast as rawToast } from "./lib/util.js";
 import { S, save, resetAll, markDay, streak, level, ls, XP_PER_LEVEL } from "./lib/state.js";
@@ -496,6 +497,8 @@ function render() {
   if (course) { el.innerHTML = pageCourse(course); }
   else if (route === "installer") { el.innerHTML = pageInstaller(); bind = () => { snipSetup = {}; bindSnippets(app()); }; }
   else if (route === "roadmaps") el.innerHTML = pageRoadmaps();
+  else if (route === "certifs") el.innerHTML = pageCerts(S, CERTS, color);
+  else if (CERTS.some(c => "cert-" + c.id === route)) { const c = CERTS.find(c => "cert-" + c.id === route); el.innerHTML = pageCert(S, c); bind = () => bindCert(S, c, { save, gain, today, rerender: () => { render(); window.scrollTo(0, 0); } }); }
   else if (route === "atelier") { el.innerHTML = pageAtelier(); bind = bindAtelier; }
   else if (ROADMAPS.some(r => r.id === route)) { const r = ROADMAPS.find(r => r.id === route); el.innerHTML = pageRoadmap(r); bind = () => bindRoadmap(r); }
   else if (byId(route)) { const x = byId(route); el.innerHTML = pageLesson(x); bind = () => bindLesson(x); }
