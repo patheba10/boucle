@@ -4,6 +4,9 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+### Ajouté
+- Cours **Deep learning**, deux premiers chapitres (9 leçons) : neurone et perceptron, activations (softmax stable), pertes, descente de gradient, rétropropagation vérifiée par différences finies, un réseau qui apprend XOR, un classifieur de chiffres manuscrits par mini-lots, surapprentissage et régularisation, questions d'entretien. Tout en NumPy, dans le navigateur (#73).
+
 ## [0.18.0] — 2026-11-12
 
 Sprint 6.2 : cours **API et tests** (FastAPI, pytest). L'étape 5 bis est terminée : SQL, API, tests.
