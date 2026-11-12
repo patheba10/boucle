@@ -5,6 +5,7 @@ import { parse, ParseError } from "./parse.js";
 import { globRegex, posixRegex } from "./text.js";
 import { COMMANDS, makeWorld, addService, EXTRA_CHECKS, SETUP_HOOKS } from "./commands.js";
 import "../docker/cli.js";
+import "../k8s/kubectl.js";
 
 class ExitSig { constructor(code) { this.code = code; } }
 class ReturnSig { constructor(code) { this.code = code; } }

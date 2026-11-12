@@ -118,8 +118,10 @@ export class Cluster {
     this.put({ apiVersion: "v1", kind: "Node", metadata: { name: this.node.name, labels: { "kubernetes.io/hostname": this.node.name, "node-role.kubernetes.io/control-plane": "" } } }, true);
     this.put({ apiVersion: "v1", kind: "Service", metadata: { name: "kubernetes", namespace: "default" }, spec: { type: "ClusterIP", clusterIP: "10.96.0.1", ports: [{ name: "https", port: 443, targetPort: 6443, protocol: "TCP" }] } }, true);
     // Les noms de Services se résolvent depuis les Pods (DNS du cluster).
-    const resolve0 = this.rt.resolveFrom.bind(this.rt);
+    const resolve0 = this.rt.resolveFrom.bind(this.rt); const http0 = this.rt.http.bind(this.rt);
     this.rt.resolveFrom = (c, name) => this.resolveSvc(c, name) || resolve0(c, name);
+    // Un Service se présente comme un conteneur « mandataire » : son port est celui du Service.
+    this.rt.http = (c, port, path, m) => (c && c.__svc ? this.svcHttp(c.__svc, port, path) : http0(c, port, path, m));
     this.created = true;
   }
   tick(s = 10) { this.t += s; this.rt.t += s; }
@@ -353,8 +355,12 @@ export class Cluster {
     const pod = this.list("Pod", null).find((p) => this.ctrName(p) === c.name); if (!pod) return null;
     const parts = String(name).split("."); const ns = parts[1] && parts[1] !== "svc" ? parts[1] : pod.metadata.namespace;
     const s = this.get("Service", parts[0], ns); if (!s) return null;
-    this.syncEndpoints(s); const ep = s.endpoints[0]; if (!ep) return null;
-    const target = this.rt.container(this.ctrName(ep.pod), { must: false }); return target ? { c: target, ip: s.spec.clusterIP } : null;
+    this.syncEndpoints(s); const ep = s.endpoints[0];
+    const target = ep && this.rt.container(this.ctrName(ep.pod), { must: false });
+    const tp = (sp) => (typeof sp.targetPort === "string" ? ((ep.pod.spec.containers[0].ports || []).find((x) => x.name === sp.targetPort) || {}).containerPort : sp.targetPort);
+    const sp = target && target.listen ? s.spec.ports.find((x) => +tp(x) === target.listen.port) : null;
+    const proxy = { __svc: s, name: s.metadata.name, id: s.metadata.uid, state: "running", listen: sp ? { port: sp.port, host: "0.0.0.0", kind: target.listen.kind } : null, pg: target ? target.pg : null };
+    return { c: proxy, ip: s.spec.clusterIP };
   }
   /** Requête HTTP vers un Service (port du Service) : un Pod prêt au hasard, sur son targetPort. */
   svcHttp(s, port, path) {
