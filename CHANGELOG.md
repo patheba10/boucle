@@ -4,6 +4,13 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.36.0] — 2026-11-12
+
+Sprint 11.4 : sauvegarde de la progression. Fin du milestone « Améliorations de l'audit ».
+
+### Ajouté
+- **Exporter et importer** la progression dans un fichier JSON, pour la garder ou la recharger sur un autre navigateur ; les fichiers invalides sont refusés avec un message clair (#118).
+
 ## [0.35.0] — 2026-11-12
 
 Sprint 11.3 : indices progressifs.

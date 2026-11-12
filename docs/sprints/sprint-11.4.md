@@ -15,12 +15,13 @@
 ## Journal
 
 - 12 nov. : module, interface, tests unitaires (aller-retour exact, sept fichiers invalides) et test de bout en bout (exporter, tout effacer, refuser un mauvais fichier, réimporter). 1 118 vérifications, 109 tests unitaires, 20 tests de bout en bout.
+- 12 nov. : PR #125, les trois jobs verts. Fusionnée ; version 0.36.0, milestone 10 fermé.
 
 ## Revue de sprint
 
 | Story | Points | Livré |
 |-------|--------|-------|
-| #118 Exporter et importer sa progression | 3 | Oui |
+| #118 Exporter et importer sa progression | 3 | Oui (PR #125) |
 
 Vélocité : 3 points sur 3. Version 0.36.0. Le milestone « Améliorations de l'audit » est terminé : 16 points sur 16.
 
