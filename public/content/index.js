@@ -14,11 +14,12 @@ import sql from "./courses/sql.js";
 import api from "./courses/api.js";
 import dl from "./courses/dl.js";
 import elec from "./courses/elec.js";
+import logique from "./courses/logique.js";
 import roadmaps from "./roadmaps.js";
 import installer from "./guides/installer.js";
 import { CERTS as certs } from "./certifs/index.js";
 
-export const COURSES = [python, data, git, cicd, linux, docker, kubernetes, exploitation, terraform, aws, sql, api, dl, elec, cpp];
+export const COURSES = [python, data, git, cicd, linux, docker, kubernetes, exploitation, terraform, aws, sql, api, dl, elec, logique, cpp];
 export const ROADMAPS = roadmaps;
 export const INSTALL = installer;
 export const CERTS = certs;
