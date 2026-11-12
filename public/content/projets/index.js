@@ -1,4 +1,6 @@
 /* Projets capstone, par roadmap (étape 9). Format : voir lib/projets.js et scripts/validate.mjs. */
 import devops from "./devops.js";
+import cloud from "./cloud.js";
+import ml from "./ml.js";
 
-export const PROJETS = [...devops];
+export const PROJETS = [...devops, ...cloud, ...ml];
