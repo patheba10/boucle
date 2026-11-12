@@ -5,7 +5,7 @@
 | Story | Points | Statut |
 |-------|--------|--------|
 | #33 US-4.2 Cluster Kubernetes simulé (enabler) | 8 | Terminé |
-| #34 US-4c Cours Kubernetes | 8 | En cours |
+| #34 US-4c Cours Kubernetes | 8 | Terminé |
 
 **Capacité** : 16 points. Le sprint court sur plusieurs sessions : le journal ci-dessous dit où reprendre.
 
@@ -26,3 +26,4 @@
 - 12 nov. (nuit) : PR #45 (cluster) fusionnée, #33 fermée. Branche `us-4c/kubernetes` pour le cours (#34). Les objets `setup.k8s.apply` sont créés après les commandes de mise en place.
 - 12 nov. (nuit) : cours enregistré (`courses/kubernetes.js`, nav), chapitre 1 validé (k8s-01 à k8s-03). Prévu : k8s-04 rollouts, k8s-05 ConfigMaps et Secrets, k8s-06 sondes et ressources, k8s-07 dépannage, k8s-08 exposition (NodePort, Ingress), k8s-09 base de données et stockage, k8s-10 mise à l'échelle (HPA), k8s-11 RBAC et Helm, k8s-12 entretien.
 - 12 nov. (nuit) : chapitres 2 et 3 validés (k8s-04 à k8s-09) ; ajout de base64, kubectl top et autoscale, ingress-nginx sur le port 80 (`setup.k8s.ingress`), validation des Ingress. Reste : k8s-10 à k8s-12, e2e, docs, PR, release 0.12.0.
+- 12 nov. (nuit) : chapitre 4 (k8s-10 à k8s-12), cours complet validé (692 vérifications), tests unitaires et e2e verts. PR du cours puis release 0.12.0.
