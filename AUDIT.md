@@ -34,7 +34,7 @@ Priorités : **P0** bloquant pour l'objectif, **P1** fort impact, **P2** confort
 | 13 | Hébergement en artifact : interdit les téléchargements à l'exécution, donc pas de paquets Python. | P0 | **Fait** : dépôt GitHub privé + Vercel |
 | 14 | Boucle infinie Python : impossible à arrêter. | P1 | **Fait** : arrêt à 20 s, redémarrage du worker |
 | 15 | C++ limité à un sous-ensemble (pas de `string`, `vector`, classes). Brancher un vrai compilateur (API de compilation ou clang en WebAssembly). | P1 | En partie : le C est couvert par minic, vérifié contre gcc (sprint 8.3, ADR 0002) ; le C++ reste sur JSCPP |
-| 16 | Progression uniquement dans le navigateur : perdue si les données du site sont effacées, pas de multi-appareil. Ajouter export/import, puis synchronisation de compte. | P1 | À faire |
+| 16 | Progression uniquement dans le navigateur : perdue si les données du site sont effacées, pas de multi-appareil. Ajouter export/import, puis synchronisation de compte. | P1 | En partie (A-4) : export et import d'un fichier JSON validé ; la synchronisation de compte demanderait un serveur |
 | 17 | Premier lancement de Python lent (environ 10 Mo). Précharger en arrière-plan dès l'ouverture d'une leçon Python. | P2 | **Fait** (sprint 2.1) |
 | 18 | Éditeur minimal : pas d'autocomplétion, pas de touche Tab sur mobile. Évaluer CodeMirror 6, ou ajouter une barre de symboles sur mobile. | P2 | À faire |
 | 19 | Pas de mode hors-ligne. En faire une PWA (manifest + service worker). | P2 | À faire |

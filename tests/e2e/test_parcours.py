@@ -118,6 +118,29 @@ def test_indices_progressifs(page):
     assert page.errors == []
 
 
+def test_exporter_importer_progression(page, tmp_path):
+    """La progression s'exporte en JSON et se réimporte ; un fichier invalide est refusé sans rien casser."""
+    page.goto(page.base + "#devops")
+    page.locator("[data-node=do-git] label.check").click()
+    with page.expect_download() as dl:
+        page.click("#export")
+    chemin = tmp_path / "sauvegarde.json"
+    dl.value.save_as(chemin)
+    assert '"format": "boucle-progression"' in chemin.read_text(encoding="utf-8")
+    page.click("#wipe")
+    page.click("#wipe")
+    page.goto(page.base + "#devops")
+    expect(page.locator("#chk-do-git")).not_to_be_checked()
+    mauvais = tmp_path / "mauvais.json"
+    mauvais.write_text('{"format": "autre"}', encoding="utf-8")
+    page.set_input_files("#import-fichier", str(mauvais))
+    expect(page.locator("#toast")).to_contain_text("pas une sauvegarde")
+    page.set_input_files("#import-fichier", str(chemin))
+    expect(page.locator("#toast")).to_contain_text("Progression importée")
+    expect(page.locator("#chk-do-git")).to_be_checked()
+    assert page.errors == []
+
+
 def test_examen_blanc_court(page):
     """Entraînement par domaine, puis examen blanc court : réponses, marque, fin, résultat par domaine."""
     page.goto(page.base + "#cert-clf")
