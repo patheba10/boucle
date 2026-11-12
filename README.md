@@ -61,6 +61,7 @@ Une leçon est un objet dans `public/content/courses/<cours>.js` :
 - `challenge` : `{ prompt, starter, solution, hint, ... }`
   - Python : `expected` (sortie exacte), plus `tests` optionnel, du code ajouté après celui de l'élève.
   - C++ : `tests`, une liste de `{ input, expected }`.
+  - SQL (cours dont `lang` vaut `"sql"`) : la base est le script `db` du défi, de la leçon ou du cours ; le résultat de la dernière requête de l'élève est comparé à celui de `solution` (ordre exigé si la solution contient `ORDER BY`, ou selon `ordered`). `columns: true` exige aussi les noms de colonnes ; `check` donne une requête de contrôle relancée sur les deux bases, pour un exercice qui modifie les données. Les blocs `~~~sql` de la théorie sont exécutables ; l'option `erreur` marque un extrait qui doit échouer.
   - Git (cours dont `lang` vaut `"git"`) : `setup` (commandes de mise en place, silencieuses), `checks` (état attendu, critères listés dans `evaluate` de `lib/gitsim.js`), `solution` (une suite de commandes possible).
   - Workflow GitHub Actions (`lang` vaut `"yaml"`) : `starter` et `solution` (fichiers YAML), `checks` (critères listés dans `evaluate` de `lib/workflow.js`, dont `scenarios` : un événement simulé et les jobs qui doivent tourner ou être sautés), `events` facultatif (onglets de simulation ; par défaut, ceux des scénarios), `file` facultatif (nom affiché).
 - `lang` (facultatif) sur une leçon : remplace le langage du cours pour cette leçon.

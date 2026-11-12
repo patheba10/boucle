@@ -4,6 +4,10 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+### Ajouté
+- Cours **SQL** en 16 leçons sur la base d'une boutique en ligne : SELECT, WHERE, tri et limites, NULL, jointures internes et externes, GROUP BY et HAVING, sous-requêtes et CTE, fonctions fenêtres, CASE et dates, auto-jointures et CTE récursives, INSERT, UPDATE, DELETE et transactions, schéma et contraintes, index et plan d'exécution, dix questions d'entretien (#67).
+- Moteur SQL : les requêtes tournent dans un vrai SQLite au navigateur, avec erreurs expliquées et comparaison au résultat de référence ; coloration SQL.
+
 ## [0.16.0] — 2026-11-12
 
 Sprint 5.3 : moteur d'examens blancs et préparation aux certifications AWS. L'étape 5 (cloud) est terminée : Terraform, AWS, certifications.

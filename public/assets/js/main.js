@@ -17,7 +17,7 @@ import { evaluate as evaluateShell } from "./lib/shell/shell.js";
 
 const toast = (msg) => rawToast(msg, I.bolt);
 function gain(n, msg) { S.xp += n; markDay(); save(); updateStats(); toast("+" + n + " XP · " + msg); }
-const firstLoad = (lang) => lang === "py"
+const firstLoad = (lang) => lang === "py" || lang === "sql"
   ? (isPyReady() ? "Exécution…" : "Démarrage de Python (quelques secondes la première fois)…")
   : "Exécution…";
 
@@ -51,7 +51,7 @@ function theoryHTML(src, lang, canRun) {
     if (parts[i].trim()) h += inl(parts[i]);
     if (i + 3 < parts.length) {
       const l = parts[i + 1], opts = parts[i + 2], code = parts[i + 3];
-      const runnable = canRun && (l === "py" || l === "cpp" || l === "git" || l === "yaml" || l === "sh") && !/norun/.test(opts);
+      const runnable = canRun && (l === "py" || l === "cpp" || l === "git" || l === "yaml" || l === "sh" || l === "sql") && !/norun/.test(opts);
       const stdin = (/stdin:(.*)$/.exec(opts) || [])[1];
       h += '<div class="snippet" data-lang="' + l + '"' + (stdin ? ' data-stdin="' + esc(stdin.trim()) + '"' : "") + '><div class="snippet-bar"><span class="lbl">' + (LANG_LABEL[l] || l) + (stdin ? " · entrée : " + esc(stdin.trim()) : "") + "</span>" +
         (runnable ? '<button class="run" type="button">' + I.play + (l === "yaml" ? "Analyser" : "Exécuter") + "</button>" : "") + "</div><pre>" + highlight(code, l) + '</pre><textarea hidden>' + esc(code) + "</textarea></div>";
@@ -59,6 +59,7 @@ function theoryHTML(src, lang, canRun) {
   }
   return h;
 }
+let snipDb = ""; // base SQL des extraits de la leçon affichée
 let snipSetup = {}; // mise en place des extraits Linux de la leçon affichée (Docker installé, fichiers…)
 function bindSnippets(root) {
   $$(".snippet", root).forEach(sn => {
@@ -70,7 +71,7 @@ function bindSnippets(root) {
       if (lang === "sh") { res.innerHTML = runShSnippet(code, snipSetup); return; }
       if (lang === "yaml") { mountReport(res, () => code, null); return; }
       b.disabled = true; res.innerHTML = statusHTML(firstLoad(lang));
-      try { const r = await run(lang, code, sn.dataset.stdin || "", t => { res.innerHTML = statusHTML(t); }); res.innerHTML = consoleHTML(r, lang); }
+      try { const r = await run(lang, code, lang === "sql" ? snipDb : sn.dataset.stdin || "", t => { res.innerHTML = statusHTML(t); }); res.innerHTML = consoleHTML(r, lang); }
       catch (e) { res.innerHTML = loadFailHTML(lang, e); }
       b.disabled = false;
     });
@@ -162,7 +163,7 @@ function pageLesson(x) {
   const ch = l.challenge;
   const term = ch && (lang === "git" || (lang === "sh" && ch.kind !== "script"));
   const code = (S.code[l.id] != null && !term ? S.code[l.id] : (ch ? ch.starter || "" : ""));
-  const file = lang === "py" ? "main.py" : "main.cpp";
+  const file = lang === "py" ? "main.py" : lang === "sql" ? "requete.sql" : "main.cpp";
   const nQuiz = (l.quiz || []).length;
   let right = "";
   if (term) {
@@ -219,8 +220,10 @@ function pageLesson(x) {
 function bindLesson(x) {
   const { c, l } = x; const lang = l.lang || c.lang; const L = ls(l.id); const ch = l.challenge;
   snipSetup = l.snippetSetup || c.snippetSetup || {};
+  snipDb = l.db || c.db || "";
   bindSnippets(app());
   if (lang === "py") preloadPy(lessonCode(l));
+  if (lang === "sql") preloadPy("import sqlite3");
   $$("[data-jump]").forEach(a => a.addEventListener("click", e => { e.preventDefault(); const t = document.getElementById(a.dataset.jump); if (t) t.scrollIntoView({ behavior: "smooth", block: "start" }); }));
   const qXP = ch ? Math.round(l.xp * 0.4) : l.xp, nQ = (l.quiz || []).length;
   $$(".quiz").forEach(qd => {
@@ -254,9 +257,9 @@ function bindLesson(x) {
   async function doRun() {
     busy(true); const lbl = '<span class="lbl">Console</span>'; cons.innerHTML = lbl + statusHTML(firstLoad(lang));
     try {
-      const stdin = lang === "cpp" ? ch.tests[0].input : "";
+      const stdin = lang === "cpp" ? ch.tests[0].input : lang === "sql" ? ch.db || l.db || c.db || "" : "";
       const r = await run(lang, ed.get(), stdin, t => { cons.innerHTML = lbl + statusHTML(t); });
-      cons.innerHTML = '<span class="lbl">Console' + (stdin ? " · entrée : " + esc(stdin.replace(/\n/g, " ⏎ ")) : "") + "</span>" + consoleHTML(r, lang);
+      cons.innerHTML = '<span class="lbl">Console' + (stdin && lang === "cpp" ? " · entrée : " + esc(stdin.replace(/\n/g, " ⏎ ")) : "") + "</span>" + consoleHTML(r, lang);
     } catch (e) { cons.innerHTML = '<span class="lbl">Console</span>' + loadFailHTML(lang, e); }
     busy(false);
   }
@@ -264,7 +267,7 @@ function bindLesson(x) {
     busy(true); const lbl = '<span class="lbl">Console</span>'; cons.innerHTML = lbl + statusHTML(firstLoad(lang));
     const slot = $('[data-slot="verdict"]');
     try {
-      const r = await check(lang, ch, ed.get(), t => { cons.innerHTML = lbl + statusHTML(t); });
+      const r = await check(lang, ch, ed.get(), t => { cons.innerHTML = lbl + statusHTML(t); }, l.db || c.db || "");
       cons.innerHTML = lbl + consoleHTML({ out: r.pre || "", err: r.err, line: r.line, figs: r.figs }, lang, r.userLines);
       slot.innerHTML = verdictHTML(r, lang);
       if (r.ok && !L.ch) {
@@ -396,7 +399,7 @@ function bindYamlChallenge(x, L) {
 
 function verdictHTML(r, lang) {
   const head = r.ok ? '<div class="verdict-h">' + I.check + (lang === "cpp" && r.cases.length > 1 ? "Tous les tests passent (" + r.cases.length + "/" + r.cases.length + ")." : "Bravo, c'est exactement ça.") + "</div>"
-    : '<div class="verdict-h">' + I.x + (r.err ? "Ton programme s'est arrêté sur une erreur." : "La sortie ne correspond pas encore.") + "</div>";
+    : '<div class="verdict-h">' + I.x + (r.err ? (lang === "sql" ? "SQLite a refusé une instruction." : "Ton programme s'est arrêté sur une erreur.") : lang === "sql" ? "Le résultat ne correspond pas encore." : "La sortie ne correspond pas encore.") + "</div>";
   if (r.ok) return '<div class="verdict ok">' + head + "</div>";
   let cases = "";
   if (lang === "cpp") {
@@ -407,6 +410,7 @@ function verdictHTML(r, lang) {
     const c = r.cases[0];
     cases = '<div class="case"><div><span class="h">Attendu</span><pre>' + esc(c.expected) + '</pre></div><div><span class="h">Obtenu</span><pre>' + esc(norm(c.got) || "(rien)") + "</pre></div></div>";
   }
+  if (r.note) cases = '<p class="verdict-note">' + esc(r.note) + "</p>" + cases;
   return '<div class="verdict no">' + head + '<div class="cases">' + cases + "</div></div>";
 }
 

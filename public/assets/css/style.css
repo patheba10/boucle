@@ -551,3 +551,4 @@ details.setup > .prose { padding: 0 22px 20px; }
 .sh-ls .sh-exe { color: var(--tk-str); font-weight: 600; }
 .sh-svc-wrap { display: flex; flex-direction: column; gap: 6px; }
 .exam [data-slot] { display: flex; flex-direction: column; gap: 12px; }
+.verdict-note { font-size: 14px; font-weight: 600; }
