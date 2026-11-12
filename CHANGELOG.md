@@ -4,6 +4,10 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+### Ajouté
+- Deep learning, chapitre **Keras** (6 leçons) : premier modèle, classer des chiffres, callbacks et courbes, réseaux convolutifs, transfert d'apprentissage, sauvegarder et servir un modèle (#74).
+- minikeras : Keras 3 réimplémenté en NumPy pour exécuter le code Keras dans le navigateur, où TensorFlow n'existe pas ; un job CI vérifie chaque défi avec le vrai TensorFlow.
+
 ## [0.19.0] — 2026-11-12
 
 Sprint 7.1 : cours **Deep learning**, réseaux de neurones à la main avec NumPy (9 leçons).

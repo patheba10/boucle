@@ -72,9 +72,33 @@ jobs:
       - name: Parcours élève dans un vrai navigateur (CDN réels)
         run: python -m pytest -q tests/e2e
 
+  tensorflow:
+    name: Vérifier le code Keras avec TensorFlow
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: requirements-tf.txt
+
+      - name: Installer TensorFlow (CPU)
+        run: pip install -r requirements-tf.txt
+
+      # Le navigateur exécute le code Keras avec minikeras ; ici, le même code doit donner les mêmes résultats avec Keras 3.
+      - name: Défis et extraits Keras avec le vrai TensorFlow
+        run: PYTHON=python node scripts/verifier_tf.mjs
+
   deploy-github-pages:
     name: Publier sur GitHub Pages
-    needs: [validate-content, e2e]
+    needs: [validate-content, e2e, tensorflow]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
