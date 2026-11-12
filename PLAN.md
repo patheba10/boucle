@@ -98,7 +98,7 @@ TensorFlow ne tourne pas dans Pyodide : les exercices TensorFlow sont validés e
 ## Étape 9 — Roadmaps et projets capstone
 
 - Nouvelle roadmap Embarqué. Faite au sprint 8.4 (#85) : roadmap « Embarqué et IoT », 9 étapes reliées aux leçons d'électronique, de logique, de C embarqué et de TinyML.
-- Pour chaque roadmap, 2 ou 3 projets capstone de niveau portfolio, avec cahier des charges, jalons et critères de réussite.
+- Pour chaque roadmap, 2 ou 3 projets capstone de niveau portfolio, avec cahier des charges, jalons et critères de réussite. Sprint 10.1 (#106) : page Projets, jalons cochables et sauvegardés, projets reliés depuis les roadmaps ; deux capstones DevOps.
 
 ## En continu
 

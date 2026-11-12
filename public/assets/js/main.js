@@ -1,6 +1,7 @@
 /* Boucle — routeur et pages. */
-import { COURSES, ROADMAPS, INSTALL, CERTS } from "../../content/index.js";
+import { COURSES, ROADMAPS, INSTALL, CERTS, PROJETS } from "../../content/index.js";
 import { pageCerts, pageCert, bindCert } from "./lib/examview.js";
+import { pageProjets, pageProjet, bindProjet, projetsDeRoadmap } from "./lib/projets.js";
 import { I } from "./lib/icons.js";
 import { esc, $, $$, inl, norm, color, today, toast as rawToast } from "./lib/util.js";
 import { S, save, resetAll, markDay, streak, level, ls, XP_PER_LEVEL } from "./lib/state.js";
@@ -85,7 +86,7 @@ function setNav(route) {
   const lesson = byId(route);
   $$(".nav a").forEach(a => {
     const t = a.getAttribute("href").slice(1);
-    const on = t === route || (lesson && lesson.c.route === t) || (t === "roadmaps" && ROADMAPS.some(r => r.id === route));
+    const on = t === route || (lesson && lesson.c.route === t) || (t === "roadmaps" && ROADMAPS.some(r => r.id === route)) || (t === "projets" && PROJETS.some(p => p.id === route)) || (t === "certifs" && route.startsWith("cert-"));
     if (on) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
   });
 }
@@ -446,7 +447,7 @@ function pageRoadmap(r) {
           '<div class="links">' + lessons + n.links.map(([t, u]) => '<a href="' + esc(u) + '" target="_blank" rel="noopener">' + esc(t) + "</a>").join("") + "</div></article>";
       }).join("") + "</div></section>").join("") +
     '<section class="rm-foot"><div class="card"><h3>Certifications utiles</h3><ul>' + r.certs.map(c => "<li>" + esc(c) + "</li>").join("") + '</ul><p style="font-size:13.5px">Les intitulés et codes d\'examen évoluent : vérifie la version en cours sur le site de l\'éditeur.</p></div>' +
-      '<div class="card"><h3>Projet portfolio</h3><p>' + esc(r.portfolio) + "</p></div></section></div>";
+      '<div class="card"><h3>Projet portfolio</h3><p>' + esc(r.portfolio) + "</p></div></section>" + projetsDeRoadmap(S, PROJETS, r.id, color) + "</div>";
 }
 function bindRoadmap(r) {
   $$("[data-node] input").forEach(inp => inp.addEventListener("change", () => {
@@ -505,6 +506,8 @@ function render() {
   else if (route === "installer") { el.innerHTML = pageInstaller(); bind = () => { snipSetup = {}; bindSnippets(app()); }; }
   else if (route === "roadmaps") el.innerHTML = pageRoadmaps();
   else if (route === "certifs") el.innerHTML = pageCerts(S, CERTS, color);
+  else if (route === "projets") el.innerHTML = pageProjets(S, PROJETS, ROADMAPS, color);
+  else if (PROJETS.some(p => p.id === route)) { const p = PROJETS.find(p => p.id === route); el.innerHTML = pageProjet(S, p, ROADMAPS, byId, color, I); bind = () => bindProjet(S, p, { save, toast, markDay, updateStats }); }
   else if (CERTS.some(c => "cert-" + c.id === route)) { const c = CERTS.find(c => "cert-" + c.id === route); el.innerHTML = pageCert(S, c); bind = () => bindCert(S, c, { save, gain, today, rerender: () => { render(); window.scrollTo(0, 0); } }); }
   else if (route === "atelier") { el.innerHTML = pageAtelier(); bind = bindAtelier; }
   else if (ROADMAPS.some(r => r.id === route)) { const r = ROADMAPS.find(r => r.id === route); el.innerHTML = pageRoadmap(r); bind = () => bindRoadmap(r); }

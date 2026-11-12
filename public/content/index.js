@@ -22,8 +22,10 @@ import entretiens from "./courses/entretiens.js";
 import roadmaps from "./roadmaps.js";
 import installer from "./guides/installer.js";
 import { CERTS as certs } from "./certifs/index.js";
+import { PROJETS as projets } from "./projets/index.js";
 
 export const COURSES = [python, data, git, cicd, linux, docker, kubernetes, exploitation, terraform, aws, sql, api, dl, elec, logique, embarque, algo, sysdesign, entretiens, cpp];
 export const ROADMAPS = roadmaps;
 export const INSTALL = installer;
 export const CERTS = certs;
+export const PROJETS = projets;
