@@ -46,7 +46,7 @@ def test_accueil(page):
 
 
 def test_pages_principales_sans_erreur(page):
-    for route in ["python", "data", "git", "cicd", "cpp", "roadmaps", "devops", "installer", "atelier", "py-01", "np-01", "git-01", "git-12", "ci-01", "ci-20", "ci-22", "linux", "lx-01", "lx-10", "lx-14", "lx-19", "lx-21", "docker", "dk-01", "dk-06", "dk-09", "dk-11", "dk-12", "kubernetes", "k8s-01", "k8s-05", "k8s-07", "k8s-12", "exploitation", "ex-02", "ex-06", "ex-10", "ex-11", "terraform", "tf-02", "tf-05", "tf-08", "tf-11", "aws", "aws-02", "aws-04", "aws-08", "aws-12", "certifs", "cert-clf", "cert-saa", "cpp-10"]:
+    for route in ["python", "data", "git", "cicd", "cpp", "roadmaps", "devops", "installer", "atelier", "py-01", "np-01", "git-01", "git-12", "ci-01", "ci-20", "ci-22", "linux", "lx-01", "lx-10", "lx-14", "lx-19", "lx-21", "docker", "dk-01", "dk-06", "dk-09", "dk-11", "dk-12", "kubernetes", "k8s-01", "k8s-05", "k8s-07", "k8s-12", "exploitation", "ex-02", "ex-06", "ex-10", "ex-11", "terraform", "tf-02", "tf-05", "tf-08", "tf-11", "aws", "aws-02", "aws-04", "aws-08", "aws-12", "sql", "sql-01", "sql-10", "sql-16", "certifs", "cert-clf", "cert-saa", "cpp-10"]:
         page.goto(page.base + "#" + route)
         expect(page.locator("#app")).not_to_be_empty()
     assert page.errors == []
@@ -139,7 +139,7 @@ def test_parite_navigateur_toutes_les_solutions(page):
             term: (l.lang || c.lang) === "git" || ((l.lang || c.lang) === "sh" && l.challenge.kind !== "script"),
             solution: Array.isArray(l.challenge.solution) ? l.challenge.solution : null }))))""")
     if OFFLINE:
-        lessons = [l for l in lessons if l["course"] != "data"]
+        lessons = [l for l in lessons if l["course"] not in ("data", "sql")]  # paquets numpy, sqlite3… du CDN
     assert lessons, "aucun défi trouvé"
     echecs = []
     for lesson in lessons:
@@ -161,6 +161,21 @@ def test_parite_navigateur_toutes_les_solutions(page):
         if "ok" not in (verdict.get_attribute("class") or ""):
             echecs.append(lesson["id"] + " : " + page.locator(".console").inner_text()[:200])
     assert not echecs, "Solutions refusées dans le navigateur :\n" + "\n".join(echecs)
+
+
+@pytest.mark.skipif(OFFLINE, reason="sqlite3 est un paquet Pyodide servi par le CDN")
+def test_sql_reel(page):
+    """Un extrait SQL s'exécute dans SQLite (Pyodide), une erreur SQLite est expliquée, un défi est vérifié."""
+    page.goto(page.base + "#sql-07")
+    page.locator(".snippet .run").first.click()
+    expect(page.locator(".snippet .res").first).to_contain_text("(1 ligne)", timeout=PY_TIMEOUT)
+    page.fill("#ed-sql-07", "SELECT categorie, COUNT(*) FROM produit;")
+    page.click('[data-act="run"]')
+    expect(page.locator(".console")).to_contain_text("no such table: produit", timeout=PY_TIMEOUT)
+    expect(page.locator(".console")).to_contain_text("Table inconnue")
+    page.click('[data-act="check"]')
+    expect(page.locator(".verdict.no")).to_be_visible(timeout=PY_TIMEOUT)
+    assert page.errors == []
 
 
 @pytest.mark.skipif(OFFLINE, reason="seaborn s'installe depuis PyPI avec micropip")

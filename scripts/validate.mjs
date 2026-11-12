@@ -16,6 +16,7 @@ import { createRequire } from "node:module";
 import vm from "node:vm";
 import { COURSES, ROADMAPS, INSTALL, CERTS } from "../public/content/index.js";
 import { lintCert, buildExam, grade } from "../public/assets/js/lib/exam.js";
+import { sqlRunProgram, sqlCheckProgram, parseSqlCheck } from "../public/assets/js/lib/sql.js";
 import { runScript, evaluate as evaluateGit } from "../public/assets/js/lib/gitsim.js";
 import { lint as lintWorkflow, evaluate as evaluateWorkflow } from "../public/assets/js/lib/workflow.js";
 import { createShell, evaluate as evaluateShell } from "../public/assets/js/lib/shell/shell.js";
@@ -155,6 +156,12 @@ for (const c of COURSES) for (const l of c.lessons) {
       else ok();
       continue;
     }
+    if (lang === "sql") {
+      if (/norun/.test(opts)) continue;
+      const r = runPy(sqlRunProgram(l.db || c.db || "", code)); const voulu = /erreur/.test(opts);
+      voulu ? (r.err ? ok() : fail(l.id, "extrait SQL marqué « erreur » mais accepté")) : r.err ? fail(l.id, "extrait SQL : " + r.err) : ok();
+      continue;
+    }
     if (lang !== "py" && lang !== "cpp") continue; // terminal, powershell… : non exécutés
     const stdin = ((/stdin:(.*)$/.exec(opts) || [])[1] || "").trim();
     if (lang === "py") {
@@ -203,6 +210,16 @@ for (const c of COURSES) for (const l of c.lessons) {
       fin.length ? fail(l.id, "la solution ne remplit pas : " + fin.map((r) => r.label).join(" ; ")) : ok();
       evaluateGit(runScript(ch.setup, []).sim, ch.checks).every((r) => r.ok) ? fail(l.id, "l'état de départ remplit déjà tous les critères") : ok();
     } catch (e) { fail(l.id, String(e.message || e)); }
+    process.stdout.write(".");
+    continue;
+  }
+  if (clang === "sql") {
+    for (const k of ["prompt", "starter", "solution", "hint"]) if (!ch[k]) fail(l.id, "défi SQL sans " + k);
+    const db = ch.db || l.db || c.db || "";
+    const sol = runPy(sqlCheckProgram(ch, db, ch.solution)); const vs = parseSqlCheck(sol.out).verdict;
+    sol.err || !vs ? fail(l.id, "la solution SQL échoue : " + (sol.err || sol.out.slice(-200))) : vs.ok ? ok() : fail(l.id, "la solution SQL ne donne pas le résultat attendu : " + vs.note);
+    const st = runPy(sqlCheckProgram(ch, db, ch.starter)); const vt = parseSqlCheck(st.out).verdict;
+    !st.err && vt && vt.ok ? fail(l.id, "le code de départ SQL passe déjà") : ok();
     process.stdout.write(".");
     continue;
   }

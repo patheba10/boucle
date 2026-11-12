@@ -2,6 +2,8 @@
    - Python : Pyodide dans un Web Worker (vrai CPython, numpy/pandas/scikit-learn/matplotlib chargés à la demande).
    - C++   : JSCPP, interpréteur pédagogique exécuté pas à pas (on peut l'arrêter en cas de boucle infinie). */
 
+import { sqlRunProgram } from "./sql.js";
+
 const PY_TIMEOUT_MS = 20000; // assez pour importer scikit-learn et entraîner un petit modèle en WebAssembly
 const CPP_TIMEOUT_MS = 6000;
 const MAX_OUT = 60000;
@@ -131,5 +133,8 @@ export async function runCpp(code, stdin, onStatus) {
   }
 }
 
-export const run = (lang, code, stdin, onStatus) => (lang === "py" ? runPy(code, stdin, onStatus) : runCpp(code, stdin, onStatus));
+/** SQL : la requête tourne dans SQLite (module sqlite3 de Python) sur une base neuve créée par le script db. */
+export const runSql = (db, code, onStatus) => runPy(sqlRunProgram(db, code), "", onStatus);
+/* Pour SQL, le troisième argument est le script de création de la base. */
+export const run = (lang, code, stdin, onStatus) => (lang === "py" ? runPy(code, stdin, onStatus) : lang === "sql" ? runSql(stdin, code, onStatus) : runCpp(code, stdin, onStatus));
 export const isPyReady = () => pyReady;

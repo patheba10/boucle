@@ -67,7 +67,20 @@ function highlightJson(code) {
   return out + esc(code.slice(last));
 }
 
+/* SQL : commentaires, chaînes, nombres, mots-clés et fonctions. */
+const SQLRX = /(--[^\n]*)|('(?:[^']|'')*')|\b(\d+(?:\.\d+)?)\b|\b(SELECT|FROM|WHERE|AND|OR|NOT|IN|IS|NULL|LIKE|BETWEEN|AS|ON|JOIN|INNER|LEFT|RIGHT|FULL|OUTER|CROSS|GROUP|BY|HAVING|ORDER|ASC|DESC|LIMIT|OFFSET|DISTINCT|UNION|ALL|EXCEPT|INTERSECT|INSERT|INTO|VALUES|UPDATE|SET|DELETE|CREATE|TABLE|INDEX|VIEW|DROP|ALTER|ADD|COLUMN|PRIMARY|KEY|FOREIGN|REFERENCES|UNIQUE|CHECK|DEFAULT|CASE|WHEN|THEN|ELSE|END|WITH|RECURSIVE|OVER|PARTITION|ROWS|RANGE|PRECEDING|FOLLOWING|CURRENT|ROW|UNBOUNDED|BEGIN|COMMIT|ROLLBACK|TRANSACTION|EXISTS|INTEGER|TEXT|REAL|NUMERIC|IF|EXPLAIN|QUERY|PLAN|PRAGMA|CASCADE|AUTOINCREMENT|COLLATE|NOCASE)\b|\b([A-Za-z_]\w*)(?=\s*\()/gi;
+function highlightSql(code) {
+  SQLRX.lastIndex = 0; let out = "", last = 0, m;
+  while ((m = SQLRX.exec(code))) {
+    out += esc(code.slice(last, m.index)); last = SQLRX.lastIndex;
+    const cls = m[1] ? "com" : m[2] ? "str" : m[3] ? "num" : m[4] ? "kw" : "fn";
+    out += '<span class="tk-' + cls + '">' + esc(m[0]) + "</span>";
+  }
+  return out + esc(code.slice(last));
+}
+
 export function highlight(code, lang) {
+  if (lang === "sql") return highlightSql(code);
   if (lang === "json") return highlightJson(code);
   if (lang === "yaml") return highlightYaml(code);
   if (lang === "docker") return highlightDocker(code);

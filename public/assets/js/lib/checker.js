@@ -1,12 +1,19 @@
 /* Vérification des défis et affichage des résultats. */
 import { esc, norm } from "./util.js";
 import { runPy, runCpp } from "./engines.js";
+import { sqlCheckProgram, parseSqlCheck, sqlTip } from "./sql.js";
 
 export const MARK = "<<<BOUCLE-TESTS>>>";
 
 /** Python : sortie exacte, ou code de test ajouté après le code de l'élève (séparé par un marqueur).
     C++ : chaque test fournit une entrée standard et une sortie attendue. */
-export async function check(lang, ch, code, onStatus) {
+export async function check(lang, ch, code, onStatus, db = "") {
+  if (lang === "sql") {
+    const r = await runPy(sqlCheckProgram(ch, ch.db || db, code), "", onStatus);
+    const { pre, verdict } = parseSqlCheck(r.out);
+    if (r.err || !verdict) return { ok: false, cases: [{ expected: "", got: "" }], err: r.err || "Vérification impossible", pre };
+    return { ok: verdict.ok, cases: [{ expected: verdict.expected, got: verdict.got }], note: verdict.note, pre };
+  }
   if (lang === "py") {
     const userLines = code.split("\n").length;
     if (ch.tests) {
@@ -34,6 +41,7 @@ export function explainErr(lang, err, line, userLines) {
   if (err === "TimeLimit") {
     return { msg: "Arrêt après " + (lang === "py" ? "20" : "6") + " secondes.", tip: "Boucle infinie ? Vérifie que la condition de ta boucle finit par devenir fausse." };
   }
+  if (lang === "sql") return { msg: String(err).replace(/^ErreurSQL: /, "Erreur SQL, "), tip: sqlTip(String(err)) };
   if (lang === "py") {
     let where = "";
     if (line && userLines && line > userLines) where = " (pendant les tests : ta fonction a planté)";
@@ -74,5 +82,5 @@ export function consoleHTML(r, lang, userLines) {
 
 export const statusHTML = (text) => '<span class="dim">' + esc(text) + "</span>";
 export const loadFailHTML = (lang, e) =>
-  '<span class="err">Impossible de charger l\'interpréteur ' + (lang === "py" ? "Python" : "C++") + ".</span>\n" +
+  '<span class="err">Impossible de charger l\'interpréteur ' + (lang === "py" ? "Python" : lang === "sql" ? "SQL (SQLite dans Python)" : "C++") + ".</span>\n" +
   '<span class="dim">→ Vérifie ta connexion puis réessaie.' + (e && e.message ? " (" + esc(e.message) + ")" : "") + "</span>";

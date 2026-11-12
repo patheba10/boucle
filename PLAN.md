@@ -66,7 +66,7 @@ Ordre choisi avec Demba : DevOps, puis Cloud (AWS), puis le reste du socle entre
 
 ## Étape 5 bis — Socle entreprise : SQL et API
 
-1. SQL : `SELECT`, filtres, jointures, agrégations, sous-requêtes, fonctions fenêtres, index, transactions. Exécuté pour de vrai (SQLite via Python).
+1. SQL (#67, sprint 6.1, 16 leçons) : `SELECT`, filtres, jointures, agrégations, sous-requêtes, fonctions fenêtres, index, transactions. Exécuté pour de vrai (SQLite via Python, dans Pyodide).
 2. API REST : HTTP, JSON, codes de statut, authentification, FastAPI.
 3. Tests : pytest, tests unitaires vs intégration.
 
