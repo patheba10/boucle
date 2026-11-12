@@ -2,7 +2,7 @@
 import { today, dayKey } from "./util.js";
 
 const KEY = "boucle-v1";
-const blank = () => ({ xp: 0, lessons: {}, roadmap: {}, projets: {}, days: [], code: {}, last: null, atelier: { lang: "py", py: "", cpp: "", stdin: "" } });
+const blank = () => ({ xp: 0, lessons: {}, roadmap: {}, projets: {}, revision: {}, days: [], code: {}, last: null, atelier: { lang: "py", py: "", cpp: "", stdin: "" } });
 
 export let S = load();
 

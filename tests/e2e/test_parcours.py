@@ -81,6 +81,30 @@ def test_roadmap_suit_les_lecons(page):
     assert page.errors == []
 
 
+def test_revision_espacee(page):
+    """Une question de quiz ratée revient dans les révisions, et en sort après trois bonnes réponses."""
+    page.goto(page.base + "#sql-01")
+    quiz = page.locator(".quiz").first
+    bonne = page.evaluate("() => import('./content/index.js').then(m => m.COURSES.find(c => c.id === 'sql').lessons[0].quiz[0].answer)")
+    mauvaise = 1 if bonne == 0 else 0
+    quiz.locator(f".opt[data-oi='{mauvaise}']").click()
+    expect(quiz.locator(".explain.no")).to_contain_text("reviendra demain")
+    # On avance l'horloge de l'élève : l'échéance passe à hier, puis on révise trois fois.
+    for tour in range(3):
+        page.evaluate("""() => { const s = JSON.parse(localStorage.getItem("boucle-v1"));
+            for (const k in s.revision) s.revision[k].due = "2000-01-01";
+            localStorage.setItem("boucle-v1", JSON.stringify(s)); }""")
+        page.goto(page.base + "#home")
+        page.reload()
+        expect(page.locator("[data-revision-carte]")).to_contain_text("1 question de quiz")
+        page.click("[data-revision-carte] a")
+        page.locator(f"[data-rev] .opt[data-oi='{bonne}']").click()
+        expect(page.locator("[data-rev] .explain")).to_contain_text("maîtrisée" if tour == 2 else "Prochaine révision")
+    page.click("[data-rev-suivante]")
+    expect(page.locator("[data-revision-fin]")).to_contain_text("Aucune question")
+    assert page.errors == []
+
+
 def test_examen_blanc_court(page):
     """Entraînement par domaine, puis examen blanc court : réponses, marque, fin, résultat par domaine."""
     page.goto(page.base + "#cert-clf")
