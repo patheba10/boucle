@@ -4,8 +4,8 @@
 
 | Story | Points | Statut |
 |-------|--------|--------|
-| #48 US-4.4 Simulateurs Prometheus et Ansible (enabler) | 8 | En cours |
-| #35 US-4d Cours Exploitation : observabilité, SRE, Ansible | 8 | À faire |
+| #48 US-4.4 Simulateurs Prometheus et Ansible (enabler) | 8 | Terminé |
+| #35 US-4d Cours Exploitation : observabilité, SRE, Ansible | 8 | Terminé |
 
 **Capacité** : 16 points. Le sprint court sur plusieurs sessions : le journal ci-dessous dit où reprendre.
 
@@ -21,3 +21,5 @@
 - 12 nov. : issue #48 et branche `us-4.4/simulateurs-exploitation` créées, conception ci-dessus. Prochaine étape : `lib/prom/promql.js` et ses tests.
 - 12 nov. : `lib/prom/promql.js` (séries et évaluateur PromQL) et `lib/prom/cli.js` (Prometheus sur le port 9090 avec règles et alertes, `promtool query instant`, `promtool check rules|config`, critères `promql` et `alerts`) écrits et essayés. Prochaine étape : `lib/ansible/` puis tests unitaires.
 - 12 nov. : `lib/ansible/ansible.js` (ansible-playbook et ansible, modules, Jinja2, handlers, check et diff, idempotence) ; 5 tests unitaires d'exploitation verts (68 en tout). PR #48 ensuite, puis le cours (#35).
+- 12 nov. : PR #49 (simulateurs) fusionnée. Branche `us-4d/exploitation` : cours enregistré, chapitre observabilité validé (ex-01 à ex-05). Prévu : ex-06 SLO (Python), ex-07 incidents, ex-08 à ex-10 Ansible, ex-11 entretien.
+- 12 nov. : cours complet (ex-01 à ex-11) validé (718 vérifications), tests unitaires et e2e verts. PR du cours puis release 0.13.0 : l'étape 4 (DevOps) est terminée. Étape suivante dans PLAN.md : étape 5, Cloud (Terraform, AWS).

@@ -4,6 +4,10 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+### Ajouté
+- Cours **Exploitation et SRE** en 11 leçons : métriques, journaux et traces, PromQL (sélecteurs, `rate`, agrégations, taux d'erreurs, p95), alertes Prometheus, tableaux de bord et saturation, SLI, SLO et budget d'erreur (en Python), incidents et post-mortems, Ansible (inventaire, ad hoc, playbooks, gabarits et handlers), dix questions d'entretien (#35).
+- Simulateurs Prometheus (PromQL, règles, alertes, `promtool`) et Ansible (`ansible-playbook`, `ansible`, idempotence, `--check --diff`) dans le terminal (#48).
+
 ## [0.12.0] — 2026-11-12
 
 Sprint 4.4 : cluster Kubernetes simulé et cours **Kubernetes** (12 leçons).
