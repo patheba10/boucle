@@ -3,7 +3,8 @@
 import { FS, FsError, errText, normalize, dirname, basename, resetClock } from "./fs.js";
 import { parse, ParseError } from "./parse.js";
 import { globRegex, posixRegex } from "./text.js";
-import { COMMANDS, makeWorld, addService } from "./commands.js";
+import { COMMANDS, makeWorld, addService, EXTRA_CHECKS, SETUP_HOOKS } from "./commands.js";
+import "../docker/cli.js";
 
 class ExitSig { constructor(code) { this.code = code; } }
 class ReturnSig { constructor(code) { this.code = code; } }
@@ -676,7 +677,7 @@ export function evaluate(sh, checks) {
         for (const n of v.absent || []) push(!sh.procs.some((p) => p.cmd.includes(n)), "Plus aucun processus « " + n + " »");
         for (const n of v.present || []) push(sh.procs.some((p) => p.cmd.includes(n)), "Un processus « " + n + " » tourne");
         break;
-      default: throw new Error("critère de vérification inconnu : " + k);
+      default: if (EXTRA_CHECKS[k]) { EXTRA_CHECKS[k](sh, v, push); break; } throw new Error("critère de vérification inconnu : " + k);
     }
   }
   return out;
@@ -695,6 +696,7 @@ export function createShell(setup = {}) {
     // Les dossiers créés pour l'occasion dans le dossier personnel appartiennent à l'élève.
     for (let d = dirname(p); d.startsWith(sh.home() + "/"); d = dirname(d)) { const dn = sh.fs.stat(d, "root"); dn.owner = sh.user; dn.group = sh.user; }
     if (s.mode) n.mode = parseInt(s.mode, 8); else if (s.dir) n.mode = 0o755;
+    if (s.bytes !== undefined) n.bytes = s.bytes;
     if (s.age !== undefined) n.mtime = new Date(Date.UTC(2026, 10, 12, 9, 30, 0) - s.age * 86400000);
   }
   for (const [name, svc] of Object.entries(setup.services || {})) {
@@ -715,6 +717,7 @@ export function createShell(setup = {}) {
     }
   }
   for (const p of setup.procs || []) sh.procs.push({ cpu: 0, mem: 0.1, user: sh.user, ...p });
+  for (const h of SETUP_HOOKS) h(sh, setup);
   for (const line of setup.commands || []) {
     const asRoot = line.startsWith("#");
     const save = sh.user; if (asRoot) sh.user = "root";
