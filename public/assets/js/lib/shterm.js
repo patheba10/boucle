@@ -56,10 +56,20 @@ export function mountShTerm(root, { setup = {}, history = [], onCommand } = {}) 
     let rows = [];
     try {
       const dir = sh.fs.stat(sh.cwd, "root");
-      rows = Object.entries(dir.children).filter(([n]) => !n.startsWith(".") || n === ".env").sort(([a], [b]) => a.localeCompare(b)).map(([n, c]) =>
+      rows = Object.entries(dir.children).filter(([n]) => !n.startsWith(".") || n === ".env" || n === ".dockerignore").sort(([a], [b]) => a.localeCompare(b)).map(([n, c]) =>
         '<li><code class="sh-mode">' + modeString(c) + '</code><span class="sh-own">' + esc(c.owner) + '</span><code class="' + (c.t === "d" ? "sh-dir" : c.mode & 0o111 && c.t === "f" ? "sh-exe" : "") + '">' + esc(n) + (c.t === "d" ? "/" : "") + (c.t === "l" ? " → " + esc(c.target) : "") + "</code></li>");
     } catch (e) { rows = []; }
     $(".sh-ls", root).innerHTML = rows.join("") || '<li class="gterm-dim">dossier vide (fichiers cachés non affichés)</li>';
+    if (sh.docker) {
+      // Avec Docker, le panneau montre les conteneurs (nom, état, ports publiés) plutôt que les services.
+      const d = sh.docker; const cs = d.containers;
+      const st = (c) => (c.state === "running" ? ["ok", c.health === "unhealthy" ? "unhealthy" : "en marche"] : c.state === "restarting" ? ["bad", "redémarre"] : c.state === "created" ? ["dim", "créé"] : [c.exitCode ? "bad" : "dim", "arrêté (" + c.exitCode + ")"]);
+      $(".sh-svc-wrap .eyebrow", root).textContent = "Conteneurs · " + Object.keys(d.images).length + " image" + (Object.keys(d.images).length > 1 ? "s" : "");
+      $(".sh-svc-wrap", root).hidden = false;
+      $(".sh-svc", root).innerHTML = cs.map((c) => { const [k, t] = st(c); return "<li><code>" + esc(c.name) + '</code><span class="gtag ' + k + '">' + t + "</span>" + (c.state === "running" ? c.ports.map((p) => '<span class="gtag dim">:' + esc(p.host) + "→" + esc(p.container) + "</span>").join("") : "") + "</li>"; }).join("") || '<li class="gterm-dim">aucun conteneur</li>';
+      screen.scrollTop = screen.scrollHeight;
+      return;
+    }
     const svc = Object.entries(sh.services).filter(([n]) => n !== "cron");
     $(".sh-svc-wrap", root).hidden = !svc.length;
     $(".sh-svc", root).innerHTML = svc.map(([n, s]) => '<li><code>' + esc(n) + '</code><span class="gtag ' + (s.active ? "ok" : s.failed ? "bad" : "dim") + '">' + (s.active ? "actif" : s.failed ? "en échec" : "arrêté") + "</span>" + (s.enabled ? '<span class="gtag dim">au démarrage</span>' : "") + "</li>").join("");
@@ -104,10 +114,19 @@ export function runScriptTests(ch, src) {
   const file = ch.file || "/home/eleve/script.sh";
   return ch.tests.map((t) => {
     const sh = createShell({ ...(ch.setup || {}), ...(t.setup || {}), files: { ...((ch.setup || {}).files || {}), ...((t.setup || {}).files || {}) } });
-    sh.fs.write(file, src, "eleve"); const n = sh.fs.stat(file, "root"); n.owner = "eleve"; n.group = "eleve"; n.mode = 0o755;
-    const argStr = (t.args || []).map((a) => (/^[\w./:=@-]+$/.test(a) ? a : "'" + a.replace(/'/g, "'\\''") + "'")).join(" ");
-    const cmd = "bash " + file.replace(sh.home() + "/", "") + (argStr ? " " + argStr : "");
-    const r = sh.run(cmd, { stdin: t.stdin || "" });
+    sh.fs.mkdir(file.replace(/\/[^/]*$/, "") || "/", "root", { parents: true });
+    sh.fs.write(file, src, "eleve"); const n = sh.fs.stat(file, "root"); n.owner = "eleve"; n.group = "eleve"; n.mode = ch.run ? 0o644 : 0o755;
+    let cmd, r;
+    if (t.run || ch.run) {
+      // Fichier non exécutable (Dockerfile, compose.yaml) : on lance une suite de commandes et on garde toute la transcription.
+      const cmds = [].concat(t.run || ch.run); let out = "", code = 0;
+      for (const c of cmds) { const x = sh.run(c, { stdin: t.stdin || "" }); out += "$ " + c + "\n" + x.out + x.err; code = x.code; }
+      cmd = cmds.join(" && "); r = { out, err: "", code };
+    } else {
+      const argStr = (t.args || []).map((a) => (/^[\w./:=@-]+$/.test(a) ? a : "'" + a.replace(/'/g, "'\\''") + "'")).join(" ");
+      cmd = "bash " + file.replace(sh.home() + "/", "") + (argStr ? " " + argStr : "");
+      r = sh.run(cmd, { stdin: t.stdin || "" });
+    }
     const norm = (s) => String(s).replace(/[ \t]+$/gm, "").replace(/\n+$/, "");
     const fails = [];
     if (t.out !== undefined && norm(r.out) !== norm(t.out)) fails.push("sortie");

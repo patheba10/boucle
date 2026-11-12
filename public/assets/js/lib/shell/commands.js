@@ -167,6 +167,10 @@ function execCheck(sh, s) {
 
 /* ---------- table des commandes ---------- */
 export const COMMANDS = {};
+/* Extensions branchées par d'autres simulateurs (Docker) : requêtes HTTP, critères, mise en place. */
+export const HTTP_HOOKS = [];
+export const EXTRA_CHECKS = {};
+export const SETUP_HOOKS = [];
 const C = (names, fn) => { for (const n of names.split(" ")) COMMANDS[n] = fn; };
 
 C("ls", (sh, args, io) => {
@@ -781,13 +785,14 @@ C("apt apt-get", (sh, args, io) => {
 
 /* ----- réseau ----- */
 function resolve(sh, host) { if (host === "localhost" || host === "127.0.0.1" || host === sh.host) return "127.0.0.1"; return sh.net.dns[host] || null; }
-function httpFor(sh, url) {
+export function httpFor(sh, url) {
   const m = /^(https?):\/\/([^/:]+)(?::(\d+))?(\/[^?#]*)?(\?[^#]*)?/.exec(url); if (!m) return { error: [3, "URL using bad/illegal format or missing URL"] };
   const [, scheme, host, port0, path0 = "/"] = m; const port = +(port0 || (scheme === "https" ? 443 : 80)); const path = path0;
   const ip = resolve(sh, host); if (!ip) return { error: [6, "Could not resolve host: " + host] };
   const key = host + ":" + port + path;
   const routes = sh.net.http;
   if (routes[key] || routes[host + path]) return routes[key] || routes[host + path];
+  for (const h of HTTP_HOOKS) { const r = h(sh, host, port, path, ip); if (r) return r; }
   if (ip === "127.0.0.1") {
     const svc = Object.entries(sh.services).find(([, s]) => s.active && (s.ports || []).includes(port));
     if (!svc) return { error: [7, "Failed to connect to " + host + " port " + port + " after 0 ms: Couldn't connect to server"] };

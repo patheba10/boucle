@@ -46,8 +46,18 @@ function highlightSh(code) {
   return out + esc(code.slice(last));
 }
 
+// Dockerfile : instructions en début de ligne, commentaires, chaînes, variables, options (--from, --chown…).
+const DOCKER = /(^[ \t]*#[^\n]*)|(^[ \t]*(?:FROM|RUN|CMD|LABEL|EXPOSE|ENV|ADD|COPY|ENTRYPOINT|VOLUME|USER|WORKDIR|ARG|ONBUILD|STOPSIGNAL|HEALTHCHECK|SHELL|MAINTAINER)\b|\b(?:AS|as)\b(?=\s+[\w.-]+\s*$))|('[^'\n]*'?|"(?:\\.|[^"\\\n])*"?)|(\$\{[^}\n]*\}|\$[A-Za-z_]\w*)|((?<=\s)--[a-z][\w-]*(?:=\S*)?)/gim;
+const DOCKER_CLS = [null, "com", "kw", "str", "pre", "num"];
+function highlightDocker(code) {
+  DOCKER.lastIndex = 0; let out = "", last = 0, m;
+  while ((m = DOCKER.exec(code))) { if (m[0] === "") { DOCKER.lastIndex++; continue; } out += esc(code.slice(last, m.index)); last = DOCKER.lastIndex; const g = m.findIndex((x, i) => i > 0 && x !== undefined); out += '<span class="tk-' + DOCKER_CLS[g] + '">' + esc(m[0]) + "</span>"; }
+  return out + esc(code.slice(last));
+}
+
 export function highlight(code, lang) {
   if (lang === "yaml") return highlightYaml(code);
+  if (lang === "docker") return highlightDocker(code);
   if (lang === "sh") return highlightSh(code);
   if (lang === "log") return highlightLog(code);
   const rx = RX[lang];

@@ -152,7 +152,7 @@ export class FS {
     if (!this.can(n, user, 4)) throw new FsError("EACCES");
     return Object.keys(n.children).sort((a, b) => a.replace(/^\./, "").localeCompare(b.replace(/^\./, ""), "en"));
   }
-  size(node) { return node.t === "f" ? new TextEncoder().encode(node.data).length : node.t === "l" ? node.target.length : 4096; }
+  size(node) { return node.t === "f" ? node.bytes ?? new TextEncoder().encode(node.data).length : node.t === "l" ? node.target.length : 4096; }
   du(node) { return node.t === "d" ? 4096 + Object.values(node.children).reduce((a, c) => a + this.du(c), 0) : this.size(node); }
 }
 
