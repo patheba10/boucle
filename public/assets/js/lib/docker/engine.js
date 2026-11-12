@@ -462,6 +462,11 @@ export class Docker {
     if (["sh", "bash"].includes(b) && a[1] === "-c") return this.behave(c, words(a.slice(2).join(" ")), img);
     if (b === "sleep") { c.listen = null; return; }
     if (["env", "printenv"].includes(b)) return exit(0, ...Object.entries(c.env).map(([k, v]) => k + "=" + v));
+    // Commandes courtes (cat, ls, id…) : elles s'exécutent puis le conteneur s'arrête avec leur code.
+    if (["cat", "ls", "id", "whoami", "pwd", "uname", "date", "hostname", "head", "tail", "wc", "df"].includes(b) && this.runShort) {
+      c.state = "running"; const r = this.runShort(c, a); return exit(r.code, ...r.out.replace(/\n$/, "").split("\n"));
+    }
+    if (b === "true" || b === "false") return exit(b === "true" ? 0 : 1);
     if (b === "nginx" || img.app === "nginx" && b === "/docker-entrypoint.sh") {
       log("/docker-entrypoint.sh: /docker-entrypoint.d/ is not empty, will attempt to perform configuration", "/docker-entrypoint.sh: Configuration complete; ready for start up", "2026/11/12 09:30:00 [notice] 1#1: nginx/1.27.3", "2026/11/12 09:30:00 [notice] 1#1: start worker processes");
       c.listen = { port: 80, host: "0.0.0.0", kind: "nginx" }; return;
@@ -520,7 +525,7 @@ export class Docker {
       }
       file = join(c.workdir, a[1] || "index.js");
       if (!this.readFile(c, file)) return exit(1, "node:internal/modules/cjs/loader:1228", "  throw err;", "  ^", "", "Error: Cannot find module '" + file + "'", "    at Module._resolveFilename (node:internal/modules/cjs/loader:1225:15)", "", "Node.js v20.18.1");
-    } else if (fileExe || this.readFile(c, join(c.workdir, a[0]))) { file = join(c.workdir, a[0]); kind = "script"; }
+    } else if (this.readFile(c, join(c.workdir, a[0]))) { file = join(c.workdir, a[0]); kind = "script"; }
     else { return; /* commande longue inconnue : on la considère en cours d'exécution */ }
     // Spécification de l'application, rattachée au fichier source copié dans l'image.
     const f = this.readFile(c, file); const spec = (f && f.origin && this.apps[f.origin]) || {};
