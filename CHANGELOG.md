@@ -4,6 +4,13 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.27.0] — 2026-11-12
+
+Sprint 9.2 : patterns d'algorithmes.
+
+### Ajouté
+- Algorithmique, chapitre **Patterns d'algorithmes** (11 leçons) : hachage, deux pointeurs, fenêtre glissante, recherche binaire, pile monotone, parcours en profondeur et tri topologique, tas, intervalles, retour sur trace, programmation dynamique, et la méthode pour mener un entretien de code (#95).
+
 ## [0.26.0] — 2026-11-12
 
 Sprint 9.1 : cours **Algorithmique**, chapitre « Structures de données ». Début de l'étape 8 (entretiens).
