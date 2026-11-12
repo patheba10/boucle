@@ -21,15 +21,15 @@ export default [
     { title: "Construire et livrer", nodes: [
       { id: "do-docker", title: "Conteneurs Docker", desc: "Images, couches, Dockerfile multi-stage, volumes, réseaux, Docker Compose. Images légères et non-root.",
         skills: ["Dockerfile", "multi-stage builds", "docker compose", "registres d'images"], project: "Conteneuriser une API FastAPI + PostgreSQL avec Compose, image finale < 150 Mo.",
-        links: [["Docker : bien démarrer", "https://docs.docker.com/get-started/"]] },
+        lessons: ["ci-13"], links: [["Docker : bien démarrer", "https://docs.docker.com/get-started/"]] },
       { id: "do-cicd", title: "CI/CD", desc: "Pipelines qui testent, construisent et déploient à chaque push. Cache, matrices, secrets, environnements, déploiement continu.",
         skills: ["GitHub Actions / GitLab CI", "tests automatisés", "build et push d'images", "gestion des secrets"], project: "Pipeline GitHub Actions : lint → tests → build Docker → push vers un registre → déploiement.",
-        lessons: ["ci-02", "ci-04", "ci-06"], links: [["GitHub Actions", "https://docs.github.com/fr/actions"]] }
+        lessons: ["ci-02", "ci-04", "ci-06", "ci-09", "ci-15", "ci-21"], links: [["GitHub Actions", "https://docs.github.com/fr/actions"]] }
     ]},
     { title: "Infrastructure", nodes: [
       { id: "do-iac", title: "Infrastructure as Code", desc: "Décrire l'infrastructure dans du code versionné : plan, apply, state distant, modules réutilisables.",
         skills: ["Terraform / OpenTofu", "state distant et verrouillage", "modules", "variables et outputs"], project: "Un module Terraform qui crée réseau + VM + bucket, avec state dans un backend distant.",
-        links: [["Tutoriels Terraform", "https://developer.hashicorp.com/terraform/tutorials"]] },
+        lessons: ["ci-17"], links: [["Tutoriels Terraform", "https://developer.hashicorp.com/terraform/tutorials"]] },
       { id: "do-ansible", title: "Gestion de configuration", desc: "Configurer des serveurs de façon reproductible et idempotente.",
         skills: ["Ansible playbooks", "inventaires", "rôles", "idempotence"], project: "Un playbook qui installe Nginx, déploie une config et redémarre le service seulement si elle change.",
         links: [["Documentation Ansible", "https://docs.ansible.com/"]] },
@@ -43,7 +43,7 @@ export default [
         links: [["Prometheus", "https://prometheus.io/docs/introduction/overview/"], ["OpenTelemetry", "https://opentelemetry.io/docs/"]] },
       { id: "do-sec", title: "DevSecOps", desc: "Sécurité intégrée au pipeline : scans de dépendances et d'images, secrets hors du code, moindre privilège.",
         skills: ["scan d'images (Trivy)", "gestion des secrets", "moindre privilège", "OWASP Top 10"], project: "Ajouter un scan Trivy au pipeline qui bloque les vulnérabilités critiques.",
-        links: [["Trivy", "https://trivy.dev/"], ["OWASP Top 10", "https://owasp.org/www-project-top-ten/"]] },
+        lessons: ["ci-11", "ci-12"], links: [["Trivy", "https://trivy.dev/"], ["OWASP Top 10", "https://owasp.org/www-project-top-ten/"]] },
       { id: "do-sre", title: "Fiabilité (SRE)", desc: "SLI, SLO et budget d'erreur, gestion d'incidents, postmortems sans blâme, réduction du travail manuel.",
         skills: ["SLI / SLO", "budget d'erreur", "runbooks", "postmortems"], project: "Définir 2 SLO pour ton API et un runbook d'incident.",
         links: [["Google SRE Book", "https://sre.google/sre-book/table-of-contents/"]] }
@@ -62,7 +62,7 @@ export default [
         links: [["AWS Skill Builder", "https://skillbuilder.aws/"], ["Microsoft Learn Azure", "https://learn.microsoft.com/fr-fr/training/azure/"]] },
       { id: "cl-iam", title: "Identités et accès (IAM)", desc: "Utilisateurs, rôles, politiques, MFA, moindre privilège. La première chose à bien configurer sur un compte.",
         skills: ["rôles vs utilisateurs", "politiques JSON", "MFA", "moindre privilège"], project: "Un rôle IAM qui ne peut lire qu'un seul bucket, testé avec un accès refusé ailleurs.",
-        links: [["AWS IAM", "https://docs.aws.amazon.com/IAM/latest/UserGuide/introduction.html"]] }
+        lessons: ["ci-12"], links: [["AWS IAM", "https://docs.aws.amazon.com/IAM/latest/UserGuide/introduction.html"]] }
     ]},
     { title: "Services cœur", nodes: [
       { id: "cl-compute", title: "Calcul", desc: "Machines virtuelles, conteneurs managés, fonctions serverless. Choisir selon la charge, le démarrage et le coût.",
@@ -81,7 +81,7 @@ export default [
         links: [["AWS Well-Architected", "https://docs.aws.amazon.com/wellarchitected/latest/framework/welcome.html"]] },
       { id: "cl-iac", title: "Déployer par le code", desc: "Toute l'infrastructure cloud décrite en Terraform ou CloudFormation, déployée par pipeline.",
         skills: ["Terraform", "CloudFormation / Bicep", "environnements dev / prod"], project: "Recréer tout ton environnement de zéro avec une seule commande.",
-        links: [["Tutoriels Terraform", "https://developer.hashicorp.com/terraform/tutorials"]] }
+        lessons: ["ci-17"], links: [["Tutoriels Terraform", "https://developer.hashicorp.com/terraform/tutorials"]] }
     ]},
     { title: "Avancé", nodes: [
       { id: "cl-containers", title: "Conteneurs managés", desc: "ECS, EKS, AKS, GKE : faire tourner des conteneurs sans gérer les nœuds soi-même, ou presque.",
