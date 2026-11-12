@@ -14,12 +14,13 @@
 ## Journal
 
 - 12 nov. : module, interface et tests (unitaires pour le calendrier, de bout en bout pour le parcours complet : erreur dans un quiz, trois révisions en avançant l'horloge, sortie de la liste). 1 118 vérifications, 105 tests unitaires, 18 tests de bout en bout.
+- 12 nov. : PR #121, les trois jobs verts. Fusionnée ; version 0.34.0.
 
 ## Revue de sprint
 
 | Story | Points | Livré |
 |-------|--------|-------|
-| #116 Révision espacée des quiz | 5 | Oui |
+| #116 Révision espacée des quiz | 5 | Oui (PR #121) |
 
 Vélocité : 5 points sur 5. Version 0.34.0.
 
