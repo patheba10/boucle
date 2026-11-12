@@ -8,9 +8,10 @@ import linux from "./courses/linux.js";
 import docker from "./courses/docker.js";
 import kubernetes from "./courses/kubernetes.js";
 import exploitation from "./courses/exploitation.js";
+import terraform from "./courses/terraform.js";
 import roadmaps from "./roadmaps.js";
 import installer from "./guides/installer.js";
 
-export const COURSES = [python, data, git, cicd, linux, docker, kubernetes, exploitation, cpp];
+export const COURSES = [python, data, git, cicd, linux, docker, kubernetes, exploitation, terraform, cpp];
 export const ROADMAPS = roadmaps;
 export const INSTALL = installer;

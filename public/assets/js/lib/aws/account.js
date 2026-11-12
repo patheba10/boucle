@@ -85,6 +85,7 @@ export class Account {
       case "aws_s3_object": id = a.key; break;
       default: id = this.id(type, JSON.stringify(a));
     }
+    if (meta.id) id = meta.id;
     const arnOf = { aws_vpc: "arn:aws:ec2:" + REGION + ":" + ACCOUNT_ID + ":vpc/" + id, aws_subnet: "arn:aws:ec2:" + REGION + ":" + ACCOUNT_ID + ":subnet/" + id, aws_security_group: "arn:aws:ec2:" + REGION + ":" + ACCOUNT_ID + ":security-group/" + id, aws_instance: "arn:aws:ec2:" + REGION + ":" + ACCOUNT_ID + ":instance/" + id, aws_s3_bucket: "arn:aws:s3:::" + id, aws_iam_role: "arn:aws:iam::" + ACCOUNT_ID + ":role/" + id, aws_iam_policy: "arn:aws:iam::" + ACCOUNT_ID + ":policy/" + id, aws_iam_user: "arn:aws:iam::" + ACCOUNT_ID + ":user/" + id, aws_dynamodb_table: "arn:aws:dynamodb:" + REGION + ":" + ACCOUNT_ID + ":table/" + id, aws_db_instance: "arn:aws:rds:" + REGION + ":" + ACCOUNT_ID + ":db:" + id, aws_cloudwatch_log_group: "arn:aws:logs:" + REGION + ":" + ACCOUNT_ID + ":log-group:" + id, aws_lambda_function: "arn:aws:lambda:" + REGION + ":" + ACCOUNT_ID + ":function:" + id, aws_internet_gateway: "arn:aws:ec2:" + REGION + ":" + ACCOUNT_ID + ":internet-gateway/" + id, aws_route_table: "arn:aws:ec2:" + REGION + ":" + ACCOUNT_ID + ":route-table/" + id, aws_db_subnet_group: "arn:aws:rds:" + REGION + ":" + ACCOUNT_ID + ":subgrp:" + id }[type];
     const c = { id };
     if (arnOf) c.arn = arnOf;
@@ -117,11 +118,13 @@ export class Account {
     if (sch && sch.args.tags) { a.tags = a.tags || {}; c.tags_all = { ...a.tags }; }
     const r = { type, id: c.id, attrs: { ...a, ...c }, meta };
     this.res[type + "/" + r.id] = r;
+    // Chaque VPC a son security group « default », comme dans AWS.
+    if (type === "aws_vpc") this.put("aws_security_group", { name: "default", description: "default VPC security group", vpc_id: r.id, ingress: [{ from_port: 0, to_port: 0, protocol: "-1", cidr_blocks: [], security_groups: [], self: true }], egress: [{ from_port: 0, to_port: 0, protocol: "-1", cidr_blocks: ["0.0.0.0/0"] }], tags: {} }, { isDefault: true, id: c.default_security_group_id });
     return r;
   }
   defaultVpc() { return this.list("aws_vpc").find((v) => v.meta.isDefault); }
   byId(id) { return Object.values(this.res).find((r) => r.id === id); }
-  remove(type, id) { delete this.res[type + "/" + id]; if (type === "aws_s3_bucket") { this.buckets.delete(id); delete this.s3[id]; } }
+  remove(type, id) { delete this.res[type + "/" + id]; if (type === "aws_s3_bucket") { this.buckets.delete(id); delete this.s3[id]; } if (type === "aws_vpc") for (const g of this.list("aws_security_group")) if (g.meta.isDefault && g.attrs.vpc_id === id) delete this.res["aws_security_group/" + g.id]; }
 
   /** Vérifie une création avant de la faire ; lève une AwsErr au format du SDK v2 de Go. */
   check(type, a, self) {
