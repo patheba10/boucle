@@ -499,3 +499,5 @@ details.setup > .prose { padding: 0 22px 20px; }
 .wf-steps li.success span { color: var(--tk-str); }
 .wf-steps li.failure { color: #FF8F87; }
 .wf-steps li.skipped { color: var(--code-dim); text-decoration: line-through; }
+
+.tk-err { color: #FF8F87; }

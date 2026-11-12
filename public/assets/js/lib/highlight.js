@@ -32,8 +32,14 @@ function highlightYaml(code) {
   return out + esc(code.slice(last));
 }
 
+/* Journal d'exécution : les lignes d'erreur ressortent. */
+function highlightLog(code) {
+  return code.split("\n").map((l) => /##\[error\]|\bError\b|\berror:|Traceback|FAILED|exit code [1-9]/.test(l) ? '<span class="tk-err">' + esc(l) + "</span>" : /##\[warning\]|\bWarning\b/.test(l) ? '<span class="tk-num">' + esc(l) + "</span>" : /^\s*(Run |##\[group\])/.test(l) ? '<span class="tk-fn">' + esc(l) + "</span>" : esc(l)).join("\n");
+}
+
 export function highlight(code, lang) {
   if (lang === "yaml") return highlightYaml(code);
+  if (lang === "log") return highlightLog(code);
   const rx = RX[lang];
   if (!rx) return esc(code);
   rx.lastIndex = 0;

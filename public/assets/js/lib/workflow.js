@@ -341,6 +341,12 @@ export function lint(text) {
     });
   }
 
+  // « Pwn request » : pull_request_target donne des secrets et un jeton en écriture ; y exécuter le code de la PR est dangereux.
+  if ("pull_request_target" in events) for (const id of ids) list(isObj(jobs[id]) ? jobs[id].steps : []).forEach((st, i) => {
+    if (isObj(st) && st.uses && actionName(st.uses) === "actions/checkout" && isObj(st.with) && /pull_request\.head|head_ref/.test(str(st.with.ref)))
+      at(["jobs", id, "steps", i, "with", "ref"], "Danger : avec pull_request_target, récupérer le code de la PR l'exécute avec les secrets et un jeton en écriture (« pwn request »). Utilise pull_request.", "warn");
+  });
+
   // Cycles dans needs
   const state = {};
   const visit = (id, chain) => {
@@ -572,7 +578,8 @@ export function plan(doc, ev, opts = {}) {
         steps.push({ label: stepLabel(st), ran, failed: broke });
       });
     }
-    out.push({ id, name: str(job.name) || id, needs, stage: lvl[id], status: r, why, steps, matrix: matrixSize(job) });
+    const envName = isObj(job.environment) ? str(job.environment.name) : str(job.environment || "");
+    out.push({ id, name: str(job.name) || id, needs, stage: lvl[id], status: r, why, steps, matrix: matrixSize(job), environment: envName });
   }
   return { triggered: true, jobs: out };
 }
@@ -643,6 +650,15 @@ export function evaluate(text, checks) {
       }
       case "timeout": for (const [j, max] of Object.entries(v)) { const t = jobs[j] && jobs[j]["timeout-minutes"]; push(typeof t === "number" && t <= max, "Le job " + j + " s'arrête au bout de " + max + " minutes au plus"); } break;
       case "concurrency": { const c = d.concurrency; push(c && (v === true || (isObj(c) && (!v.cancel || c["cancel-in-progress"] === true))), "Une nouvelle exécution " + (v.cancel ? "annule la précédente" : "ne se superpose pas à la précédente")); break; }
+      case "services": for (const [j, names] of Object.entries(v)) { const sv = jobs[j] && isObj(jobs[j].services) ? jobs[j].services : {}; push(names.every((n) => isObj(sv[n]) && sv[n].image), "Le job " + j + " démarre le service " + fmtList(names)); } break;
+      case "environment": for (const [j, e] of Object.entries(v)) { const got = jobs[j] && (isObj(jobs[j].environment) ? jobs[j].environment.name : jobs[j].environment); push(str(got) === e, "Le job " + j + " déploie dans l'environnement « " + e + " »"); } break;
+      case "cache": for (const [j, kind] of Object.entries(v)) { const st = stepsOf(d, j); push(st.some((x) => (isObj(x.with) && str(x.with.cache) === kind) || (x.uses && actionName(x.uses) === "actions/cache")), "Le job " + j + " met en cache les dépendances " + kind); } break;
+      case "matrixSize": for (const [j, n] of Object.entries(v)) push(jobs[j] && matrixSize(jobs[j]) === n, "La matrice de " + j + " produit " + n + " combinaisons"); break;
+      case "failFast": for (const [j, ff] of Object.entries(v)) { const st = jobs[j] && isObj(jobs[j].strategy) ? jobs[j].strategy["fail-fast"] : undefined; push((st === undefined ? true : st) === ff, ff ? "Un échec dans la matrice de " + j + " arrête les autres combinaisons" : "Un échec dans la matrice de " + j + " n'arrête pas les autres combinaisons"); } break;
+      case "jobConcurrency": for (const [j, cfg] of Object.entries(v)) { const c = jobs[j] && jobs[j].concurrency; const cancel = isObj(c) ? c["cancel-in-progress"] === true : false; push(c != null && (cfg.cancel === undefined || cancel === cfg.cancel), "Le job " + j + " ne tourne qu'une fois à la fois" + (cfg.cancel === false ? ", sans annuler un déploiement en cours" : cfg.cancel ? ", la nouvelle exécution annule l'ancienne" : "")); } break;
+      case "dispatchInputs": { const cfg = isObj(events.workflow_dispatch) && isObj(events.workflow_dispatch.inputs) ? events.workflow_dispatch.inputs : {}; push(v.every((n) => n in cfg), "Le lancement manuel demande " + fmtList(v.map((n) => "« " + n + " »"))); break; }
+      case "contains": for (const t of v) push(text.includes(t), "Le fichier contient « " + t + " »"); break;
+      case "lacks": for (const t of v) push(!!doc && !text.includes(t), "Le fichier ne contient plus « " + t + " »"); break;
       case "noWarnings": push(!warns.length, warns.length ? "Aucun avertissement (" + warns.length + " restant)" : "Aucun avertissement"); break;
       case "scenarios":
         for (const s of v) {
