@@ -5,6 +5,7 @@
    - la solution du défi passe tous les tests, le code de départ échoue.
    Python : CPython + le harnais du navigateur (public/assets/py/harness.py).
    C++    : g++ (vrai compilateur) ET JSCPP (l'interpréteur du navigateur).
+   C      : gcc (vrai compilateur, avec mcu.h) ET minic (l'interpréteur du navigateur) : mêmes sorties exigées.
    Git    : simulateur du navigateur (lib/gitsim.js).
    YAML   : moteur des workflows du navigateur (lib/workflow.js). */
 import { spawnSync } from "node:child_process";
@@ -17,6 +18,7 @@ import vm from "node:vm";
 import { COURSES, ROADMAPS, INSTALL, CERTS } from "../public/content/index.js";
 import { lintCert, buildExam, grade } from "../public/assets/js/lib/exam.js";
 import { sqlRunProgram, sqlCheckProgram, parseSqlCheck } from "../public/assets/js/lib/sql.js";
+import { cProgram } from "../public/assets/js/lib/engines.js";
 import { runScript, evaluate as evaluateGit } from "../public/assets/js/lib/gitsim.js";
 import { lint as lintWorkflow, evaluate as evaluateWorkflow } from "../public/assets/js/lib/workflow.js";
 import { createShell, evaluate as evaluateShell } from "../public/assets/js/lib/shell/shell.js";
@@ -46,6 +48,29 @@ function pyCheck(ch, code) {
     return { pass: !r.err && norm(got) === norm(ch.expected), got, err: r.err };
   }
   const r = runPy(code);
+  return { pass: !r.err && norm(r.out) === norm(ch.expected), got: r.out, err: r.err };
+}
+
+/* ---------- C ---------- */
+const MCU_DIR = join(ROOT, "public/assets/py");
+const gccCache = new Map();
+function runGcc(code, strict = true) {
+  const cle = (strict ? "S" : "W") + code;
+  if (!gccCache.has(cle)) {
+    const src = join(tmp, "c" + gccCache.size + ".c"), bin = src.replace(/\.c$/, "");
+    writeFileSync(src, code);
+    // -fwrapv : le dépassement signé boucle, comme dans minic ; -Werror : le code du cours doit compiler proprement.
+    const r = spawnSync("gcc", ["-std=c11", "-O0", "-fwrapv", "-Wall", "-Wextra", ...(strict ? ["-Werror"] : []), "-Wno-unused-parameter", "-I", MCU_DIR, src, "-o", bin, "-lm"], { encoding: "utf8" });
+    gccCache.set(cle, r.status === 0 ? { bin } : { err: r.stderr.split("\n").filter(Boolean).slice(0, 3).join(" ") });
+  }
+  const c = gccCache.get(cle);
+  if (c.err) return { out: "", err: "compilation : " + c.err };
+  const r = spawnSync(c.bin, [], { encoding: "utf8", timeout: 5000 });
+  return { out: r.stdout || "", err: r.status === 0 ? null : "exit " + r.status + (r.signal ? " " + r.signal : "") };
+}
+const runMinic = (code) => runPy(cProgram(code));
+function cCheck(ch, code, runner) {
+  const r = runner(code + "\n" + ch.tests);
   return { pass: !r.err && norm(r.out) === norm(ch.expected), got: r.out, err: r.err };
 }
 
@@ -162,6 +187,16 @@ for (const c of COURSES) for (const l of c.lessons) {
       voulu ? (r.err ? ok() : fail(l.id, "extrait SQL marqué « erreur » mais accepté")) : r.err ? fail(l.id, "extrait SQL : " + r.err) : ok();
       continue;
     }
+    if (lang === "c") {
+      if (/norun/.test(opts)) continue;
+      // option avertissement : extrait qui montre volontairement un piège signalé par gcc -Wall -Wextra
+      const g = runGcc(code, !/avertissement/.test(opts)), m = runMinic(code);
+      if (g.err) fail(l.id, "extrait C (gcc) : " + g.err);
+      else if (m.err) fail(l.id, "extrait C (navigateur) : " + m.err);
+      else if (norm(g.out) !== norm(m.out)) fail(l.id, "extrait C : sorties différentes entre gcc et le navigateur : " + JSON.stringify(g.out.slice(0, 200)) + " / " + JSON.stringify(m.out.slice(0, 200)));
+      else ok();
+      continue;
+    }
     if (lang !== "py" && lang !== "cpp") continue; // terminal, powershell… : non exécutés
     if (/norun|\btf\b/.test(opts)) continue; // tf : vérifié par scripts/verifier_tf.mjs
     const stdin = ((/stdin:(.*)$/.exec(opts) || [])[1] || "").trim();
@@ -221,6 +256,15 @@ for (const c of COURSES) for (const l of c.lessons) {
     sol.err || !vs ? fail(l.id, "la solution SQL échoue : " + (sol.err || sol.out.slice(-200))) : vs.ok ? ok() : fail(l.id, "la solution SQL ne donne pas le résultat attendu : " + vs.note);
     const st = runPy(sqlCheckProgram(ch, db, ch.starter)); const vt = parseSqlCheck(st.out).verdict;
     !st.err && vt && vt.ok ? fail(l.id, "le code de départ SQL passe déjà") : ok();
+    process.stdout.write(".");
+    continue;
+  }
+  if (clang === "c") {
+    for (const [name, runner] of [["gcc", runGcc], ["navigateur", runMinic]]) {
+      const s = cCheck(ch, ch.solution, runner);
+      s.pass ? ok() : fail(l.id, "solution (" + name + ") échoue : " + (s.err || JSON.stringify(s.got)));
+    }
+    cCheck(ch, ch.starter, runMinic).pass ? fail(l.id, "le code de départ passe déjà les tests") : ok();
     process.stdout.write(".");
     continue;
   }

@@ -3,11 +3,11 @@ import { esc } from "./util.js";
 
 const KW = {
   py: "False None True and as assert async await break class continue def del elif else except finally for from global if import in is lambda nonlocal not or pass raise return try while with yield",
-  cpp: "auto break case catch class const continue default delete do else enum false for friend if inline namespace new nullptr operator private protected public return sizeof static struct switch template this throw true try typedef typename using virtual void while"
+  cpp: "auto break case catch class const continue default delete do else enum extern false for friend if inline namespace new nullptr operator private protected public return sizeof static struct switch template this throw true try typedef typename union using virtual void volatile while"
 };
 const BUILTIN = {
   py: "print len range int float str bool list dict set tuple sum min max sorted abs round input type enumerate zip map filter isinstance open self np pd plt",
-  cpp: "int double float char bool long short unsigned signed string vector cout cin endl std main printf size_t"
+  cpp: "int double float char bool long short unsigned signed string vector cout cin endl std main printf size_t int8_t uint8_t int16_t uint16_t int32_t uint32_t int64_t uint64_t NULL"
 };
 const kw = {}, bi = {};
 for (const l of ["py", "cpp"]) { kw[l] = new Set(KW[l].split(" ")); bi[l] = new Set(BUILTIN[l].split(" ")); }
@@ -80,6 +80,7 @@ function highlightSql(code) {
 }
 
 export function highlight(code, lang) {
+  if (lang === "c") lang = "cpp"; // même coloration que le C++
   if (lang === "sql") return highlightSql(code);
   if (lang === "json") return highlightJson(code);
   if (lang === "yaml") return highlightYaml(code);

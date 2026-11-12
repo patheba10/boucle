@@ -1,6 +1,7 @@
 /* Moteurs d'exécution.
    - Python : Pyodide dans un Web Worker (vrai CPython, numpy/pandas/scikit-learn/matplotlib chargés à la demande).
-   - C++   : JSCPP, interpréteur pédagogique exécuté pas à pas (on peut l'arrêter en cas de boucle infinie). */
+   - C++   : JSCPP, interpréteur pédagogique exécuté pas à pas (on peut l'arrêter en cas de boucle infinie).
+   - C     : minic (assets/py/minic.py), interpréteur C écrit en Python sur pycparser, exécuté par Pyodide. */
 
 import { sqlRunProgram } from "./sql.js";
 
@@ -135,6 +136,9 @@ export async function runCpp(code, stdin, onStatus) {
 
 /** SQL : la requête tourne dans SQLite (module sqlite3 de Python) sur une base neuve créée par le script db. */
 export const runSql = (db, code, onStatus) => runPy(sqlRunProgram(db, code), "", onStatus);
+/** C : le programme est interprété par minic dans le worker Python (même chemin qu'en CI : scripts/validate.mjs). */
+export const cProgram = (code) => "import pycparser\nimport minic\nminic.executer(" + JSON.stringify(code) + ")\n";
+export const runC = (code, onStatus) => runPy(cProgram(code), "", onStatus);
 /* Pour SQL, le troisième argument est le script de création de la base. */
-export const run = (lang, code, stdin, onStatus) => (lang === "py" ? runPy(code, stdin, onStatus) : lang === "sql" ? runSql(stdin, code, onStatus) : runCpp(code, stdin, onStatus));
+export const run = (lang, code, stdin, onStatus) => (lang === "py" ? runPy(code, stdin, onStatus) : lang === "sql" ? runSql(stdin, code, onStatus) : lang === "c" ? runC(code, onStatus) : runCpp(code, stdin, onStatus));
 export const isPyReady = () => pyReady;
