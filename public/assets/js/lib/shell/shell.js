@@ -9,6 +9,7 @@ import "../k8s/kubectl.js";
 import "../prom/cli.js";
 import "../ansible/ansible.js";
 import "../terraform/terraform.js";
+import "../aws/cli.js";
 
 class ExitSig { constructor(code) { this.code = code; } }
 class ReturnSig { constructor(code) { this.code = code; } }

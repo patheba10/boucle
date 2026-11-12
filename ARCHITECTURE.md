@@ -89,7 +89,7 @@ ES modules natifs, sans framework ni étape de build.
 - `compose.js` : Compose v2 (interpolation et `.env`, `depends_on` avec `service_healthy`, réseau et volumes du projet, `down -v`, validation du fichier) ;
 - `cli.js` : sorties au format de Docker 27 et critères déclaratifs (`images`, `containers`, `volumes`, `networks`, `pushed`, `http`, `dockerfile`).
 
-Le comportement d'une application (modules Python requis, routes, variables d'environnement, base de données) est décrit dans la mise en place du défi et rattaché au fichier source copié dans l'image.
+Le comportement d'une application (modules Python requis, routes, variables d'environnement, base de données) est décrit dans la mise en place du défi et rattaché au fichier source copié dans l'image. L'élève doit donc vraiment copier le bon fichier, installer les dépendances, écouter sur `0.0.0.0`, publier le bon port et mettre les conteneurs sur le même réseau.
 
 **Kubernetes.** `lib/k8s/` ajoute un cluster d'un nœud (comme kind) et `kubectl` au terminal :
 
@@ -106,7 +106,12 @@ Les conteneurs des Pods tournent dans un moteur Docker propre au nœud : mêmes 
 **Cloud.** `lib/aws/account.js` simule un compte AWS (`123456789012`, région `ca-central-1`, VPC par défaut) : ressources avec identifiants et ARN réalistes, schémas des ressources (arguments, types, arguments qui forcent le remplacement, attributs calculés) et vérifications de l'API (plages CIDR, sous-réseaux qui se chevauchent, AMI et types d'instance inconnus, noms de buckets pris, documents IAM invalides), avec les erreurs du SDK. `lib/terraform/` s'appuie dessus :
 
 - `hcl.js` : analyseur HCL (blocs, expressions, interpolation, heredoc, `for`, splat, conditions) et fonctions courantes (`cidrsubnet`, `merge`, `format`, `lookup`…), erreurs au format de Terraform avec l'extrait de code ;
-- `terraform.js` : `init`, `validate` (avec suggestions « Did you mean »), `fmt`, `plan` (graphe de dépendances, `count`, `for_each`, modules locaux, valeurs « known after apply », remplacement forcé), `apply` (confirmation, erreurs d'API, état partiel), `destroy` dans l'ordre inverse, `output`, `state`, `import`, dérive détectée au rafraîchissement, backend `s3` avec migration et verrou. L'état est un vrai `terraform.tfstate` dans le dossier. L'élève doit donc vraiment copier le bon fichier, installer les dépendances, écouter sur `0.0.0.0`, publier le bon port et mettre les conteneurs sur le même réseau.
+- `terraform.js` : `init`, `validate` (avec suggestions « Did you mean »), `fmt`, `plan` (graphe de dépendances, `count`, `for_each`, modules locaux, valeurs « known after apply », remplacement forcé), `apply` (confirmation, erreurs d'API, état partiel), `destroy` dans l'ordre inverse, `output`, `state`, `import`, dérive détectée au rafraîchissement, backend `s3` avec migration et verrou. L'état est un vrai `terraform.tfstate` dans le dossier.
+
+`lib/aws/` complète le compte pour la CLI :
+
+- `iam.js` : évaluation des politiques dans l'ordre d'AWS (refus explicite, puis autorisation, sinon refus implicite), jokers dans les actions et les ARN, conditions courantes (`StringEquals`, `StringLike`, `Bool`, `IpAddress`, `…IfExists`), politiques d'identité et politiques de bucket, politiques gérées par AWS les plus utilisées ;
+- `cli.js` : `aws` v2 (`sts`, `s3`, `s3api`, `ec2`, `iam`, `rds`, `configure`) avec les sorties JSON d'AWS, `--output text|table`, `--query` (sous-ensemble de JMESPath : projections, aplatissement, filtres, multisélection, fonctions), profils (`--profile`, `AWS_PROFILE`), refus `AccessDenied` ou `UnauthorizedOperation` décidés par IAM. La joignabilité d'une instance depuis Internet suit le vrai chemin : état, IP publique, table de routage du sous-réseau (association ou table principale), passerelle Internet attachée au VPC, règles d'entrée des security groups ; `curl` vers l'IP publique répond seulement si tout est en place. Critères `iam`, `reach` et `s3`.
 
 ### 4. Vérification d'un défi
 
@@ -156,6 +161,7 @@ La CI GitHub Actions lance cette validation à chaque push, puis publie `public/
 | Cluster Kubernetes | `npm run test:unit` (node:test) | 7 tests : apply idempotent, validation, ImagePullBackOff, CrashLoopBackOff, CreateContainerConfigError, Pending, targetPort, DNS, sondes, base de données, rollouts et retour arrière, ConfigMap, namespaces, expose, RBAC |
 | Exploitation | `npm run test:unit` (node:test) | 5 tests : PromQL (valeurs et erreurs), promtool, règles et alertes, rechargement, critère `promql`, playbook avec handlers, boucles et gabarits, idempotence, `--check --diff`, erreurs d'Ansible |
 | Terraform | `npm run test:unit` (node:test) | 5 tests : validate et suggestions, plan et apply avec count et outputs, confirmation, idempotence, destroy ordonné, mise à jour sur place, remplacement forcé, erreurs d'API, variables et validation, tfvars, for_each, modules, import, dérive, backend S3 et verrou, fmt |
+| CLI AWS | `npm run test:unit` (node:test) | 7 tests : évaluation IAM et conditions, JMESPath, identité, buckets et objets, erreurs de l'API, profil restreint et `AccessDenied`, rôle de service et politiques attachées, instance lancée puis ouverte au web, sous-réseau privé et table de routage |
 | Moteur des workflows | `npm run test:unit` (node:test) | 17 tests, dont un qui passe la vraie CI de Boucle au lint : erreurs YAML traduites, lint, expressions, filtres de branches et de chemins, simulation (PR, push, tag, échec en cascade, étape `if: failure()`), critères, numéros de ligne |
 | Contenu | `npm run validate` | Chaque extrait, chaque solution (doit passer) et chaque code de départ (doit échouer), avec CPython, g++ et JSCPP |
 | Bout en bout | `npm run test:e2e` (pytest + Playwright) | Accueil, pages principales sans erreur JS, chaque solution de défi dans le vrai navigateur, jeux de données, boucle infinie, NumPy + figure, terminal Git, défi et extrait YAML, absence de débordement sur mobile |

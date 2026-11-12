@@ -169,6 +169,8 @@ function execCheck(sh, s) {
 export const COMMANDS = {};
 /* Extensions branchées par d'autres simulateurs (Docker) : requêtes HTTP, critères, mise en place. */
 export const HTTP_HOOKS = [];
+/* Résolution de noms ajoutée par un simulateur (noms DNS publics des instances EC2). */
+export const DNS_HOOKS = [];
 export const EXTRA_CHECKS = {};
 export const SETUP_HOOKS = [];
 const C = (names, fn) => { for (const n of names.split(" ")) COMMANDS[n] = fn; };
@@ -784,7 +786,7 @@ C("apt apt-get", (sh, args, io) => {
 });
 
 /* ----- réseau ----- */
-function resolve(sh, host) { if (host === "localhost" || host === "127.0.0.1" || host === sh.host || /\.localhost$/.test(host)) return "127.0.0.1"; return sh.net.dns[host] || null; }
+function resolve(sh, host) { if (host === "localhost" || host === "127.0.0.1" || host === sh.host || /\.localhost$/.test(host)) return "127.0.0.1"; if (sh.net.dns[host]) return sh.net.dns[host]; for (const h of DNS_HOOKS) { const ip = h(sh, host); if (ip) return ip; } return /^\d+\.\d+\.\d+\.\d+$/.test(host) ? host : null; }
 export function httpFor(sh, url) {
   const m = /^(https?):\/\/([^/:]+)(?::(\d+))?(\/[^?#]*)?(\?[^#]*)?/.exec(url); if (!m) return { error: [3, "URL using bad/illegal format or missing URL"] };
   const [, scheme, host, port0, path0 = "/"] = m; const port = +(port0 || (scheme === "https" ? 443 : 80)); const path = path0;
@@ -793,6 +795,7 @@ export function httpFor(sh, url) {
   const routes = sh.net.http;
   if (routes[key] || routes[host + path]) return routes[key] || routes[host + path];
   for (const h of HTTP_HOOKS) { const r = h(sh, host, port, path, ip); if (r) return r; }
+  if (/^\d+\.\d+\.\d+\.\d+$/.test(host) && ip !== "127.0.0.1") return { error: [28, "Failed to connect to " + host + " port " + port + " after 30001 ms: Timeout was reached"] };
   if (ip === "127.0.0.1") {
     const svc = Object.entries(sh.services).find(([, s]) => s.active && (s.ports || []).includes(port));
     if (!svc) return { error: [7, "Failed to connect to " + host + " port " + port + " after 0 ms: Couldn't connect to server"] };
