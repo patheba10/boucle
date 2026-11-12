@@ -4,6 +4,10 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.10.0] — 2026-11-11
+
+Sprint 4.2 : le cours **Linux et Bash** est complet (21 leçons en 10 chapitres, avec des mises en situation et des questions d'entretien).
+
 ### Ajouté
 - Cours **Linux et Bash**, chapitres 6 à 10 : processus et signaux, services systemd et journaux, variables et environnement, scripts Bash testés avec des arguments, réseau (ports, DNS, HTTP), SSH par clés et durcissement, cron, un incident nginx à résoudre, un script de sauvegarde avec rotation et dix questions d'entretien avec réponses modèles. Le cours compte 21 leçons (#30).
 - Terminal Linux : `find -mtime`, `ps --sort`, unités systemd écrites à la main, `trap`, `mktemp`, `ssh-keygen`, services et processus de mise en place (port occupé, service en échec et son journal), `nginx -t` qui contrôle le nombre d'arguments de `root`, `proxy_pass` et `include` (#29).
