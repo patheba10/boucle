@@ -11,6 +11,7 @@ export class HclErr extends Error {
 }
 export class Unknown { constructor(why = "") { this.why = why; } toString() { return "(known after apply)"; } }
 export const UNKNOWN = new Unknown();
+class SplatList extends Array {}
 export const isUnknown = (v) => v instanceof Unknown || (Array.isArray(v) && v.some(isUnknown)) || (v && typeof v === "object" && !(v instanceof Unknown) && !Array.isArray(v) && Object.values(v).some(isUnknown));
 
 /* ===================== lexer ===================== */
@@ -218,13 +219,14 @@ export function evaluate(node, scope) {
       if (node.e.k === "attr" && node.e.e.k === "ref" && scope.refPath3) { const r = scope.refPath3(node.e.e.name, node.e.name, node.name, node); if (r !== undefined) return r.value; }
       const base = ev(node.e);
       if (base instanceof Unknown) return base;
+      if (base instanceof SplatList) return SplatList.from(base.map((x) => (x instanceof Unknown ? x : x && typeof x === "object" ? x[node.name] : undefined)));
       if (base === null || base === undefined || typeof base !== "object") throw new HclErr("Unsupported attribute", "This object does not have an attribute named \"" + node.name + "\".", scope.file, node.line);
       if (Array.isArray(base)) throw new HclErr("Unsupported attribute", "Can't access attributes on a list of objects. Did you mean to access attribute \"" + node.name + "\" for a specific element of the list, or across all elements of the list?", scope.file, node.line);
       if (!(node.name in base)) throw new HclErr("Unsupported attribute", "This object does not have an attribute named \"" + node.name + "\".", scope.file, node.line);
       return base[node.name];
     }
     case "index": { const b = ev(node.e); const i = ev(node.i); if (b instanceof Unknown || i instanceof Unknown) return new Unknown(); if (Array.isArray(b) && (i < 0 || i >= b.length)) throw new HclErr("Invalid index", "The given key does not identify an element in this collection value: the given index is greater than or equal to the length of the collection.", scope.file, node.line || 0); if (b && typeof b === "object" && !(i in b)) throw new HclErr("Invalid index", "The given key does not identify an element in this collection value.", scope.file, node.line || 0); return b[i]; }
-    case "splat": { const b = ev(node.e); return Array.isArray(b) ? b : b === null ? [] : [b]; }
+    case "splat": { const b = ev(node.e); return SplatList.from(Array.isArray(b) ? b : b === null || b === undefined ? [] : [b]); }
     case "un": { const v = ev(node.e); if (v instanceof Unknown) return v; return node.op === "!" ? !v : -v; }
     case "bin": {
       const a = ev(node.left), b = ev(node.right); if (a instanceof Unknown || b instanceof Unknown) return new Unknown();

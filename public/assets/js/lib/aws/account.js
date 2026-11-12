@@ -11,7 +11,7 @@ const TAKEN_BUCKETS = new Set(["boutique", "test", "backup", "terraform-state", 
 export class AwsErr extends Error { constructor(op, code, msg, status = 400) { super(msg); this.op = op; this.code = code; this.status = status; } }
 
 let SEQ = 0;
-function hex(seed, n) { let h = 2166136261 ^ seed.length; let out = ""; for (let i = 0; out.length < n; i++) { h = Math.imul(h ^ seed.charCodeAt(i % seed.length) ^ i, 16777619) >>> 0; out += h.toString(16).padStart(8, "0"); } return out.slice(0, n); }
+function hex(seed, n) { let h = 2166136261; for (let i = 0; i < seed.length; i++) h = Math.imul(h ^ seed.charCodeAt(i), 16777619) >>> 0; let out = ""; for (let i = 0; out.length < n; i++) { h = Math.imul(h ^ (i + 0x9e37), 2654435761) >>> 0; h = (h ^ (h >>> 15)) >>> 0; out += h.toString(16).padStart(8, "0"); } return out.slice(0, n); }
 const ip2n = (ip) => ip.split(".").reduce((a, b) => a * 256 + +b, 0);
 const cidrRange = (c) => { const [ip, l] = c.split("/"); const n = ip2n(ip); const size = 2 ** (32 - +l); const start = n - (n % size); return [start, start + size - 1]; };
 const validCidr = (c) => /^(\d{1,3}\.){3}\d{1,3}\/\d{1,2}$/.test(String(c)) && String(c).split("/")[0].split(".").every((x) => +x < 256) && +String(c).split("/")[1] <= 32;

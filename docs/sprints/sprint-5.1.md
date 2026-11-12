@@ -21,3 +21,4 @@
 - 12 nov. : milestone « Étape 5 — Cloud » (#52 à #56) et branche `us-5.0/terraform` créées, conception ci-dessus. Prochaine étape : `lib/terraform/hcl.js` et ses tests.
 - 12 nov. : `lib/terraform/hcl.js` écrit et essayé (blocs, expressions, interpolation, for, fonctions, erreurs au format Terraform). Prochaine étape : `lib/aws/account.js` et `lib/terraform/terraform.js`.
 - 12 nov. : `lib/aws/account.js` écrit (compte simulé, schémas des ressources Terraform, vérifications d'API). Prochaine étape : `lib/terraform/terraform.js` (init, validate, plan, apply, destroy, output, state, fmt).
+- 12 nov. : `lib/terraform/terraform.js` écrit et branché (init, validate, fmt, plan, apply, destroy, output, state, import, force-unlock, backend s3 avec verrou, dérive). Premier scénario OK : VPC + sous-réseaux avec count, apply, plan vide, destroy dans l'ordre. Prochaine étape : tests unitaires `tests/unit/terraform.test.mjs`, puis PR #52.
