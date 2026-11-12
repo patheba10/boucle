@@ -630,6 +630,9 @@ EXTRA_CHECKS.tf = (sh, v, push) => {
     for (const a of v.state || []) push(addrs.includes(a), a + " est géré par Terraform (dans l'état)");
     for (const a of v.notState || []) push(!addrs.includes(a), a + " n'est plus dans l'état");
     for (const [n, val] of Object.entries(v.outputs || {})) push(st.outputs[n] && (val === true || JSON.stringify(st.outputs[n].value) === JSON.stringify(val)), "L'output " + n + (val === true ? " existe" : " vaut " + JSON.stringify(val)));
+    if (v.remote) { const L = tf.stateLoc(); push(L.remote && !!(sh.aws.s3[L.bucket] || {})[L.key], "L'état est stocké dans S3" + (L.remote ? " (s3://" + L.bucket + "/" + L.key + ")" : "")); }
+    if (v.fmt) { const bad = Object.entries(tf.cfg.files).filter(([, src]) => fmtHcl(src) !== src).map(([f]) => f); push(!bad.length, "Les fichiers .tf respectent le format de terraform fmt" + (bad.length ? " (à reformater : " + bad.join(", ") + ")" : "")); }
+    if (v.valid) { const errs = validateConfig(tf.cfg); push(!errs.length, "terraform validate ne trouve aucune erreur"); }
     if (v.noChanges) {
       let ok = false;
       try { const io = { out: () => {}, err: () => {} }; if (tf.load(io)) { tf.state = st; const p = tf.plan(st); ok = !p.actions.length && !p.outChanges.length; } } catch (e) { ok = false; }

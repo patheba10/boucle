@@ -4,8 +4,8 @@
 
 | Story | Points | Statut |
 |-------|--------|--------|
-| #52 US-5.0 Terraform et compte AWS simulés (enabler) | 8 | En cours |
-| #53 US-5a Cours Terraform | 8 | À faire |
+| #52 US-5.0 Terraform et compte AWS simulés (enabler) | 8 | Terminé |
+| #53 US-5a Cours Terraform | 8 | Terminé |
 
 **Capacité** : 16 points. Le sprint court sur plusieurs sessions : le journal ci-dessous dit où reprendre.
 
@@ -23,3 +23,6 @@
 - 12 nov. : `lib/aws/account.js` écrit (compte simulé, schémas des ressources Terraform, vérifications d'API). Prochaine étape : `lib/terraform/terraform.js` (init, validate, plan, apply, destroy, output, state, fmt).
 - 12 nov. : `lib/terraform/terraform.js` écrit et branché (init, validate, fmt, plan, apply, destroy, output, state, import, force-unlock, backend s3 avec verrou, dérive). Premier scénario OK : VPC + sous-réseaux avec count, apply, plan vide, destroy dans l'ordre. Prochaine étape : tests unitaires `tests/unit/terraform.test.mjs`, puis PR #52.
 - 12 nov. : 5 tests unitaires Terraform verts (73 en tout), documentation. PR #52 ensuite, puis le cours Terraform (#53).
+- 12 nov. : PR #57 (Terraform simulé) fusionnée. Branche `us-5a/cours-terraform` pour le cours (#53). Critères `tf` : remote, fmt, valid ajoutés.
+- 12 nov. : chapitres 1 et 2 du cours Terraform validés (tf-01 à tf-07). Reste : tf-08 état distant, tf-09 import et dérive, tf-10 équipe et CI, tf-11 entretien ; puis e2e, docs, PR, release 0.14.0.
+- 12 nov. : cours complet (tf-01 à tf-11) validé (738 vérifications), tests unitaires et e2e verts. PR du cours puis release 0.14.0. Sprint suivant : 5.2, CLI aws, IAM et réseau (#54), puis le cours AWS (#55).
