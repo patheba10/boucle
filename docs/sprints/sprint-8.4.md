@@ -17,12 +17,13 @@
 
 - 12 nov. : chapitre en 4 leçons (3 défis), roadmap, page des roadmaps passée à quatre parcours. Deux réglages après calcul : le multiplicateur de la couche int8 saturait toutes les sorties (0,0125 → 0,003), et un octet parasite après l'erreur de trame est désormais annoncé dans l'énoncé. 1 024 vérifications, 100 tests unitaires, tests de bout en bout.
 - 12 nov. : un test de bout en bout de l'examen blanc a échoué une fois puis réussi deux fois sans changement : noté dans l'audit (#29).
+- 12 nov. : PR #92, les trois jobs verts. Fusionnée ; version 0.25.0, milestone 7 fermé.
 
 ## Revue de sprint
 
 | Story | Points | Livré |
 |-------|--------|-------|
-| #85 Outils, datasheets et TinyML | 5 | Oui |
+| #85 Outils, datasheets et TinyML | 5 | Oui (PR #92) |
 
 Vélocité : 5 points sur 5. Version 0.25.0. L'étape 7 est terminée : trois cours (Électronique, Logique numérique, C embarqué), 39 leçons, et la roadmap Embarqué et IoT.
 
