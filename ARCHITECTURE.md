@@ -89,7 +89,14 @@ ES modules natifs, sans framework ni étape de build.
 - `compose.js` : Compose v2 (interpolation et `.env`, `depends_on` avec `service_healthy`, réseau et volumes du projet, `down -v`, validation du fichier) ;
 - `cli.js` : sorties au format de Docker 27 et critères déclaratifs (`images`, `containers`, `volumes`, `networks`, `pushed`, `http`, `dockerfile`).
 
-Le comportement d'une application (modules Python requis, routes, variables d'environnement, base de données) est décrit dans la mise en place du défi et rattaché au fichier source copié dans l'image. L'élève doit donc vraiment copier le bon fichier, installer les dépendances, écouter sur `0.0.0.0`, publier le bon port et mettre les conteneurs sur le même réseau.
+Le comportement d'une application (modules Python requis, routes, variables d'environnement, base de données) est décrit dans la mise en place du défi et rattaché au fichier source copié dans l'image.
+
+**Kubernetes.** `lib/k8s/` ajoute un cluster d'un nœud (comme kind) et `kubectl` au terminal :
+
+- `cluster.js` : validation des manifests comme l'API server (champs requis, champs inconnus, types, sélecteur et labels), objets et valeurs par défaut, réconciliation Deployment → ReplicaSet → Pods avec déploiement progressif (`maxSurge`, `maxUnavailable`), ordonnancement selon les ressources demandées, kubelet (tirage d'image, ConfigMaps et Secrets, démarrage, sondes, `CrashLoopBackOff`), Services et Endpoints, DNS du cluster, HPA ;
+- `kubectl.js` : `apply`, `get` (`-o wide|yaml|json|jsonpath|name`, `-l`, `-A`), `describe` avec événements, `logs` (`--previous`), `exec`, `delete`, `scale`, `set image|env`, `rollout status|history|undo|restart`, `expose`, `port-forward`, `run`, `create`, `auth can-i`, au format de kubectl 1.31, et les critères `k8s` et `pods`.
+
+Les conteneurs des Pods tournent dans un moteur Docker propre au nœud : mêmes images (celles du catalogue et celles poussées avec `docker push`), mêmes comportements d'application. Une variable manquante donne donc le même `KeyError` dans `kubectl logs` que dans `docker logs`. L'élève doit donc vraiment copier le bon fichier, installer les dépendances, écouter sur `0.0.0.0`, publier le bon port et mettre les conteneurs sur le même réseau.
 
 ### 4. Vérification d'un défi
 
@@ -136,6 +143,7 @@ La CI GitHub Actions lance cette validation à chaque push, puis publie `public/
 | Simulateur Git | `npm run test:unit` (node:test) | 16 scénarios : commits, .gitignore, diff, branches, fusions et conflits, rebase interrompu, reset, revert, stash, cherry-pick, tags, push rejeté puis pull |
 | Terminal Linux | `npm run test:unit` (node:test) | 11 tests : navigation et messages GNU, redirections et pipes, expansions, droits et sudo, services et journal, processus et cron, unités systemd, scripts, défis de scripts, options POSIX, configuration nginx, critères |
 | Simulateur Docker | `npm run test:unit` (node:test) | 12 tests : étapes et cache de construction, `.dockerignore`, erreurs de BuildKit, hadolint, multi-étapes et non root, ports et `127.0.0.1`, plantages, réseaux et DNS, volumes, redémarrage, montages, registre, Compose, droits, défi de type fichier |
+| Cluster Kubernetes | `npm run test:unit` (node:test) | 7 tests : apply idempotent, validation, ImagePullBackOff, CrashLoopBackOff, CreateContainerConfigError, Pending, targetPort, DNS, sondes, base de données, rollouts et retour arrière, ConfigMap, namespaces, expose, RBAC |
 | Moteur des workflows | `npm run test:unit` (node:test) | 17 tests, dont un qui passe la vraie CI de Boucle au lint : erreurs YAML traduites, lint, expressions, filtres de branches et de chemins, simulation (PR, push, tag, échec en cascade, étape `if: failure()`), critères, numéros de ligne |
 | Contenu | `npm run validate` | Chaque extrait, chaque solution (doit passer) et chaque code de départ (doit échouer), avec CPython, g++ et JSCPP |
 | Bout en bout | `npm run test:e2e` (pytest + Playwright) | Accueil, pages principales sans erreur JS, chaque solution de défi dans le vrai navigateur, jeux de données, boucle infinie, NumPy + figure, terminal Git, défi et extrait YAML, absence de débordement sur mobile |
