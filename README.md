@@ -74,6 +74,8 @@ Pour lire un jeu de données dans un exercice, place le fichier dans `public/dat
 
 Lance ensuite `npm run validate`.
 
+Une certification se déclare dans `public/content/certifs/` : `{ id, code, name, price, minutes, count, passing, intro, about, tips, domains: [{ id, name, weight }], bank }`, chaque question valant `{ id, d, q, options, answer, explain }` (`answer` est un indice, ou une liste d'indices pour une question à réponses multiples dont l'énoncé finit par « Choisis-en deux. »). `npm run validate` vérifie la banque et qu'un examen complet peut être tiré selon les poids.
+
 Un nouveau cours se déclare avec `route` (son adresse, ex. `data`) et `badge` (2 ou 3 caractères), puis s'importe dans `public/content/index.js`.
 
 ## Moteurs d'exécution

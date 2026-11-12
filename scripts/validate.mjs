@@ -14,7 +14,8 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 import vm from "node:vm";
-import { COURSES, ROADMAPS, INSTALL } from "../public/content/index.js";
+import { COURSES, ROADMAPS, INSTALL, CERTS } from "../public/content/index.js";
+import { lintCert, buildExam, grade } from "../public/assets/js/lib/exam.js";
 import { runScript, evaluate as evaluateGit } from "../public/assets/js/lib/gitsim.js";
 import { lint as lintWorkflow, evaluate as evaluateWorkflow } from "../public/assets/js/lib/workflow.js";
 import { createShell, evaluate as evaluateShell } from "../public/assets/js/lib/shell/shell.js";
@@ -116,6 +117,14 @@ for (const r of ROADMAPS) for (const s of r.stages) for (const n of s.nodes) {
 }
 for (const sec of INSTALL.sections) if (!sec.id || !sec.title || !sec.body) fail("installer", "section incomplète");
 ok();
+
+/* ---------- Certifications : banques de questions ---------- */
+for (const c of CERTS) {
+  const errs = lintCert(c); errs.length ? errs.forEach((e) => fail("cert-" + c.id, e)) : ok();
+  // un examen complet doit pouvoir être tiré, et tout juste donner 1000
+  const ex = buildExam(c, { seed: 42 }); ex.items.length === c.count ? ok() : fail("cert-" + c.id, "examen complet de " + ex.items.length + " questions au lieu de " + c.count);
+  const all = Object.fromEntries(c.bank.map((q) => [q.id, q.answer])); grade(c, ex, all).score === 1000 ? ok() : fail("cert-" + c.id, "un examen parfait ne donne pas 1000");
+}
 
 /* ---------- Exécution ---------- */
 for (const c of COURSES) for (const l of c.lessons) {
