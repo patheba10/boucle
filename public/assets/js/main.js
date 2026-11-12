@@ -1,5 +1,5 @@
 /* Boucle — routeur et pages. */
-import { COURSES, ROADMAPS, INSTALL, CERTS, PROJETS } from "../../content/index.js";
+import { COURSES, ROADMAPS, INSTALL, CERTS, PROJETS, GROUPES } from "../../content/index.js";
 import { pageCerts, pageCert, bindCert } from "./lib/examview.js";
 import { pageProjets, pageProjet, bindProjet, projetsDeRoadmap } from "./lib/projets.js";
 import { I } from "./lib/icons.js";
@@ -90,7 +90,7 @@ function setNav(route) {
   const lesson = byId(route);
   $$(".nav a").forEach(a => {
     const t = a.getAttribute("href").slice(1);
-    const on = t === route || (lesson && lesson.c.route === t) || (t === "roadmaps" && ROADMAPS.some(r => r.id === route)) || (t === "projets" && PROJETS.some(p => p.id === route)) || (t === "certifs" && route.startsWith("cert-"));
+    const on = t === route || (t === "cours" && (COURSES.some(c => c.route === route) || !!lesson)) || (t === "roadmaps" && ROADMAPS.some(r => r.id === route)) || (t === "projets" && PROJETS.some(p => p.id === route)) || (t === "certifs" && route.startsWith("cert-"));
     if (on) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
   });
 }
@@ -105,6 +105,18 @@ function dailyPick() {
   return pool[h % pool.length];
 }
 
+function courseCard(c) {
+  const p = courseProgress(c);
+  return '<a class="card course-card" href="#' + c.route + '" style="--c:' + color(c.id) + '"><div class="course-head"><span class="badge-lang">' + esc(c.badge) + "</span><div><h3>" + c.name + '</h3><span class="mono">' + esc(c.tag) + " " + c.lessons.length + " leçons</span></div></div><p>" + esc(c.blurb) + '</p><div class="bar"><i style="width:' + p.pct + '%"></i></div><div class="meta-row"><span>' + p.d + " / " + p.n + " terminées</span><span>" + p.pct + " %</span></div></a>";
+}
+function groupesHTML() {
+  return GROUPES.map(g => '<div class="groupe"><h3 class="groupe-h">' + esc(g.titre) + '<span>' + esc(g.desc) + '</span></h3><div class="grid-courses">' + g.cours.map(id => COURSES.find(c => c.id === id)).filter(Boolean).map(courseCard).join("") + "</div></div>").join("");
+}
+function pageCours() {
+  const fait = ALL.filter(x => lessonState(x.l).done).length;
+  return '<div class="crumbs"><a href="#home">Accueil</a><span>/</span><span>Cours</span></div>' +
+    '<section style="display:flex;flex-direction:column;gap:10px"><h1 style="font-size:clamp(30px,4vw,42px);font-weight:800">Cours</h1><p class="lead">' + COURSES.length + " cours, " + ALL.length + " leçons, regroupés par domaine. " + fait + " leçons terminées.</p></section>" + groupesHTML();
+}
 function pageHome() {
   const lv = level(), inLv = S.xp % XP_PER_LEVEL;
   const doneL = ALL.filter(x => lessonState(x.l).done).length;
@@ -126,9 +138,7 @@ function pageHome() {
       '<div class="kv"><div><b>' + S.xp + "</b><span>XP au total</span></div><div><b>" + streak() + "</b><span>jours de série</span></div><div><b>" + doneL + "/" + ALL.length + "</b><span>leçons finies</span></div></div>" +
     "</div></section>" +
     '<section class="card daily"><div class="daily-ic">' + I.target + '</div><div class="daily-txt"><b>Défi du jour</b><p>' + name + " · " + esc(dp.l.title) + (dDone ? " · déjà réussi, bravo." : " · un défi tiré au sort chaque jour.") + '</p></div><a class="btn ' + (dDone ? "" : "primary") + '" href="#' + dp.l.id + '">' + (dDone ? "Revoir" : "Relever le défi") + "</a></section>" +
-    '<section style="display:flex;flex-direction:column;gap:14px"><div class="sec-h"><h2>Cours</h2><a href="#installer">Installer ton environnement</a></div><div class="grid-courses">' +
-      COURSES.map(c => { const p = courseProgress(c); return '<a class="card course-card" href="#' + c.route + '" style="--c:' + color(c.id) + '"><div class="course-head"><span class="badge-lang">' + esc(c.badge) + "</span><div><h3>" + c.name + '</h3><span class="mono">' + esc(c.tag) + " " + c.lessons.length + " leçons</span></div></div><p>" + esc(c.blurb) + '</p><div class="bar"><i style="width:' + p.pct + '%"></i></div><div class="meta-row"><span>' + p.d + " / " + p.n + " terminées</span><span>" + p.pct + " %</span></div></a>"; }).join("") +
-    "</div></section>" +
+    '<section style="display:flex;flex-direction:column;gap:14px"><div class="sec-h"><h2>Cours</h2><a href="#installer">Installer ton environnement</a></div>' + groupesHTML() + "</section>" +
     '<section style="display:flex;flex-direction:column;gap:14px"><div class="sec-h"><h2>Roadmaps métier</h2><a href="#roadmaps">Tout voir</a></div><div class="grid3">' +
       ROADMAPS.map(r => { const p = rmProgress(r); return '<a class="card rm-card" href="#' + r.id + '" style="--c:' + color(r.id) + '"><span class="k">' + esc(r.kicker) + "</span><h3>" + r.name + "</h3><p>" + esc(r.intro) + '</p><div class="bar"><i style="width:' + p.pct + '%"></i></div><div class="meta-row"><span>' + p.d + " / " + p.n + " étapes acquises</span><span>" + p.pct + " %</span></div></a>"; }).join("") +
     "</div></section>";
@@ -510,6 +520,7 @@ function render() {
   if (course) { el.innerHTML = pageCourse(course); }
   else if (route === "installer") { el.innerHTML = pageInstaller(); bind = () => { snipSetup = {}; bindSnippets(app()); }; }
   else if (route === "roadmaps") el.innerHTML = pageRoadmaps();
+  else if (route === "cours") el.innerHTML = pageCours();
   else if (route === "certifs") el.innerHTML = pageCerts(S, CERTS, color);
   else if (route === "projets") el.innerHTML = pageProjets(S, PROJETS, ROADMAPS, color);
   else if (PROJETS.some(p => p.id === route)) { const p = PROJETS.find(p => p.id === route); el.innerHTML = pageProjet(S, p, ROADMAPS, byId, color, I); bind = () => bindProjet(S, p, { save, toast, markDay, updateStats }); }

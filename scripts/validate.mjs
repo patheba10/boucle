@@ -15,7 +15,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 import vm from "node:vm";
-import { COURSES, ROADMAPS, INSTALL, CERTS, PROJETS } from "../public/content/index.js";
+import { COURSES, ROADMAPS, INSTALL, CERTS, PROJETS, GROUPES } from "../public/content/index.js";
 import { lintCert, buildExam, grade } from "../public/assets/js/lib/exam.js";
 import { sqlRunProgram, sqlCheckProgram, parseSqlCheck } from "../public/assets/js/lib/sql.js";
 import { cProgram } from "../public/assets/js/lib/engines.js";
@@ -114,7 +114,7 @@ function cppCheck(ch, code, runner) {
 
 /* ---------- Structure ---------- */
 const ids = new Set();
-const routes = new Set(["home", "roadmaps", "atelier", "installer", "projets", "certifs"]);
+const routes = new Set(["home", "roadmaps", "atelier", "installer", "projets", "certifs", "cours"]);
 for (const c of COURSES) {
   if (!c.route || !c.badge) fail(c.id, "cours sans route ou badge");
   if (routes.has(c.route)) fail(c.id, "route en double : " + c.route);
@@ -154,6 +154,8 @@ for (const p of PROJETS) {
   if (JSON.stringify(p).includes("`")) fail(p.id, "accent grave dans le texte : écrire le code entre @@ @@");
   ok();
 }
+for (const c of COURSES) { const n = GROUPES.filter((g) => g.cours.includes(c.id)).length; if (n !== 1) fail(c.id, "cours présent dans " + n + " groupe(s) de la page Cours (il en faut exactement 1)"); }
+for (const g of GROUPES) for (const id of g.cours) if (!COURSES.some((c) => c.id === id)) fail("groupes", "cours inconnu : " + id);
 for (const sec of INSTALL.sections) if (!sec.id || !sec.title || !sec.body) fail("installer", "section incomplète");
 ok();
 

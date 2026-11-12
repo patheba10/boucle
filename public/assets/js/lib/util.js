@@ -9,7 +9,14 @@ export const inl = (html) => html.replace(/@@([\s\S]+?)@@/g, (_, c) => "<code>" 
 /** Normalise une sortie console pour la comparer : fins de ligne, espaces de fin, lignes vides finales. */
 export const norm = (s) => String(s).replace(/\r/g, "").split("\n").map((l) => l.replace(/\s+$/, "")).join("\n").replace(/\n+$/, "");
 
-export const color = (id) => "var(--" + id + ")";
+/* Couleur d'un cours, d'une roadmap ou d'une certification : les identifiants sans couleur propre prennent celle
+   de leur famille (audit #28). */
+const FAMILLE = {
+  docker: "devops", kubernetes: "devops", exploitation: "devops", terraform: "cloud", aws: "cloud", sysdesign: "cloud",
+  sql: "data", dl: "ml", api: "py", algo: "py", elec: "cpp", logique: "cpp", embarque: "cpp", iot: "cpp", entretiens: "accent",
+  clf: "cloud", saa: "cloud", "entretien-devops": "devops", "entretien-ml": "ml", "entretien-embarque": "cpp"
+};
+export const color = (id) => "var(--" + (FAMILLE[id] || id) + ")";
 
 export function dayKey(d) {
   return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
