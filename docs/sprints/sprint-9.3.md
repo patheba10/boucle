@@ -15,12 +15,13 @@
 ## Journal
 
 - 12 nov. : 9 leçons, 8 défis, sorties calculées par script puis relues. Un test du cache montre volontairement le pire cas du LRU (un balayage de 1 500 clés pour 1 000 places : 0 succès), commenté dans le test. Les 8 défis passent dans Pyodide (hashlib compris). 1 101 vérifications, tests de bout en bout.
+- 12 nov. : PR #102, les trois jobs verts. Fusionnée ; version 0.28.0.
 
 ## Revue de sprint
 
 | Story | Points | Livré |
 |-------|--------|-------|
-| #96 System design | 8 | Oui |
+| #96 System design | 8 | Oui (PR #102) |
 
 Vélocité : 8 points sur 8. Version 0.28.0.
 
