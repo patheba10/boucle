@@ -26,3 +26,22 @@
 - 12 nov. : PR #57 (Terraform simulé) fusionnée. Branche `us-5a/cours-terraform` pour le cours (#53). Critères `tf` : remote, fmt, valid ajoutés.
 - 12 nov. : chapitres 1 et 2 du cours Terraform validés (tf-01 à tf-07). Reste : tf-08 état distant, tf-09 import et dérive, tf-10 équipe et CI, tf-11 entretien ; puis e2e, docs, PR, release 0.14.0.
 - 12 nov. : cours complet (tf-01 à tf-11) validé (738 vérifications), tests unitaires et e2e verts. PR du cours puis release 0.14.0. Sprint suivant : 5.2, CLI aws, IAM et réseau (#54), puis le cours AWS (#55).
+
+## Livré
+
+- Terraform et compte AWS simulés (PR #57) : HCL, cycle complet init, plan, apply, destroy, état local et distant, import, dérive. 5 tests unitaires.
+- Cours Terraform (PR #58) : 11 leçons, 10 défis (7 fichiers `.tf` écrits dans l'éditeur, 3 situations au terminal : modifier sans remplacer, migrer l'état, importer, réparer une PR), 22 questions de quiz.
+- Version 0.14.0.
+
+## Rétrospective
+
+**Ce qui a marché**
+- Le compte AWS simulé comme socle commun : Terraform y crée de vrais objets avec des identifiants, et les vérifications de l'API (CIDR qui se chevauchent, bucket déjà pris, type d'instance inconnu) produisent les erreurs qu'on rencontre en vrai. Il servira tel quel à la CLI `aws`.
+- Le critère « un second plan est vide » : il vérifie d'un coup que la configuration est complète et idempotente, comme on le fait en revue.
+- Les transcriptions ont encore montré des défauts invisibles aux tests : identifiants en double (fonction de hachage qui ne lisait que le début de la chaîne), security group par défaut absent (une instance du VPC par défaut ne pouvait pas changer de type), commandes de mise en place lancées hors du dossier du projet.
+
+**Ce qui a coincé**
+- Le format exact des plans (indentation des maps, ordre alphabétique des outputs et de `state list`, ordre lexical des clés de `for_each`) demande plusieurs passes de comparaison avec la vraie sortie.
+
+**On change**
+- Garder une transcription de référence d'un vrai Terraform pour chaque forme de plan, et la comparer automatiquement.

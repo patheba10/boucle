@@ -4,6 +4,10 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.14.0] — 2026-11-12
+
+Sprint 5.1 : Terraform et compte AWS simulés, cours **Terraform** (11 leçons).
+
 ### Ajouté
 - Cours **Terraform** en 11 leçons : infrastructure as code, providers et ressources AWS, lire un plan (modification ou remplacement), variables, locals et outputs, réseau et dépendances, `count` et `for_each`, modules, état distant S3 et verrou, import et dérive, Terraform en équipe et en CI, dix questions d'entretien (#53).
 - Terraform 1.9 et un compte AWS simulés dans le terminal : HCL, `init`, `validate`, `fmt`, `plan`, `apply`, `destroy`, `output`, `state`, `import`, backend S3 avec verrou, dérive (#52).
