@@ -17,7 +17,7 @@ import { evaluate as evaluateShell } from "./lib/shell/shell.js";
 
 const toast = (msg) => rawToast(msg, I.bolt);
 function gain(n, msg) { S.xp += n; markDay(); save(); updateStats(); toast("+" + n + " XP · " + msg); }
-const firstLoad = (lang) => lang === "py" || lang === "sql"
+const firstLoad = (lang) => lang === "py" || lang === "sql" || lang === "c"
   ? (isPyReady() ? "Exécution…" : "Démarrage de Python (quelques secondes la première fois)…")
   : "Exécution…";
 
@@ -43,7 +43,7 @@ function lessonCode(l) {
 }
 
 /* ===================== Théorie (texte + extraits exécutables) ===================== */
-const LANG_LABEL = { py: "python", cpp: "c++", git: "terminal git", bash: "terminal", ps: "powershell", text: "texte", yaml: "yaml", sh: "terminal linux", log: "journal", groovy: "jenkinsfile", hcl: "terraform", docker: "dockerfile" };
+const LANG_LABEL = { py: "python", cpp: "c++", c: "c", git: "terminal git", bash: "terminal", ps: "powershell", text: "texte", yaml: "yaml", sh: "terminal linux", log: "journal", groovy: "jenkinsfile", hcl: "terraform", docker: "dockerfile" };
 function theoryHTML(src, lang, canRun) {
   const parts = src.split(/~~~(\w+)([^\n]*)\n([\s\S]*?)\n~~~/);
   let h = "";
@@ -51,7 +51,7 @@ function theoryHTML(src, lang, canRun) {
     if (parts[i].trim()) h += inl(parts[i]);
     if (i + 3 < parts.length) {
       const l = parts[i + 1], opts = parts[i + 2], code = parts[i + 3];
-      const runnable = canRun && (l === "py" || l === "cpp" || l === "git" || l === "yaml" || l === "sh" || l === "sql") && !/norun|\btf\b/.test(opts);
+      const runnable = canRun && (l === "py" || l === "cpp" || l === "c" || l === "git" || l === "yaml" || l === "sh" || l === "sql") && !/norun|\btf\b/.test(opts);
       const stdin = (/stdin:(.*)$/.exec(opts) || [])[1];
       const tfOnly = /\btf\b/.test(opts); // code TensorFlow : vérifié en CI avec le vrai TensorFlow, à exécuter sur sa machine ou dans Colab
       h += '<div class="snippet" data-lang="' + l + '"' + (stdin ? ' data-stdin="' + esc(stdin.trim()) + '"' : "") + '><div class="snippet-bar"><span class="lbl">' + (LANG_LABEL[l] || l) + (tfOnly ? " · TensorFlow (sur ta machine ou dans Colab)" : "") + (stdin ? " · entrée : " + esc(stdin.trim()) : "") + "</span>" +
@@ -164,7 +164,7 @@ function pageLesson(x) {
   const ch = l.challenge;
   const term = ch && (lang === "git" || (lang === "sh" && ch.kind !== "script"));
   const code = (S.code[l.id] != null && !term ? S.code[l.id] : (ch ? ch.starter || "" : ""));
-  const file = lang === "py" ? "main.py" : lang === "sql" ? "requete.sql" : "main.cpp";
+  const file = lang === "py" ? "main.py" : lang === "sql" ? "requete.sql" : lang === "c" ? "main.c" : "main.cpp";
   const nQuiz = (l.quiz || []).length;
   let right = "";
   if (term) {
@@ -225,6 +225,7 @@ function bindLesson(x) {
   bindSnippets(app());
   if (lang === "py") preloadPy(lessonCode(l));
   if (lang === "sql") preloadPy("import sqlite3");
+  if (lang === "c") preloadPy("import pycparser");
   $$("[data-jump]").forEach(a => a.addEventListener("click", e => { e.preventDefault(); const t = document.getElementById(a.dataset.jump); if (t) t.scrollIntoView({ behavior: "smooth", block: "start" }); }));
   const qXP = ch ? Math.round(l.xp * 0.4) : l.xp, nQ = (l.quiz || []).length;
   $$(".quiz").forEach(qd => {
@@ -259,7 +260,8 @@ function bindLesson(x) {
     busy(true); const lbl = '<span class="lbl">Console</span>'; cons.innerHTML = lbl + statusHTML(firstLoad(lang));
     try {
       const stdin = lang === "cpp" ? ch.tests[0].input : lang === "sql" ? ch.db || l.db || c.db || "" : "";
-      const r = await run(lang, ed.get() + (ch.runWith ? "\n" + ch.runWith : ""), stdin, t => { cons.innerHTML = lbl + statusHTML(t); });
+      // En C, le code de l'élève n'a pas de main : « Exécuter » le lance avec le main des tests.
+      const r = await run(lang, ed.get() + (lang === "c" ? "\n" + ch.tests : ch.runWith ? "\n" + ch.runWith : ""), stdin, t => { cons.innerHTML = lbl + statusHTML(t); });
       cons.innerHTML = '<span class="lbl">Console' + (stdin && lang === "cpp" ? " · entrée : " + esc(stdin.replace(/\n/g, " ⏎ ")) : "") + "</span>" + consoleHTML(r, lang);
     } catch (e) { cons.innerHTML = '<span class="lbl">Console</span>' + loadFailHTML(lang, e); }
     busy(false);

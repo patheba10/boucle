@@ -5,7 +5,7 @@ import { highlight } from "./highlight.js";
 export function editorHTML(id, lang, code) {
   return '<div class="ed" data-ed="' + id + '" data-lang="' + lang + '"><div class="ed-gutter" aria-hidden="true"></div>' +
     '<div class="ed-scroll"><div class="ed-stack"><pre class="ed-hl" aria-hidden="true"></pre>' +
-    '<textarea id="' + id + '" aria-label="Éditeur de code ' + ({ py: "Python", cpp: "C++", yaml: "YAML", sh: "Bash" }[lang] || lang) +
+    '<textarea id="' + id + '" aria-label="Éditeur de code ' + ({ py: "Python", cpp: "C++", c: "C", yaml: "YAML", sh: "Bash" }[lang] || lang) +
     '" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off">' + esc(code) + "</textarea></div></div></div>";
 }
 
@@ -35,7 +35,7 @@ export function mountEditor(root, onChange, onRun) {
       const line = before.slice(before.lastIndexOf("\n") + 1);
       let indent = (/^[ \t]*/.exec(line) || [""])[0];
       const trimmed = line.replace(/\s+$/, "");
-      if ((lang === "py" && trimmed.endsWith(":")) || (lang === "cpp" && trimmed.endsWith("{"))) indent += "    ";
+      if ((lang === "py" && trimmed.endsWith(":")) || ((lang === "cpp" || lang === "c") && trimmed.endsWith("{"))) indent += "    ";
       // YAML : on rentre de 2 après « clé: », et on s'aligne sur les clés d'un élément « - ».
       if (lang === "sh" && /(\bthen|\bdo|\{|\belse|\)\s*$)$/.test(trimmed) && !/^\s*#/.test(line)) indent += "  ";
       if (lang === "yaml") { if (/^\s*-\s/.test(line)) indent += "  "; if (/:$/.test(trimmed) || /:\s*[|>][-+]?$/.test(trimmed)) indent += "  "; }

@@ -1,6 +1,6 @@
 /* Vérification des défis et affichage des résultats. */
 import { esc, norm } from "./util.js";
-import { runPy, runCpp } from "./engines.js";
+import { runPy, runCpp, runC } from "./engines.js";
 import { sqlCheckProgram, parseSqlCheck, sqlTip } from "./sql.js";
 
 export const MARK = "<<<BOUCLE-TESTS>>>";
@@ -13,6 +13,11 @@ export async function check(lang, ch, code, onStatus, db = "") {
     const { pre, verdict } = parseSqlCheck(r.out);
     if (r.err || !verdict) return { ok: false, cases: [{ expected: "", got: "" }], err: r.err || "Vérification impossible", pre };
     return { ok: verdict.ok, cases: [{ expected: verdict.expected, got: verdict.got }], note: verdict.note, pre };
+  }
+  if (lang === "c") {
+    // Le code de l'élève (des fonctions) puis celui des tests (avec main) forment un seul programme C.
+    const r = await runC(code + "\n" + ch.tests, onStatus);
+    return { ok: !r.err && norm(r.out) === norm(ch.expected), cases: [{ expected: ch.expected, got: r.out }], err: r.err, pre: r.out, userLines: code.split("\n").length };
   }
   if (lang === "py") {
     const userLines = code.split("\n").length;
@@ -42,6 +47,7 @@ export function explainErr(lang, err, line, userLines) {
     return { msg: "Arrêt après " + (lang === "py" ? "20" : "6") + " secondes.", tip: "Boucle infinie ? Vérifie que la condition de ta boucle finit par devenir fausse." };
   }
   if (lang === "sql") return { msg: String(err).replace(/^ErreurSQL: /, "Erreur SQL, "), tip: sqlTip(String(err)) };
+  if (lang === "c") return cErr(String(err), userLines);
   if (lang === "py") {
     let where = "";
     if (line && userLines && line > userLines) where = " (pendant les tests : ta fonction a planté)";
@@ -68,6 +74,25 @@ export function explainErr(lang, err, line, userLines) {
   return { msg: err, tip };
 }
 
+/* Erreurs du C (minic) : « ErreurC: ligne 12 : … » ; au-delà du code de l'élève, la ligne est dans les tests. */
+function cErr(err, userLines) {
+  if (!/^ErreurC: /.test(err)) return { msg: err, tip: "" };
+  let msg = err.replace(/^ErreurC: /, "Erreur : ");
+  const m = /ligne (\d+)/.exec(msg);
+  if (m && userLines && +m[1] > userLines) msg = msg.replace(/ligne \d+ : /, "") + " (pendant les tests : ta fonction a planté)";
+  const tips = [
+    [/syntaxe/, "Vérifie les points-virgules en fin d'instruction, et que chaque { a son }."],
+    [/n'est pas déclaré|non déclarée/, "Un nom inconnu : faute de frappe, variable déclarée dans un autre bloc, ou fonction définie plus bas sans prototype ?"],
+    [/NULL|hors limites/, "Un pointeur invalide : non initialisé, NULL, ou un indice qui dépasse la taille du tableau."],
+    [/trop d'étapes/, "Boucle infinie ? Vérifie que la condition finit par devenir fausse (attention aux entiers non signés qui ne deviennent jamais négatifs)."],
+    [/division par zéro/, "Vérifie le diviseur avant de diviser."],
+    [/décalage/, "On ne peut décaler un entier de n bits que si n est entre 0 et sa taille en bits moins 1."],
+    [/printf/, "Chaque % du format doit correspondre à un argument du bon type."]
+  ];
+  const t = tips.find(([rx]) => rx.test(msg));
+  return { msg, tip: t ? t[1] : "" };
+}
+
 export function consoleHTML(r, lang, userLines) {
   let h = "";
   if (r.out) h += esc(r.out);
@@ -82,5 +107,5 @@ export function consoleHTML(r, lang, userLines) {
 
 export const statusHTML = (text) => '<span class="dim">' + esc(text) + "</span>";
 export const loadFailHTML = (lang, e) =>
-  '<span class="err">Impossible de charger l\'interpréteur ' + (lang === "py" ? "Python" : lang === "sql" ? "SQL (SQLite dans Python)" : "C++") + ".</span>\n" +
+  '<span class="err">Impossible de charger l\'interpréteur ' + (lang === "py" ? "Python" : lang === "sql" ? "SQL (SQLite dans Python)" : lang === "c" ? "C (minic dans Python)" : "C++") + ".</span>\n" +
   '<span class="dim">→ Vérifie ta connexion puis réessaie.' + (e && e.message ? " (" + esc(e.message) + ")" : "") + "</span>";

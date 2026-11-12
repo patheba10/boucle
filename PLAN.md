@@ -83,7 +83,7 @@ TensorFlow ne tourne pas dans Pyodide : les exercices TensorFlow sont validés e
 
 1. Électronique : tension, courant, loi d'Ohm, Kirchhoff, puissance, résistances, diviseurs, condensateurs et circuits RC, inductances, diodes et LED, transistors BJT et MOSFET (commutation), ampli-op, alimentation et régulateurs. Calculateurs interactifs. Fait au sprint 8.1 (#82) : cours « Électronique », 12 leçons ; les calculateurs prennent la forme de défis qui dimensionnent de vrais circuits (valeurs E12, puissances, autonomie), à refaire dans le simulateur Falstad.
 2. Logique numérique : portes, algèbre de Boole, bascules, compteurs, machines à états. Fait au sprint 8.2 (#83) : cours « Logique numérique », 10 leçons, des portes à l'ALU et ses drapeaux, simulées en Python pur.
-3. Embarqué : C pour microcontrôleur, registres, GPIO, PWM, ADC, interruptions, timers, UART, I2C, SPI, gestion de l'énergie, FreeRTOS.
+3. Embarqué : C pour microcontrôleur, registres, GPIO, PWM, ADC, interruptions, timers, UART, I2C, SPI, gestion de l'énergie, FreeRTOS. Fait au sprint 8.3 (#84) : cours « C embarqué », 13 leçons, exécutées dans le navigateur par minic (un interpréteur C écrit pour Boucle) sur un microcontrôleur simulé, et compilées par gcc en CI.
 4. Outils : multimètre, oscilloscope, datasheets, KiCad, simulateur Wokwi (Arduino, ESP32).
 5. TinyML : un modèle TensorFlow Lite Micro sur ESP32, le pont entre ML et embarqué.
 
