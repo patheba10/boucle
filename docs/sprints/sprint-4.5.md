@@ -19,3 +19,4 @@
 ## Journal
 
 - 12 nov. : issue #48 et branche `us-4.4/simulateurs-exploitation` créées, conception ci-dessus. Prochaine étape : `lib/prom/promql.js` et ses tests.
+- 12 nov. : `lib/prom/promql.js` (séries et évaluateur PromQL) et `lib/prom/cli.js` (Prometheus sur le port 9090 avec règles et alertes, `promtool query instant`, `promtool check rules|config`, critères `promql` et `alerts`) écrits et essayés. Prochaine étape : `lib/ansible/` puis tests unitaires.
