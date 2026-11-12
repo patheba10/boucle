@@ -243,7 +243,7 @@ export function evaluate(node, scope) {
     }
     case "for": {
       const c = ev(node.coll); if (c instanceof Unknown) return new Unknown();
-      const entries = Array.isArray(c) ? c.map((v, i) => [i, v]) : Object.entries(c);
+      const entries = Array.isArray(c) ? c.map((v, i) => [i, v]) : Object.entries(c).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)); // ordre lexical, comme Terraform
       const out = node.obj ? {} : [];
       for (const [k, v] of entries) {
         const s2 = { ...scope, ref: (n, nd) => (n === node.v1 ? (node.v2 ? k : v) : n === node.v2 ? v : scope.ref(n, nd)) };

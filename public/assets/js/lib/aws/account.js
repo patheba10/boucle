@@ -148,6 +148,7 @@ export class Account {
         break;
       case "aws_s3_bucket":
         if (!/^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/.test(a.bucket) || /\.\./.test(a.bucket)) E("S3: CreateBucket", "InvalidBucketName", "The specified bucket is not valid.");
+        if (this.get("aws_s3_bucket", a.bucket) && !self) E("S3: CreateBucket", "BucketAlreadyOwnedByYou", "Your previous request to create the named bucket succeeded and you already own it.", 409);
         if (this.buckets.has(a.bucket) && !self) E("S3: CreateBucket", "BucketAlreadyExists", "The requested bucket name is not available. The bucket namespace is shared by all users of the system. Please select a different name and try again.", 409);
         break;
       case "aws_iam_role": case "aws_iam_policy": {

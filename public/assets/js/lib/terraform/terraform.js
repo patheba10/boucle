@@ -211,8 +211,8 @@ class TF {
           if (n === "local") return new Proxy({}, { get: (_, p) => { if (typeof p !== "string") return undefined; if (!(p in loc)) { const l = cfg.locals.find((x) => x.name === p); loc[p] = evaluate(l.expr, sc); } return loc[p]; }, has: (_, p) => cfg.locals.some((x) => x.name === p) });
           if (n === "path") return { module: cfg.dir, root: this.dir, cwd: this.dir };
           if (n === "terraform") return { workspace: "default" };
-          if (n === "data") return new Proxy({}, { get: (_, t) => new Proxy({}, { get: (__, nm) => valueOf(mod, "data." + t, nm), has: () => true }) });
-          if (n === "module") return new Proxy({}, { get: (_, mn) => { if (!this.mods[mn]) return undefined; const out = {}; for (const [on, o] of Object.entries(this.mods[mn].cfg.outputs)) out[on] = evaluate(o.body.attrs.value.expr, scopeFor("module." + mn)); return out; } });
+          if (n === "data") return new Proxy({}, { get: (_, t) => new Proxy({}, { get: (__, nm) => valueOf(mod, "data." + t, nm), has: () => true }), has: () => true });
+          if (n === "module") return new Proxy({}, { get: (_, mn) => { if (!this.mods[mn]) return undefined; const out = {}; for (const [on, o] of Object.entries(this.mods[mn].cfg.outputs)) out[on] = evaluate(o.body.attrs.value.expr, scopeFor("module." + mn)); return out; }, has: (_, mn) => !!this.mods[mn] });
           if (SCHEMAS[n]) return new Proxy({}, { get: (_, nm) => valueOf(mod, n, nm), has: (_, nm) => !!byKey[(mod ? mod + "." : "") + n + "." + nm] });
           throw new HclErr("Invalid reference", 'A reference to a resource type must be followed by at least one attribute access, specifying the resource name.', "main.tf", node.line);
         }
@@ -229,7 +229,7 @@ class TF {
       const r = byKey[k]; const sc = scopeFor(r.mod);
       let idxs = [null];
       if (r.body.attrs.count) { const c = evaluate(r.body.attrs.count.expr, sc); if (c instanceof Unknown) throw new TfErr("Invalid count argument", 'The "count" value depends on resource attributes that cannot be determined until apply, so Terraform cannot predict how many instances will be created. To work around this, use the -target argument to first apply only the resources that the count depends on.', { ...r.at, line: r.body.attrs.count.line, block: 'resource "' + r.type + '" "' + r.name + '"' }); idxs = Array.from({ length: c }, (_, i) => i); }
-      if (r.body.attrs.for_each) { const fe = evaluate(r.body.attrs.for_each.expr, sc); if (Array.isArray(fe) && fe.some((x) => typeof x !== "string")) throw new TfErr("Invalid for_each argument", 'The given "for_each" argument value is unsuitable: the "for_each" argument must be a map, or set of strings, and you have provided a value of type list of object.', { ...r.at, line: r.body.attrs.for_each.line }); idxs = Array.isArray(fe) ? fe : Object.keys(fe); r.feMap = Array.isArray(fe) ? Object.fromEntries(fe.map((x) => [x, x])) : fe; }
+      if (r.body.attrs.for_each) { const fe = evaluate(r.body.attrs.for_each.expr, sc); if (Array.isArray(fe) && fe.some((x) => typeof x !== "string")) throw new TfErr("Invalid for_each argument", 'The given "for_each" argument value is unsuitable: the "for_each" argument must be a map, or set of strings, and you have provided a value of type list of object.', { ...r.at, line: r.body.attrs.for_each.line }); idxs = (Array.isArray(fe) ? [...new Set(fe)] : Object.keys(fe)).sort(); r.feMap = Array.isArray(fe) ? Object.fromEntries(fe.map((x) => [x, x])) : fe; }
       for (const idx of idxs) {
         const addr = addrOf(r, idx);
         const extra = {}; if (r.body.attrs.count) extra.count = { index: idx }; if (r.body.attrs.for_each) extra.each = { key: idx, value: r.feMap[idx] };
