@@ -846,6 +846,12 @@ C("ss", (sh, args, io) => {
   return 0;
 });
 C("netstat", (sh, args, io) => { io.err("Command 'netstat' not found, but can be installed with:\nsudo apt install net-tools\n(netstat est obsolète : utilise ss -tlnp)\n"); return 127; });
+C("base64", (sh, args, io) => {
+  const dec = args.includes("-d") || args.includes("--decode"); const f = args.find((a) => !a.startsWith("-"));
+  let data; try { data = f ? sh.fs.read(sh.abs(f), sh.user) : io.stdin || ""; } catch (e) { fail("base64: " + f + ": No such file or directory"); }
+  if (dec) { try { io.out(decodeURIComponent(escape(atob(data.replace(/\s+/g, ""))))); } catch (e) { fail("base64: invalid input"); } return 0; }
+  const b = btoa(unescape(encodeURIComponent(data))); io.out((b.match(/.{1,76}/g) || [""]).join("\n") + "\n"); return 0;
+});
 C("ssh-keygen", (sh, args, io) => {
   const { o } = need("ssh-keygen", opts(args, "t:f:N:C:b:qyl"));
   const type = o.t || "ed25519"; const f = sh.abs(o.f || "~/.ssh/id_" + type);

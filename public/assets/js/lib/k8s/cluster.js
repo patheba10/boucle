@@ -287,6 +287,8 @@ export class Cluster {
       if (vf.configMapKeyRef || vf.secretKeyRef) { const r = fromRef(vf.configMapKeyRef || vf.secretKeyRef, !!vf.secretKeyRef); if (r.err) return this.configError(p, cs, r.err); env[e.name] = r.v; }
       if (vf.fieldRef) env[e.name] = vf.fieldRef.fieldPath === "metadata.name" ? p.metadata.name : vf.fieldRef.fieldPath === "metadata.namespace" ? ns : st.podIP;
     }
+    if (cs.lastTry === this.t && cs.restartCount) return; // une tentative par tour d'horloge
+    cs.lastTry = this.t;
     if (c) this.rt.remove(c);
     const first = !cs.lastState && cs.restartCount === 0 && !cs.started;
     if (first) { this.event(p, "Normal", "Pulled", 'Container image "' + spec.image + '" already present on machine'); }

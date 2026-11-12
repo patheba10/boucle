@@ -28,7 +28,7 @@ export function podStatus(cl, p) {
   if (cs && cs.state.terminated) return cs.state.terminated.reason;
   return st.phase || "Pending";
 }
-function restarts(cl, p) { const cs = ((p.status || {}).containerStatuses || [])[0]; if (!cs || !cs.restartCount) return "0"; return cs.restartCount + " (" + Math.min(cl.t - (cs.lastState ? cs.lastState.terminated.finishedAt : cl.t) + 12, 59) + "s ago)"; }
+function restarts(cl, p) { const cs = ((p.status || {}).containerStatuses || [])[0]; if (!cs || !cs.restartCount) return "0"; return cs.restartCount + " (" + Math.max(1, Math.min(cl.t - p.metadata.creationTimestamp - 2, cl.t - (cs.lastState ? cs.lastState.terminated.finishedAt : cl.t) + 3)) + "s ago)"; }
 
 /* ===================== analyse des arguments ===================== */
 function parseArgs(args) {
@@ -42,7 +42,7 @@ function parseArgs(args) {
     else if (k === "-l" || k === "--selector") o.l = val();
     else if (k === "-o" || k === "--output") o.o = val();
     else if (/^-o\S/.test(k)) o.o = k.slice(2);
-    else if (k === "-f" || k === "--filename") o.f.push(val());
+    else if (k === "-f" || k === "--filename") { if (args[i + 1] === undefined || args[i + 1].startsWith("-")) o.follow = true; else o.f.push(val()); }
     else if (k === "-A" || k === "--all-namespaces") o.A = true;
     else if (k === "-w" || k === "--watch") o.w = true;
     else if (k === "--previous" || k === "-p") o.previous = true;
@@ -279,12 +279,13 @@ function run(sh, cl, args, io) {
       io.out(items.map((x) => describe(cl, kind, x)).join("\n\n\n")); return 0;
     }
     case "logs": {
-      let [ref] = o._; if (!ref) throw new K8sErr("error: expected 'logs [-f] [-p] (POD | TYPE/NAME) [-c CONTAINER]'.");
+      let [ref] = o._; if (!ref && !o.l) throw new K8sErr("error: expected 'logs [-f] [-p] (POD | TYPE/NAME) [-c CONTAINER]'.");
       let pod;
-      if (ref.includes("/")) { const [w, n] = ref.split("/"); const kind = kindOf(w); const obj = must(cl, kind, n, ns); const sel = kind === "Deployment" ? obj.spec.selector.matchLabels : kind === "Service" ? obj.spec.selector : null; pod = kind === "Pod" ? obj : cl.list("Pod", ns).filter((p) => matches(sel, p.metadata.labels)).sort((a, b) => cl.podReady(b) - cl.podReady(a))[0]; if (!pod) throw new K8sErr("error: timed out waiting for the condition"); if (kind !== "Pod") io.err("Found " + cl.list("Pod", ns).filter((p) => matches(sel, p.metadata.labels)).length + " pods, using pod/" + pod.metadata.name + "\n"); }
-      else if (o.l) { const pods = cl.list("Pod", ns).filter((p) => selectorMatch(o.l, p.metadata.labels)); for (const p of pods) { const c = cl.rt.container(cl.ctrName(p), { must: false }); if (c) io.out(c.logs.join("\n") + (c.logs.length ? "\n" : "")); } return 0; }
-      else pod = must(cl, "Pod", ref, ns);
-      if (o.f) io.err("(logs -f suit le journal en continu ; ici, la commande affiche ce qui est déjà écrit.)\n");
+      if (!ref) { /* sélection par labels, plus bas */ }
+      else if (ref.includes("/")) { const [w, n] = ref.split("/"); const kind = kindOf(w); const obj = must(cl, kind, n, ns); const sel = kind === "Deployment" ? obj.spec.selector.matchLabels : kind === "Service" ? obj.spec.selector : null; pod = kind === "Pod" ? obj : cl.list("Pod", ns).filter((p) => matches(sel, p.metadata.labels)).sort((a, b) => cl.podReady(b) - cl.podReady(a))[0]; if (!pod) throw new K8sErr("error: timed out waiting for the condition"); if (kind !== "Pod") io.err("Found " + cl.list("Pod", ns).filter((p) => matches(sel, p.metadata.labels)).length + " pods, using pod/" + pod.metadata.name + "\n"); }
+      if (!ref && o.l) { const pods = cl.list("Pod", ns).filter((p) => selectorMatch(o.l, p.metadata.labels)); for (const p of pods) { const cs0 = ((p.status || {}).containerStatuses || [])[0]; const c = cl.rt.container(cl.ctrName(p), { must: false }); const lines = o.previous ? (cs0 && cs0.prevLogs) || [] : c ? c.logs : []; if (lines.length) io.out(lines.join("\n") + "\n"); } return 0; }
+      if (!pod) pod = must(cl, "Pod", ref, ns);
+      if (o.f.length || o.follow) io.err("(logs -f suit le journal en continu ; ici, la commande affiche ce qui est déjà écrit.)\n");
       const cs = ((pod.status || {}).containerStatuses || [])[0]; const c = cl.rt.container(cl.ctrName(pod), { must: false });
       if (o.previous) { if (!cs || !cs.prevLogs) throw new K8sErr('Error from server (BadRequest): previous terminated container "' + pod.spec.containers[0].name + '" in pod "' + pod.metadata.name + '" not found'); io.out(cs.prevLogs.join("\n") + "\n"); return 0; }
       if (!c || !cs || (cs.state.waiting && !cs.prevLogs)) throw new K8sErr('Error from server (BadRequest): container "' + pod.spec.containers[0].name + '" in pod "' + pod.metadata.name + '" is waiting to start: ' + (cs && /ImagePull/.test(cs.state.waiting.reason) ? "trying and failing to pull image" : cs && cs.state.waiting.reason === "CreateContainerConfigError" ? "CreateContainerConfigError" : "ContainerCreating"));
