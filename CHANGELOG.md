@@ -4,9 +4,17 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.9.0] — 2026-11-11
+
+Sprint 4.1, début de l'étape DevOps : un terminal Linux dans le navigateur et les cinq premiers chapitres du cours **Linux et Bash** (10 leçons).
+
 ### Ajouté
 - **Terminal Linux simulé** (Ubuntu 24.04) : système de fichiers avec utilisateurs, groupes et droits ; Bash avec pipes, redirections, here-docs, boucles, conditions, fonctions et `set -euo pipefail` ; une centaine de commandes aux messages GNU, dont `sed`, `awk`, `sudo`, `systemctl`, `journalctl`, `apt`, `cron` et un réseau simulé. Saisie sur plusieurs lignes comme dans bash, défis vérifiés sur l'état de la machine ou sur la sortie, défis de scripts testés avec des arguments (#29).
 - Plan des étapes 4 (DevOps) et 5 (AWS et Terraform), ADR 0001 sur le choix des simulateurs.
+- Cours **Linux et Bash**, chapitres 1 à 5 : se repérer, fichiers, liens, recherche et archives, droits, utilisateurs et sudo, grep, tri et comptage, sed et awk, redirections, pipes et codes de sortie, avec une mise en situation sur un journal nginx (#30).
+
+### Modifié
+- CI de Boucle : actions mises à jour par Dependabot (checkout v7, setup-node v7, setup-python v7, configure-pages v6, upload-pages-artifact v5, deploy-pages v5), toujours épinglées par SHA. Le déploiement est passé avec ces versions.
 
 ## [0.8.0] — 2026-11-11
 
