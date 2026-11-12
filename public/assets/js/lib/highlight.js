@@ -55,7 +55,20 @@ function highlightDocker(code) {
   return out + esc(code.slice(last));
 }
 
+/* JSON : clés, chaînes, nombres, littéraux. */
+const JSONRX = /("(?:[^"\\]|\\.)*")(\s*:)?|(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)|\b(true|false|null)\b/g;
+function highlightJson(code) {
+  JSONRX.lastIndex = 0; let out = "", last = 0, m;
+  while ((m = JSONRX.exec(code))) {
+    out += esc(code.slice(last, m.index)); last = JSONRX.lastIndex;
+    if (m[1]) out += '<span class="tk-' + (m[2] ? "kw" : "str") + '">' + esc(m[1]) + "</span>" + esc(m[2] || "");
+    else out += '<span class="tk-' + (m[3] ? "num" : "kw") + '">' + esc(m[0]) + "</span>";
+  }
+  return out + esc(code.slice(last));
+}
+
 export function highlight(code, lang) {
+  if (lang === "json") return highlightJson(code);
   if (lang === "yaml") return highlightYaml(code);
   if (lang === "docker") return highlightDocker(code);
   if (lang === "sh") return highlightSh(code);

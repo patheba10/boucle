@@ -96,7 +96,7 @@ test("EC2 : lancer une instance, security group, joignabilité diagnostiquée", 
   assert.match(evaluate(sh, { reach: { web: { 80: true } } })[0].label, /aucune règle d'entrée de sg-0[0-9a-f]+ n'autorise tcp\/80/);
   run(sh, "aws ec2 authorize-security-group-ingress --group-id " + sg + " --protocol tcp --port 80 --cidr 0.0.0.0/0");
   assert.match(run(sh, "aws ec2 authorize-security-group-ingress --group-id " + sg + " --protocol tcp --port 80 --cidr 0.0.0.0/0").err, /InvalidPermission\.Duplicate/);
-  assert.match(run(sh, "curl -s http://" + ip).out, /<h1>web<\/h1>/);
+  assert.match(run(sh, "curl -s http://" + ip).out, /<h1>Welcome to nginx!<\/h1>/);
   ok(sh, { reach: { web: { 80: true, 22: false } } });
   assert.match(run(sh, "aws ec2 run-instances --image-id ami-123 --instance-type t3.micro").err, /InvalidAMIID\.Malformed/);
   const id = res.Instances[0].InstanceId;
@@ -119,4 +119,43 @@ test("réseau : sous-réseau privé et table de routage expliqués", () => {
   ok(sh, { reach: { web: { 80: true } } });
   const routes = JSON.parse(run(sh, "aws ec2 describe-route-tables --filters Name=association.subnet-id,Values=" + sub.id + " --query 'RouteTables[0].Routes'").out);
   assert.deepEqual(routes.map((r) => r.GatewayId), ["local", igw.id]);
+});
+
+test("réseau à la CLI : passerelle, table de routage, association, et sortie en tableau", () => {
+  const sh = world({ resources: [
+    { type: "aws_vpc", as: "vpc", args: { cidr_block: "10.0.0.0/16", tags: { Name: "boutique" } } },
+    { type: "aws_subnet", as: "pub", args: { vpc_id: "@vpc", cidr_block: "10.0.1.0/24", map_public_ip_on_launch: true, tags: { Name: "public-a" } } },
+    { type: "aws_security_group", as: "web", args: { name: "web", vpc_id: "@vpc", ingress: [{ from_port: 80, to_port: 80, protocol: "tcp", cidr_blocks: ["0.0.0.0/0"] }, { from_port: 22, to_port: 22, protocol: "tcp", cidr_blocks: ["198.51.100.23/32"] }], tags: {} } },
+    { type: "aws_instance", args: { ami: "ami-0c9b7f4e5d3a21f80", instance_type: "t3.micro", subnet_id: "@pub", vpc_security_group_ids: ["@web"], user_data: "nginx", tags: { Name: "vitrine" } } }
+  ] });
+  const vpc = run(sh, "aws ec2 describe-vpcs --filters Name=tag:Name,Values=boutique --query 'Vpcs[0].VpcId' --output text").out.trim();
+  const sub = run(sh, "aws ec2 describe-subnets --filters Name=tag:Name,Values=public-a --query 'Subnets[0].SubnetId' --output text").out.trim();
+  const igw = run(sh, "aws ec2 create-internet-gateway --query InternetGateway.InternetGatewayId --output text").out.trim();
+  const rtb = run(sh, "aws ec2 create-route-table --vpc-id " + vpc + " --query RouteTable.RouteTableId --output text").out.trim();
+  assert.match(run(sh, "aws ec2 create-route --route-table-id " + rtb + " --destination-cidr-block 0.0.0.0/0 --gateway-id " + igw).err, /belong to different networks/);
+  assert.equal(run(sh, "aws ec2 attach-internet-gateway --internet-gateway-id " + igw + " --vpc-id " + vpc).code, 0);
+  run(sh, "aws ec2 create-route --route-table-id " + rtb + " --destination-cidr-block 0.0.0.0/0 --gateway-id " + igw);
+  assert.match(run(sh, "aws ec2 create-route --route-table-id " + rtb + " --destination-cidr-block 0.0.0.0/0 --gateway-id " + igw).err, /RouteAlreadyExists/);
+  run(sh, "aws ec2 associate-route-table --route-table-id " + rtb + " --subnet-id " + sub);
+  ok(sh, { reach: { vitrine: { 80: true, 22: [true, { open: false, from: "203.0.113.9" }] } } });
+  const t = run(sh, "aws ec2 describe-instances --query 'Reservations[].Instances[].{Nom: Tags[?Key==`Name`] | [0].Value, Type: InstanceType}' --output table").out;
+  assert.match(t, /^-+\n\|\s+DescribeInstances\s+\|\n\+-+\+-+\+\n\|\s+Nom\s+\|\s+Type\s+\|\n\+-+\+-+\+\n\|  vitrine\s+\|  t3\.micro\s+\|\n/);
+});
+
+test("IAM : versions d'une politique gérée par le client", () => {
+  const sh = world({ resources: [
+    { type: "aws_iam_policy", as: "p", args: { name: "publier", policy: '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":"s3:PutObject","Resource":"arn:aws:s3:::site"}]}', tags: {} } },
+    { type: "aws_iam_role", args: { name: "ci", assume_role_policy: '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"Service":"ec2.amazonaws.com"},"Action":"sts:AssumeRole"}]}', tags: {} } },
+    { type: "aws_iam_role_policy_attachment", args: { role: "ci", policy_arn: "@p.arn" } }
+  ] });
+  const arn = "arn:aws:iam::123456789012:policy/publier";
+  ok(sh, { iam: { role: "ci", deny: [["s3:PutObject", "arn:aws:s3:::site/index.html"]] } });
+  run(sh, "aws iam get-policy-version --policy-arn " + arn + " --version-id v1 --query PolicyVersion.Document > p.json");
+  run(sh, "sed -i 's#arn:aws:s3:::site\"#arn:aws:s3:::site/*\"#' p.json");
+  assert.equal(JSON.parse(run(sh, "aws iam create-policy-version --policy-arn " + arn + " --policy-document file://p.json --set-as-default").out).PolicyVersion.VersionId, "v2");
+  assert.equal(run(sh, "aws iam get-policy --policy-arn " + arn + " --query Policy.DefaultVersionId --output text").out, "v2\n");
+  ok(sh, { iam: { role: "ci", allow: [["s3:PutObject", "arn:aws:s3:::site/index.html"]] } });
+  assert.match(run(sh, "aws iam create-policy-version --policy-arn arn:aws:iam::aws:policy/ReadOnlyAccess --policy-document file://p.json").err, /Cannot modify an AWS managed policy/);
+  run(sh, "aws iam detach-role-policy --role-name ci --policy-arn " + arn);
+  assert.equal(run(sh, "aws iam list-attached-role-policies --role-name ci --query 'length(AttachedPolicies)'").out, "0\n");
 });

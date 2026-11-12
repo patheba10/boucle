@@ -65,7 +65,10 @@ export class Account {
     // VPC par défaut de la région, comme dans un vrai compte.
     const dv = this.put("aws_vpc", { cidr_block: "172.31.0.0/16", enable_dns_hostnames: true, enable_dns_support: true, instance_tenancy: "default", tags: {} }, { isDefault: true });
     AZS.forEach((az, i) => this.put("aws_subnet", { vpc_id: dv.id, cidr_block: "172.31." + i * 16 + ".0/20", availability_zone: az, map_public_ip_on_launch: true, tags: {} }, { isDefault: true }));
-    for (const r of setup.resources || []) { const o = this.put(r.type, r.args, { console: true }); if (r.as) o.alias = r.as; }
+    // Ressources créées « à la console » pour la mise en place d'un exercice ; "@nom" ou "@nom.attribut" renvoie à une ressource précédente déclarée avec as: "nom".
+    const named = {};
+    const ref = (v) => (typeof v === "string" && /^@\w+(\.\w+)?$/.test(v) ? (([n, at = "id"]) => (named[n] ? named[n].attrs[at] ?? named[n][at] : v))(v.slice(1).split(".")) : Array.isArray(v) ? v.map(ref) : v && typeof v === "object" ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, ref(x)])) : v);
+    for (const r of setup.resources || []) { const o = this.put(r.type, ref(r.args), { console: true }); if (r.as) { o.alias = r.as; named[r.as] = o; } }
     for (const [b, objs] of Object.entries(setup.s3 || {})) { this.put("aws_s3_bucket", { bucket: b, force_destroy: false, tags: {} }, { console: true }); this.s3[b] = { ...objs }; }
   }
   id(type, seed) { const p = SCHEMAS[type] && SCHEMAS[type].prefix; return (p ? p + "-0" : "") + hex(type + seed + this.seq++, 16); }
