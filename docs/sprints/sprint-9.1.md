@@ -17,12 +17,13 @@
 - 12 nov. : 9 leçons, 8 défis. Un code de départ quadratique sur 200 000 éléments rendait la validation très lente (8 min) : les codes de départ doivent échouer vite, pas lentement. Un test lisait le milieu d'une liste après l'avoir inversée en place : corrigé.
 - 12 nov. : en CI, le test de l'examen blanc a échoué : la première question d'entraînement est tirée au hasard, et une question à plusieurs réponses demande de valider. Test corrigé (audit #29).
 - 12 nov. : le test de parité a révélé un vrai bogue de la plateforme : après le défi de l'arbre dégénéré (3 000 nœuds), le défi suivant restait bloqué 20 s. Cause : dans Pyodide, libérer d'un coup une longue chaîne d'objets liés est récursif et dépasse la petite pile C ; la libération arrivait plus tard, au passage du ramasse-miettes. Correctif dans le harnais : après chaque exécution, les objets de l'élève sont démontés un par un (test unitaire ajouté). 1 048 vérifications, 101 tests unitaires, tests de bout en bout.
+- 12 nov. : PR #98, les trois jobs verts après le correctif du test. Fusionnée ; version 0.26.0.
 
 ## Revue de sprint
 
 | Story | Points | Livré |
 |-------|--------|-------|
-| #94 Structures de données et complexité | 8 | Oui |
+| #94 Structures de données et complexité | 8 | Oui (PR #98) |
 
 Vélocité : 8 points sur 8. Version 0.26.0.
 

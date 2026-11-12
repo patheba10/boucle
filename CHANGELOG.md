@@ -4,6 +4,17 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.26.0] — 2026-11-12
+
+Sprint 9.1 : cours **Algorithmique**, chapitre « Structures de données ». Début de l'étape 8 (entretiens).
+
+### Ajouté
+- Cours **Algorithmique** : complexité, tableau dynamique, table de hachage, piles et files, listes chaînées, arbres binaires de recherche, tas, graphes et parcours en largeur, et une fiche d'entretien. Chaque structure codée à la main et éprouvée sur de grandes entrées (#94).
+
+### Corrigé
+- Python dans le navigateur : libérer une longue chaîne d'objets (une liste chaînée de 100 000 nœuds) bloquait l'exécution suivante dans Pyodide. Le harnais démonte désormais les objets de l'élève un par un après chaque exécution.
+- Test de bout en bout de l'examen blanc instable selon la question tirée au hasard.
+
 ## [0.25.0] — 2026-11-12
 
 Sprint 8.4 : outils et TinyML, roadmap Embarqué et IoT. L'étape 7 (hardware et embarqué) est terminée.
