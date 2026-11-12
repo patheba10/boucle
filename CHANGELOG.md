@@ -4,6 +4,16 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.32.0] — 2026-11-12
+
+Sprint 10.3 : projets Embarqué et IoT, roadmaps reliées aux leçons. L'étape 9 est terminée.
+
+### Ajouté
+- Projets **Embarqué et IoT** : station de mesure connectée sur batterie, reconnaissance de gestes TinyML (#108).
+
+### Modifié
+- Les roadmaps suivent la progression réelle : une étape affiche ses leçons terminées et se coche d'elle-même quand toutes le sont.
+
 ## [0.31.0] — 2026-11-12
 
 Sprint 10.2 : projets capstone Cloud et ML.

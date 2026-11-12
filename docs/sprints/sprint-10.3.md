@@ -14,12 +14,13 @@
 ## Journal
 
 - 12 nov. : projets, règle de progression et test de bout en bout (une leçon terminée coche l'étape « Conception de cartes » de la roadmap Embarqué). Une apostrophe non échappée dans une chaîne JavaScript a été vue tout de suite par `node --check` (test ajouté au sprint 9.4). 1 118 vérifications, 102 tests unitaires, 17 tests de bout en bout.
+- 12 nov. : PR #113, les trois jobs verts. Fusionnée ; version 0.32.0, milestone 9 fermé.
 
 ## Revue de sprint
 
 | Story | Points | Livré |
 |-------|--------|-------|
-| #108 Capstones Embarqué et progression des roadmaps | 5 | Oui |
+| #108 Capstones Embarqué et progression des roadmaps | 5 | Oui (PR #113) |
 
 Vélocité : 5 points sur 5. Version 0.32.0. L'étape 9 est terminée : 8 projets capstone, 2 par roadmap, et des roadmaps reliées aux leçons.
 
