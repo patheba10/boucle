@@ -20,3 +20,4 @@
 ## Journal
 
 - 12 nov. (nuit) : branche `us-4.2/cluster-k8s` créée, conception ci-dessus. Prochaine étape : `manifest.js` et `cluster.js`, puis tests unitaires.
+- 12 nov. (nuit) : `lib/k8s/cluster.js` écrit (validation, réconciliation Deployment → ReplicaSet → Pods, rollouts, sondes, CrashLoopBackOff, ImagePullBackOff, Pending, DNS des Services, HPA). Pas encore testé. Prochaine étape : `lib/k8s/kubectl.js` (commandes, sorties, critères, branchement au terminal), puis tests unitaires.
