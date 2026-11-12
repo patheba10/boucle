@@ -1,5 +1,6 @@
 /* Terminal Linux simulé : saisie avec historique, prompt, contenu du dossier courant et services.
    Aussi : extraits de théorie exécutables et tests des défis de scripts. */
+import { podStatus } from "./k8s/kubectl.js";
 import { esc, $ } from "./util.js";
 import { createShell, evaluate } from "./shell/shell.js";
 import { parse } from "./shell/parse.js";
@@ -60,6 +61,16 @@ export function mountShTerm(root, { setup = {}, history = [], onCommand } = {}) 
         '<li><code class="sh-mode">' + modeString(c) + '</code><span class="sh-own">' + esc(c.owner) + '</span><code class="' + (c.t === "d" ? "sh-dir" : c.mode & 0o111 && c.t === "f" ? "sh-exe" : "") + '">' + esc(n) + (c.t === "d" ? "/" : "") + (c.t === "l" ? " → " + esc(c.target) : "") + "</code></li>");
     } catch (e) { rows = []; }
     $(".sh-ls", root).innerHTML = rows.join("") || '<li class="gterm-dim">dossier vide (fichiers cachés non affichés)</li>';
+    if (sh.k8s) {
+      // Avec Kubernetes, le panneau montre les Pods du namespace courant et leur état.
+      const cl = sh.k8s; cl.reconcile(); const pods = cl.list("Pod", cl.ns);
+      const st = (p) => { const s = podStatus(cl, p); return [s === "Running" && cl.podReady(p) ? "ok" : /BackOff|Err|Error/.test(s) ? "bad" : "dim", s === "Running" && !cl.podReady(p) ? "pas prêt" : s]; };
+      $(".sh-svc-wrap .eyebrow", root).textContent = "Pods · namespace " + cl.ns;
+      $(".sh-svc-wrap", root).hidden = false;
+      $(".sh-svc", root).innerHTML = pods.map((p) => { const [k, t] = st(p); return "<li><code>" + esc(p.metadata.name) + '</code><span class="gtag ' + k + '">' + esc(t) + "</span></li>"; }).join("") || '<li class="gterm-dim">aucun Pod</li>';
+      screen.scrollTop = screen.scrollHeight;
+      return;
+    }
     if (sh.docker) {
       // Avec Docker, le panneau montre les conteneurs (nom, état, ports publiés) plutôt que les services.
       const d = sh.docker; const cs = d.containers;
