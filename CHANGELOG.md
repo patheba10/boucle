@@ -4,6 +4,11 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+### Ajouté
+- Cours **AWS** en 12 leçons : régions et responsabilité partagée, IAM et moindre privilège, diagnostic d'un AccessDenied, VPC et routage, security groups, EC2, ECS, EKS et Lambda, S3 et sa protection, RDS, DynamoDB et disques, CloudWatch et architectures résilientes, coûts, douze questions d'entretien. Chaque leçon propose aussi un lab sur un vrai compte (#55).
+- CLI `aws` v2 dans le terminal, sur le même compte simulé que Terraform : `sts`, `s3`, `s3api`, `ec2`, `iam`, `rds`, sorties JSON, `--query` (JMESPath), `--output text|table`, profils, refus d'accès décidés par une évaluation IAM fidèle, joignabilité réseau d'une instance vérifiée par `curl` (#54).
+- Coloration JSON dans l'éditeur et la théorie.
+
 ## [0.14.0] — 2026-11-12
 
 Sprint 5.1 : Terraform et compte AWS simulés, cours **Terraform** (11 leçons).

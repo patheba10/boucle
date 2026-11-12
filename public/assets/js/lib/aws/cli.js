@@ -41,7 +41,7 @@ function parseJmes(src) {
   const peek = (s) => { ws(); return src.startsWith(s, i); };
   const eat = (s) => { if (peek(s)) { i += s.length; return true; } return false; };
   const ident = () => { ws(); if (src[i] === '"') { const j = src.indexOf('"', i + 1); const v = src.slice(i + 1, j); i = j + 1; return v; } const m = /^[A-Za-z_][\w-]*/.exec(src.slice(i)); if (!m) err(); i += m[0].length; return m[0]; };
-  const literal = () => { ws(); if (src[i] === "'") { const j = src.indexOf("'", i + 1); const v = src.slice(i + 1, j); i = j + 1; return { lit: v }; } if (src[i] === "`") { const j = src.indexOf("`", i + 1); const v = JSON.parse(src.slice(i + 1, j)); i = j + 1; return { lit: v }; } const m = /^-?\d+(\.\d+)?/.exec(src.slice(i)); if (m) { i += m[0].length; return { lit: +m[0] }; } return null; };
+  const literal = () => { ws(); if (src[i] === "'") { const j = src.indexOf("'", i + 1); const v = src.slice(i + 1, j); i = j + 1; return { lit: v }; } if (src[i] === "`") { const j = src.indexOf("`", i + 1); const raw = src.slice(i + 1, j); let v; try { v = JSON.parse(raw); } catch (e) { v = raw; /* littéral historique sans guillemets, accepté par la CLI */ } i = j + 1; return { lit: v }; } const m = /^-?\d+(\.\d+)?/.exec(src.slice(i)); if (m) { i += m[0].length; return { lit: +m[0] }; } return null; };
   function pipe() { const parts = [chain()]; while (!peek("||") && eat("|")) parts.push(chain()); return parts.length === 1 ? parts[0] : { pipe: parts }; }
   function cond() { const ors = [[cmp()]]; for (;;) { if (eat("&&")) ors[ors.length - 1].push(cmp()); else if (eat("||")) ors.push([cmp()]); else break; } return ors; }
   function cmp() { const neg = eat("!"); const left = literal() || chain(); for (const op of ["==", "!=", "<=", ">=", "<", ">"]) if (eat(op)) return { neg, left, op, right: literal() || chain() }; return { neg, left }; }
@@ -123,14 +123,19 @@ function render(data, o) {
     walk(data); return lines.length ? lines.join("\n") + "\n" : "";
   }
   if (fmt === "table") {
+    // comme la CLI : titre de l'opération, colonnes triées, en-têtes centrés, valeurs décalées de deux espaces
     const rows0 = Array.isArray(data) ? data : [data];
     const rows = rows0.map((r) => (Array.isArray(r) ? Object.fromEntries(r.map((x, j) => ["Col" + (j + 1), x])) : r));
-    if (rows.every((r) => isNull(r) || typeof r !== "object")) { const w = Math.max(...rows.map((r) => String(r ?? "None").length), 8); const line = "+" + "-".repeat(w + 2) + "+"; return line + "\n" + rows.map((r) => "|  " + String(r ?? "None").padEnd(w) + "|").join("\n") + "\n" + line + "\n"; }
-    const keys = [...new Set(rows.flatMap((r) => Object.keys(r || {}).filter((k) => isNull(r[k]) || typeof r[k] !== "object")))];
-    const cell = (r, k) => String(isNull((r || {})[k]) ? "None" : r[k]);
-    const w = keys.map((k) => Math.max(k.length, ...rows.map((r) => cell(r, k).length)));
-    const line = "+" + w.map((x) => "-".repeat(x + 2)).join("+") + "+";
-    return line + "\n|" + keys.map((k, j) => " " + k.padEnd(w[j]) + " ").join("|") + "|\n" + line + "\n" + rows.map((r) => "|" + keys.map((k, j) => " " + cell(r, k).padEnd(w[j]) + " ").join("|") + "|").join("\n") + "\n" + line + "\n";
+    const center = (t, w) => { const l = Math.floor((w - t.length) / 2); return " ".repeat(l) + t + " ".repeat(w - t.length - l); };
+    const cell = (v) => (isNull(v) ? "None" : typeof v === "boolean" ? (v ? "True" : "False") : String(v));
+    const scalars = rows.every((r) => isNull(r) || typeof r !== "object");
+    const keys = scalars ? [] : [...new Set(rows.flatMap((r) => Object.keys(r || {}).filter((k) => isNull(r[k]) || typeof r[k] !== "object")))].sort();
+    const w = scalars ? [Math.max(...rows.map((r) => cell(r).length)) + 4] : keys.map((k) => Math.max(k.length + 2, ...rows.map((r) => cell((r || {})[k]).length + 4)));
+    let total = w.reduce((a, b) => a + b, 0) + w.length - 1; const title = o.title || "";
+    if (title.length + 2 > total) { w[w.length - 1] += title.length + 2 - total; total = title.length + 2; }
+    const line = "+" + w.map((x) => "-".repeat(x)).join("+") + "+";
+    const body = scalars ? rows.map((r) => "|" + ("  " + cell(r)).padEnd(w[0]) + "|") : rows.map((r) => "|" + keys.map((k, j) => ("  " + cell((r || {})[k])).padEnd(w[j])).join("|") + "|");
+    return "-".repeat(total + 2) + "\n|" + center(title, total) + "|\n" + line + "\n" + (scalars ? "" : "|" + keys.map((k, j) => center(k, w[j])).join("|") + "|\n" + line + "\n") + body.join("\n") + "\n" + line + "\n";
   }
   return JSON.stringify(data ?? null, null, 4) + "\n";
 }
@@ -175,8 +180,9 @@ const ACTIONS = {
   "s3api get-bucket-policy": "s3:GetBucketPolicy", "s3api put-bucket-policy": "s3:PutBucketPolicy", "s3api get-bucket-versioning": "s3:GetBucketVersioning", "s3api put-bucket-versioning": "s3:PutBucketVersioning", "s3api put-public-access-block": "s3:PutBucketPublicAccessBlock", "s3api get-public-access-block": "s3:GetBucketPublicAccessBlock",
   "ec2 describe-vpcs": "ec2:DescribeVpcs", "ec2 describe-subnets": "ec2:DescribeSubnets", "ec2 describe-route-tables": "ec2:DescribeRouteTables", "ec2 describe-internet-gateways": "ec2:DescribeInternetGateways", "ec2 describe-security-groups": "ec2:DescribeSecurityGroups", "ec2 describe-instances": "ec2:DescribeInstances",
   "ec2 run-instances": "ec2:RunInstances", "ec2 terminate-instances": "ec2:TerminateInstances", "ec2 stop-instances": "ec2:StopInstances", "ec2 start-instances": "ec2:StartInstances",
+  "ec2 create-vpc": "ec2:CreateVpc", "ec2 create-subnet": "ec2:CreateSubnet", "ec2 create-internet-gateway": "ec2:CreateInternetGateway", "ec2 attach-internet-gateway": "ec2:AttachInternetGateway", "ec2 create-route-table": "ec2:CreateRouteTable", "ec2 create-route": "ec2:CreateRoute", "ec2 associate-route-table": "ec2:AssociateRouteTable", "ec2 modify-subnet-attribute": "ec2:ModifySubnetAttribute",
   "ec2 create-security-group": "ec2:CreateSecurityGroup", "ec2 authorize-security-group-ingress": "ec2:AuthorizeSecurityGroupIngress", "ec2 revoke-security-group-ingress": "ec2:RevokeSecurityGroupIngress",
-  "iam list-users": "iam:ListUsers", "iam list-roles": "iam:ListRoles", "iam get-role": "iam:GetRole", "iam create-role": "iam:CreateRole", "iam create-policy": "iam:CreatePolicy", "iam attach-role-policy": "iam:AttachRolePolicy", "iam list-attached-role-policies": "iam:ListAttachedRolePolicies", "iam simulate-principal-policy": "iam:SimulatePrincipalPolicy",
+  "iam list-users": "iam:ListUsers", "iam list-roles": "iam:ListRoles", "iam get-role": "iam:GetRole", "iam create-role": "iam:CreateRole", "iam create-policy": "iam:CreatePolicy", "iam attach-role-policy": "iam:AttachRolePolicy", "iam list-attached-role-policies": "iam:ListAttachedRolePolicies", "iam detach-role-policy": "iam:DetachRolePolicy", "iam list-policies": "iam:ListPolicies", "iam get-policy": "iam:GetPolicy", "iam get-policy-version": "iam:GetPolicyVersion", "iam create-policy-version": "iam:CreatePolicyVersion", "iam simulate-principal-policy": "iam:SimulatePrincipalPolicy",
   "rds describe-db-instances": "rds:DescribeDBInstances",
   "configure list": null, "configure get": null
 };
@@ -244,6 +250,7 @@ function aws(sh, args, io) {
     try { return sh.fs.read(sh.abs(v.slice(7)), sh.user); } catch (e) { throw new CliErr("\nError parsing parameter '--" + name + "': Unable to load paramfile " + v + ": [Errno 2] No such file or directory: '" + v.slice(7) + "'", 252); }
   };
   const need = (...names) => { const miss = names.filter((n) => o[n] === undefined); if (miss.length) throw new CliErr("\n" + usage + "\naws: error: the following arguments are required: " + miss.map((n) => "--" + n).join(", "), 252); };
+  o.title = op.split("-").map((x) => x[0].toUpperCase() + x.slice(1)).join("");
   const out = (data) => { io.out(render(data, o)); return 0; };
   const s3uri = (u) => /^s3:\/\/([^/]+)\/?(.*)$/.exec(u || "");
   const bucketPol = (b) => (b && b.attrs.policy) || null;
@@ -399,6 +406,60 @@ function aws(sh, args, io) {
         });
         return out({ [{ "terminate-instances": "TerminatingInstances", "stop-instances": "StoppingInstances", "start-instances": "StartingInstances" }[op]]: res });
       }
+      case "ec2 create-vpc": case "ec2 create-subnet": case "ec2 create-internet-gateway": case "ec2 create-route-table": {
+        const Op = op.split("-").map((x) => x[0].toUpperCase() + x.slice(1)).join("");
+        if (op === "create-vpc") need("cidr-block"); if (op === "create-subnet") need("vpc-id", "cidr-block"); if (op === "create-route-table") need("vpc-id");
+        authorize(ACTIONS[key]);
+        const tags = {}; for (const m of String(many(o["tag-specifications"]).join(" ")).matchAll(/Key=([^,}\]]+),Value=([^,}\]\s]+)/g)) tags[m[1]] = m[2];
+        const type = { "create-vpc": "aws_vpc", "create-subnet": "aws_subnet", "create-internet-gateway": "aws_internet_gateway", "create-route-table": "aws_route_table" }[op];
+        const a = { "create-vpc": { cidr_block: o["cidr-block"], enable_dns_hostnames: false, enable_dns_support: true, instance_tenancy: "default", tags }, "create-subnet": { vpc_id: o["vpc-id"], cidr_block: o["cidr-block"], availability_zone: o["availability-zone"], map_public_ip_on_launch: false, tags }, "create-internet-gateway": { tags }, "create-route-table": { vpc_id: o["vpc-id"], route: [], tags } }[op];
+        try { acct.check(type, a, null); } catch (e) { throw new CliErr("\nAn error occurred (" + e.code + ") when calling the " + Op + " operation: " + e.message); }
+        const r = acct.put(type, a, { cli: true });
+        if (op === "create-vpc") return out({ Vpc: { CidrBlock: r.attrs.cidr_block, DhcpOptionsId: "dopt-0a1b2c3d4e5f60718", State: "pending", VpcId: r.id, OwnerId: ACCOUNT_ID, InstanceTenancy: "default", IsDefault: false, ...withTags(tags) } });
+        if (op === "create-subnet") return out({ Subnet: { AvailabilityZone: r.attrs.availability_zone, AvailableIpAddressCount: 2 ** (32 - +r.attrs.cidr_block.split("/")[1]) - 5, CidrBlock: r.attrs.cidr_block, DefaultForAz: false, MapPublicIpOnLaunch: false, State: "available", SubnetId: r.id, VpcId: r.attrs.vpc_id, OwnerId: ACCOUNT_ID, ...withTags(tags) } });
+        if (op === "create-internet-gateway") return out({ InternetGateway: { Attachments: [], InternetGatewayId: r.id, OwnerId: ACCOUNT_ID, ...withTags(tags) } });
+        return out({ RouteTable: { Associations: [], RouteTableId: r.id, Routes: [{ DestinationCidrBlock: acct.byId(r.attrs.vpc_id).attrs.cidr_block, GatewayId: "local", Origin: "CreateRouteTable", State: "active" }], VpcId: r.attrs.vpc_id, OwnerId: ACCOUNT_ID, ...withTags(tags) } });
+      }
+      case "ec2 attach-internet-gateway": {
+        need("internet-gateway-id", "vpc-id"); authorize(ACTIONS[key]);
+        const g = acct.get("aws_internet_gateway", o["internet-gateway-id"]); const v = acct.get("aws_vpc", o["vpc-id"]);
+        if (!g) throw new CliErr("\nAn error occurred (InvalidInternetGatewayID.NotFound) when calling the AttachInternetGateway operation: The internetGateway ID '" + o["internet-gateway-id"] + "' does not exist");
+        if (!v) throw new CliErr("\nAn error occurred (InvalidVpcID.NotFound) when calling the AttachInternetGateway operation: The vpc ID '" + o["vpc-id"] + "' does not exist");
+        if (g.attrs.vpc_id) throw new CliErr("\nAn error occurred (Resource.AlreadyAssociated) when calling the AttachInternetGateway operation: resource " + g.id + " is already attached to network " + g.attrs.vpc_id);
+        if (acct.list("aws_internet_gateway").some((x) => x.attrs.vpc_id === v.id)) throw new CliErr("\nAn error occurred (InvalidParameterValue) when calling the AttachInternetGateway operation: Network " + v.id + " already has an internet gateway attached");
+        g.attrs.vpc_id = v.id; return 0;
+      }
+      case "ec2 create-route": {
+        need("route-table-id", "destination-cidr-block"); authorize(ACTIONS[key]);
+        const rt = acct.get("aws_route_table", o["route-table-id"]);
+        if (!rt) throw new CliErr("\nAn error occurred (InvalidRouteTableID.NotFound) when calling the CreateRoute operation: The routeTable ID '" + o["route-table-id"] + "' does not exist");
+        const target = o["gateway-id"] || o["nat-gateway-id"];
+        if (!target) throw new CliErr("\nAn error occurred (InvalidParameterCombination) when calling the CreateRoute operation: No target provided. Specify one of gatewayId, natGatewayId, instanceId, networkInterfaceId…");
+        const t = acct.byId(target);
+        if (!t) throw new CliErr("\nAn error occurred (" + (o["gateway-id"] ? "InvalidGatewayID.NotFound" : "InvalidNatGatewayID.NotFound") + ") when calling the CreateRoute operation: The " + (o["gateway-id"] ? "gateway" : "natGateway") + " ID '" + target + "' does not exist");
+        if (o["gateway-id"] && t.attrs.vpc_id !== rt.attrs.vpc_id) throw new CliErr("\nAn error occurred (InvalidParameterValue) when calling the CreateRoute operation: route table " + rt.id + " and network gateway " + target + " belong to different networks");
+        if ((rt.attrs.route || []).some((x) => x.cidr_block === o["destination-cidr-block"])) throw new CliErr("\nAn error occurred (RouteAlreadyExists) when calling the CreateRoute operation: The route identified by " + o["destination-cidr-block"] + " already exists.");
+        rt.attrs.route = [...(rt.attrs.route || []), { cidr_block: o["destination-cidr-block"], ...(o["gateway-id"] ? { gateway_id: target } : { nat_gateway_id: target }) }];
+        return out({ Return: true });
+      }
+      case "ec2 associate-route-table": {
+        need("route-table-id", "subnet-id"); authorize(ACTIONS[key]);
+        const rt = acct.get("aws_route_table", o["route-table-id"]); const sub = acct.get("aws_subnet", o["subnet-id"]);
+        if (!rt) throw new CliErr("\nAn error occurred (InvalidRouteTableID.NotFound) when calling the AssociateRouteTable operation: The routeTable ID '" + o["route-table-id"] + "' does not exist");
+        if (!sub) throw new CliErr("\nAn error occurred (InvalidSubnetID.NotFound) when calling the AssociateRouteTable operation: The subnet ID '" + o["subnet-id"] + "' does not exist");
+        if (sub.attrs.vpc_id !== rt.attrs.vpc_id) throw new CliErr("\nAn error occurred (InvalidParameterValue) when calling the AssociateRouteTable operation: Route table " + rt.id + " and subnet " + sub.id + " belong to different networks");
+        if (acct.list("aws_route_table_association").some((x) => x.attrs.subnet_id === sub.id)) throw new CliErr("\nAn error occurred (Resource.AlreadyAssociated) when calling the AssociateRouteTable operation: the specified association for route table " + rt.id + " conflicts with an existing association");
+        const as = acct.put("aws_route_table_association", { subnet_id: sub.id, route_table_id: rt.id }, { cli: true });
+        return out({ AssociationId: as.id, AssociationState: { State: "associated" } });
+      }
+      case "ec2 modify-subnet-attribute": {
+        need("subnet-id"); authorize(ACTIONS[key]);
+        const sub = acct.get("aws_subnet", o["subnet-id"]);
+        if (!sub) throw new CliErr("\nAn error occurred (InvalidSubnetID.NotFound) when calling the ModifySubnetAttribute operation: The subnet ID '" + o["subnet-id"] + "' does not exist");
+        if (o["map-public-ip-on-launch"]) sub.attrs.map_public_ip_on_launch = true; else if (o["no-map-public-ip-on-launch"]) sub.attrs.map_public_ip_on_launch = false;
+        else throw new CliErr("\nAn error occurred (InvalidParameterCombination) when calling the ModifySubnetAttribute operation: No attributes specified.");
+        return 0;
+      }
       case "ec2 create-security-group": {
         need("group-name", "description"); authorize(ACTIONS[key]);
         const a = { name: o["group-name"], description: o.description, vpc_id: o["vpc-id"] || acct.defaultVpc().id, ingress: [], egress: [{ from_port: 0, to_port: 0, protocol: "-1", cidr_blocks: ["0.0.0.0/0"] }], tags: {} };
@@ -464,6 +525,39 @@ function aws(sh, args, io) {
         if (!acct.get("aws_iam_role", o["role-name"])) throw new CliErr("\nAn error occurred (NoSuchEntity) when calling the ListAttachedRolePolicies operation: The role with name " + o["role-name"] + " cannot be found.");
         return out({ AttachedPolicies: acct.list("aws_iam_role_policy_attachment").filter((x) => x.attrs.role === o["role-name"]).map((x) => ({ PolicyName: x.attrs.policy_arn.split("/").pop(), PolicyArn: x.attrs.policy_arn })) });
       }
+      case "iam detach-role-policy": {
+        need("role-name", "policy-arn"); authorize(ACTIONS[key], "arn:aws:iam::" + ACCOUNT_ID + ":role/" + o["role-name"]);
+        const at = acct.list("aws_iam_role_policy_attachment").find((x) => x.attrs.role === o["role-name"] && x.attrs.policy_arn === o["policy-arn"]);
+        if (!at) throw new CliErr("\nAn error occurred (NoSuchEntity) when calling the DetachRolePolicy operation: Policy " + o["policy-arn"] + " was not found.");
+        acct.remove("aws_iam_role_policy_attachment", at.id); return 0;
+      }
+      case "iam list-policies": {
+        authorize(ACTIONS[key]);
+        const local = acct.list("aws_iam_policy").map((p) => policyJson(acct, p));
+        const managed = Object.keys(AWS_MANAGED).map((arn) => ({ PolicyName: arn.split("/").pop(), PolicyId: "ANPA" + arn.split("/").pop().toUpperCase().replace(/[^A-Z0-9]/g, "").padEnd(17, "Q").slice(0, 17), Arn: arn, Path: arn.includes("service-role") ? "/service-role/" : "/", DefaultVersionId: "v1", AttachmentCount: 0, IsAttachable: true, CreateDate: "2015-02-06T18:40:15+00:00" }));
+        return out({ Policies: o.scope === "Local" ? local : o.scope === "AWS" ? managed : [...managed, ...local] });
+      }
+      case "iam get-policy": case "iam get-policy-version": case "iam create-policy-version": {
+        need("policy-arn"); const arn = o["policy-arn"]; const Op = op.split("-").map((x) => x[0].toUpperCase() + x.slice(1)).join("");
+        authorize(ACTIONS[key], arn);
+        const p = acct.list("aws_iam_policy").find((x) => x.attrs.arn === arn);
+        if (!p && AWS_MANAGED[arn] && op !== "create-policy-version") return out(op === "get-policy" ? { Policy: { PolicyName: arn.split("/").pop(), Arn: arn, Path: "/", DefaultVersionId: "v1", IsAttachable: true } } : { PolicyVersion: { Document: AWS_MANAGED[arn], VersionId: "v1", IsDefaultVersion: true, CreateDate: "2015-02-06T18:40:15+00:00" } });
+        if (!p) throw new CliErr("\nAn error occurred (" + (AWS_MANAGED[arn] ? "AccessDenied" : "NoSuchEntity") + ") when calling the " + Op + " operation: " + (AWS_MANAGED[arn] ? "Cannot modify an AWS managed policy." : "Policy " + arn + " does not exist or is not attachable."));
+        const vs = p.attrs.versions || (p.attrs.versions = [{ id: "v1", doc: p.attrs.policy, def: true, n: 1 }]);
+        if (op === "get-policy") return out({ Policy: policyJson(acct, p) });
+        if (op === "get-policy-version") {
+          need("version-id"); const v = vs.find((x) => x.id === o["version-id"]);
+          if (!v) throw new CliErr("\nAn error occurred (NoSuchEntity) when calling the GetPolicyVersion operation: Policy " + arn + " version " + o["version-id"] + " does not exist or is not attachable.");
+          return out({ PolicyVersion: { Document: JSON.parse(v.doc), VersionId: v.id, IsDefaultVersion: v.def, CreateDate: T0 } });
+        }
+        need("policy-document"); const doc = readArg("policy-document"); const errs = lintPolicy(doc);
+        if (errs.length) throw new CliErr("\nAn error occurred (MalformedPolicyDocument) when calling the CreatePolicyVersion operation: " + errs[0]);
+        if (vs.length >= 5) throw new CliErr("\nAn error occurred (LimitExceeded) when calling the CreatePolicyVersion operation: A managed policy can have up to 5 versions. Before you create a new version, you must delete an existing version.", 254);
+        const v = { id: "v" + (Math.max(...vs.map((x) => x.n)) + 1), n: Math.max(...vs.map((x) => x.n)) + 1, doc: JSON.stringify(JSON.parse(doc)), def: !!o["set-as-default"] };
+        if (v.def) { vs.forEach((x) => { x.def = false; }); p.attrs.policy = v.doc; }
+        vs.push(v);
+        return out({ PolicyVersion: { VersionId: v.id, IsDefaultVersion: v.def, CreateDate: T0 } });
+      }
       case "iam simulate-principal-policy": {
         need("policy-source-arn", "action-names"); authorize(ACTIONS[key]);
         const src = o["policy-source-arn"]; const rm = /:role\/(.+)$/.exec(src);
@@ -490,6 +584,7 @@ function instJson(acct, i) {
   const a = i.attrs;
   return { AmiLaunchIndex: 0, ImageId: a.ami, InstanceId: i.id, InstanceType: a.instance_type, ...(a.key_name ? { KeyName: a.key_name } : {}), LaunchTime: T0, Monitoring: { State: a.monitoring ? "enabled" : "disabled" }, Placement: { AvailabilityZone: a.availability_zone, Tenancy: "default" }, PrivateDnsName: "ip-" + a.private_ip.replace(/\./g, "-") + ".ca-central-1.compute.internal", PrivateIpAddress: a.private_ip, PublicDnsName: a.public_dns || "", ...(a.public_ip ? { PublicIpAddress: a.public_ip } : {}), State: { Code: CODE[a.instance_state], Name: a.instance_state }, SubnetId: a.subnet_id, VpcId: acct.byId(a.subnet_id).attrs.vpc_id, ...(a.iam_instance_profile ? { IamInstanceProfile: { Arn: "arn:aws:iam::" + ACCOUNT_ID + ":instance-profile/" + a.iam_instance_profile } } : {}), SecurityGroups: (a.vpc_security_group_ids || []).map((g) => ({ GroupId: g, GroupName: (acct.byId(g) || { attrs: {} }).attrs.name })), ...withTags(a.tags) };
 }
+function policyJson(acct, p) { return { PolicyName: p.id, PolicyId: p.attrs.policy_id, Arn: p.attrs.arn, Path: "/", DefaultVersionId: ((p.attrs.versions || []).find((v) => v.def) || { id: "v1" }).id, AttachmentCount: acct.list("aws_iam_role_policy_attachment").filter((x) => x.attrs.policy_arn === p.attrs.arn).length, PermissionsBoundaryUsageCount: 0, IsAttachable: true, CreateDate: T0, UpdateDate: T0 }; }
 function roleJson(r) { return { Path: "/", RoleName: r.id, RoleId: r.attrs.unique_id, Arn: r.attrs.arn, CreateDate: r.attrs.create_date, AssumeRolePolicyDocument: JSON.parse(r.attrs.assume_role_policy), ...(r.attrs.description ? { Description: r.attrs.description } : {}), MaxSessionDuration: 3600 }; }
 function perm(r, g) { return { IpProtocol: r.protocol, ...(r.protocol === "-1" ? {} : { FromPort: +r.from_port, ToPort: +r.to_port }), UserIdGroupPairs: (r.security_groups || []).map((x) => ({ GroupId: x, UserId: ACCOUNT_ID })).concat(r.self ? [{ GroupId: g.id, UserId: ACCOUNT_ID }] : []), IpRanges: (r.cidr_blocks || []).map((c) => ({ CidrIp: c, ...(r.description ? { Description: r.description } : {}) })), Ipv6Ranges: [], PrefixListIds: [] }; }
 /** --filters Name=…,Values=… (plusieurs filtres = ET, plusieurs valeurs = OU), --vpc-ids, --subnet-ids. */
@@ -516,7 +611,9 @@ HTTP_HOOKS.push((sh, host, port, path, ip) => {
   const r = reach(sh.aws, inst, port, ((sh.aws.profiles || {}).default || {}).ip || DEFAULT_IP);
   if (!r.ok) return { error: [28, "Failed to connect to " + host + " port " + port + " after 30001 ms: Timeout was reached"] };
   if (webPort(inst) !== port) return { error: [7, "Failed to connect to " + host + " port " + port + " after 18 ms: Couldn't connect to server"] };
-  return { status: 200, type: "text/html", body: "<!DOCTYPE html>\n<h1>" + ((inst.attrs.tags || {}).Name || "Bonjour") + "</h1>\n<p>Servi par " + inst.id + " (" + inst.attrs.availability_zone + ")</p>\n", server: /http\.server/.test(inst.attrs.user_data) ? "SimpleHTTP/0.6 Python/3.12.3" : "nginx/1.24.0 (Ubuntu)" };
+  // la page que sert vraiment le logiciel installé par le user data
+  if (/http\.server/.test(inst.attrs.user_data)) return { status: 200, type: "text/html; charset=utf-8", body: "<!DOCTYPE HTML>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<title>Directory listing for /</title>\n</head>\n<body>\n<h1>Directory listing for /</h1>\n<hr>\n<ul>\n</ul>\n<hr>\n</body>\n</html>\n", server: "SimpleHTTP/0.6 Python/3.12.3" };
+  return { status: 200, type: "text/html", body: "<!DOCTYPE html>\n<html>\n<head>\n<title>Welcome to nginx!</title>\n</head>\n<body>\n<h1>Welcome to nginx!</h1>\n<p>If you see this page, the nginx web server is successfully installed and\nworking. Further configuration is required.</p>\n</body>\n</html>\n", server: "nginx/1.24.0 (Ubuntu)" };
 });
 SETUP_HOOKS.push((sh, setup) => {
   if (!setup.aws && !setup.terraform) return;
@@ -542,13 +639,15 @@ EXTRA_CHECKS.iam = (sh, v, push) => {
   for (const [a, r] of v.deny || []) push(dec(a, r) !== "allowed", who + " ne peut pas faire " + a + (r === "*" ? "" : " sur " + r));
 };
 EXTRA_CHECKS.reach = (sh, v, push) => {
-  // { "Nom de l'instance": { "80": true, "22": false } }
+  // { "Nom de l'instance": { "80": true, "22": { open: false, from: "203.0.113.50" } } }
   for (const [name, spec] of Object.entries(v)) {
     const inst = sh.aws.list("aws_instance").find((i) => (i.attrs.tags || {}).Name === name);
     if (!inst) { push(false, "L'instance « " + name + " » existe"); continue; }
-    for (const [port, open] of Object.entries(spec)) {
-      const r = reach(sh.aws, inst, +port, (sh.aws.profiles.default || {}).ip || DEFAULT_IP);
-      push(r.ok === open, "Le port " + port + " de « " + name + " » " + (open ? "est joignable" : "n'est pas joignable") + " depuis Internet" + (r.ok !== open ? " (" + r.why + ")" : ""));
+    for (const [port, wants] of Object.entries(spec)) for (const want of [].concat(wants)) {
+      // valeur : true/false depuis le poste de l'élève, { open, from: "IP" } pour une autre source, ou une liste des deux
+      const open = typeof want === "object" ? want.open : want; const from = typeof want === "object" && want.from;
+      const r = reach(sh.aws, inst, +port, from || (sh.aws.profiles.default || {}).ip || DEFAULT_IP);
+      push(r.ok === open, "Le port " + port + " de « " + name + " » " + (open ? "est joignable" : "n'est pas joignable") + (from ? " depuis " + from : " depuis Internet") + (r.ok !== open ? " (" + r.why + ")" : ""));
     }
   }
 };
