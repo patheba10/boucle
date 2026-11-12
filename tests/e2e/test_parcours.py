@@ -46,9 +46,23 @@ def test_accueil(page):
 
 
 def test_pages_principales_sans_erreur(page):
-    for route in ["python", "data", "git", "cicd", "cpp", "roadmaps", "devops", "installer", "atelier", "py-01", "np-01", "git-01", "git-12", "ci-01", "ci-20", "ci-22", "linux", "lx-01", "lx-10", "lx-14", "lx-19", "lx-21", "docker", "dk-01", "dk-06", "dk-09", "dk-11", "dk-12", "kubernetes", "k8s-01", "k8s-05", "k8s-07", "k8s-12", "exploitation", "ex-02", "ex-06", "ex-10", "ex-11", "terraform", "tf-02", "tf-05", "tf-08", "tf-11", "aws", "aws-02", "aws-04", "aws-08", "aws-12", "sql", "sql-01", "sql-10", "sql-16", "api", "api-04", "api-09", "api-11", "dl", "dl-05", "dl-09", "dl-10", "dl-13", "dl-15", "dl-16", "dl-20", "electronique", "el-01", "el-07", "el-12", "logique", "ln-01", "ln-08", "ln-10", "embarque", "em-01", "em-07", "em-13", "em-15", "em-17", "iot", "algo", "al-01", "al-08", "al-09", "al-12", "al-19", "al-20", "system-design", "sd-01", "sd-04", "sd-09", "entretiens", "it-02", "it-05", "certifs", "cert-clf", "cert-saa", "cert-entretien-devops", "cert-entretien-ml", "cert-entretien-embarque", "cpp-10"]:
+    for route in ["python", "data", "git", "cicd", "cpp", "roadmaps", "devops", "installer", "atelier", "py-01", "np-01", "git-01", "git-12", "ci-01", "ci-20", "ci-22", "linux", "lx-01", "lx-10", "lx-14", "lx-19", "lx-21", "docker", "dk-01", "dk-06", "dk-09", "dk-11", "dk-12", "kubernetes", "k8s-01", "k8s-05", "k8s-07", "k8s-12", "exploitation", "ex-02", "ex-06", "ex-10", "ex-11", "terraform", "tf-02", "tf-05", "tf-08", "tf-11", "aws", "aws-02", "aws-04", "aws-08", "aws-12", "sql", "sql-01", "sql-10", "sql-16", "api", "api-04", "api-09", "api-11", "dl", "dl-05", "dl-09", "dl-10", "dl-13", "dl-15", "dl-16", "dl-20", "electronique", "el-01", "el-07", "el-12", "logique", "ln-01", "ln-08", "ln-10", "embarque", "em-01", "em-07", "em-13", "em-15", "em-17", "iot", "algo", "al-01", "al-08", "al-09", "al-12", "al-19", "al-20", "system-design", "sd-01", "sd-04", "sd-09", "entretiens", "it-02", "it-05", "certifs", "cert-clf", "cert-saa", "cert-entretien-devops", "cert-entretien-ml", "cert-entretien-embarque", "projets", "pj-plateforme", "pj-incidents", "cpp-10"]:
         page.goto(page.base + "#" + route)
         expect(page.locator("#app")).not_to_be_empty()
+    assert page.errors == []
+
+
+def test_projet_jalons_sauvegardes(page):
+    """Un jalon coché reste coché après rechargement, et la roadmap renvoie vers ses projets."""
+    page.goto(page.base + "#devops")
+    page.click("a[href='#pj-plateforme']")
+    expect(page.locator("#pj-count")).to_have_text("0 / 5")
+    page.locator("[data-jalon=api] label.check").click()
+    expect(page.locator("#pj-count")).to_have_text("1 / 5")
+    page.reload()
+    expect(page.locator("[data-jalon=api] input")).to_be_checked()
+    page.goto(page.base + "#projets")
+    expect(page.locator("a[href='#pj-plateforme'] .meta-row")).to_contain_text("1 / 5 jalons")
     assert page.errors == []
 
 

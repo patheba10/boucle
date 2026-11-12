@@ -15,7 +15,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 import vm from "node:vm";
-import { COURSES, ROADMAPS, INSTALL, CERTS } from "../public/content/index.js";
+import { COURSES, ROADMAPS, INSTALL, CERTS, PROJETS } from "../public/content/index.js";
 import { lintCert, buildExam, grade } from "../public/assets/js/lib/exam.js";
 import { sqlRunProgram, sqlCheckProgram, parseSqlCheck } from "../public/assets/js/lib/sql.js";
 import { cProgram } from "../public/assets/js/lib/engines.js";
@@ -114,7 +114,7 @@ function cppCheck(ch, code, runner) {
 
 /* ---------- Structure ---------- */
 const ids = new Set();
-const routes = new Set(["home", "roadmaps", "atelier", "installer"]);
+const routes = new Set(["home", "roadmaps", "atelier", "installer", "projets", "certifs"]);
 for (const c of COURSES) {
   if (!c.route || !c.badge) fail(c.id, "cours sans route ou badge");
   if (routes.has(c.route)) fail(c.id, "route en double : " + c.route);
@@ -140,6 +140,19 @@ for (const r of ROADMAPS) for (const s of r.stages) for (const n of s.nodes) {
   ids.add(n.id);
   for (const lid of n.lessons || []) if (!COURSES.some((c) => c.lessons.some((l) => l.id === lid))) fail(n.id, "leçon liée introuvable : " + lid);
   for (const [, url] of n.links) if (!/^https:\/\//.test(url)) fail(n.id, "lien non https : " + url);
+}
+for (const p of PROJETS) {
+  if (ids.has(p.id) || routes.has(p.id)) fail(p.id, "id de projet en double ou déjà utilisé comme route");
+  ids.add(p.id);
+  if (!ROADMAPS.some((r) => r.id === p.roadmap)) fail(p.id, "roadmap inconnue : " + p.roadmap);
+  for (const k of ["titre", "niveau", "duree", "resume", "contexte", "architecture"]) if (!p[k]) fail(p.id, "projet sans " + k);
+  for (const k of ["technos", "exigences", "jalons", "criteres", "extensions", "lecons", "liens"]) if (!Array.isArray(p[k]) || !p[k].length) fail(p.id, "projet : liste « " + k + " » vide");
+  const jal = new Set();
+  for (const j of p.jalons || []) { if (jal.has(j.id)) fail(p.id, "jalon en double : " + j.id); jal.add(j.id); if (!j.titre || !(j.livrables || []).length) fail(p.id, "jalon incomplet : " + j.id); }
+  for (const lid of p.lecons || []) if (!COURSES.some((c) => c.lessons.some((l) => l.id === lid))) fail(p.id, "leçon liée introuvable : " + lid);
+  for (const [, url] of p.liens || []) if (!/^https:\/\//.test(url)) fail(p.id, "lien non https : " + url);
+  if (JSON.stringify(p).includes("`")) fail(p.id, "accent grave dans le texte : écrire le code entre @@ @@");
+  ok();
 }
 for (const sec of INSTALL.sections) if (!sec.id || !sec.title || !sec.body) fail("installer", "section incomplète");
 ok();
