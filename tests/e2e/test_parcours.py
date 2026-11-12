@@ -57,6 +57,8 @@ def test_examen_blanc_court(page):
     page.goto(page.base + "#cert-clf")
     page.click("[data-practice=facturation]")
     page.locator(".opt").first.click()
+    if page.locator("[data-valid]").is_visible():  # question à plusieurs réponses (tirage aléatoire) : il faut valider
+        page.click("[data-valid]")
     expect(page.locator(".explain")).to_be_visible()
     page.goto(page.base + "#home")
     page.goto(page.base + "#cert-clf")

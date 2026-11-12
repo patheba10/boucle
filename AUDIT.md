@@ -47,7 +47,7 @@ Priorités : **P0** bloquant pour l'objectif, **P1** fort impact, **P2** confort
 | 26 | Le simulateur Git a son propre petit shell (echo, cat, ls…), distinct du terminal Linux. Les unifier éviterait deux comportements différents pour la même commande. | P3 | À faire |
 | 27 | La barre de navigation compte 20 liens : sur un écran de portable, les cours les plus récents (Électronique, Logique, C embarqué) sont hors de vue à droite. Regrouper les cours par étape dans un menu, ou une page « Cours ». | P2 | À faire (vu au sprint 8.4) |
 | 28 | Les cours ajoutés depuis l'étape 5 n'ont pas de couleur propre dans la feuille de style (seuls Python, C++, Data, Git, CI/CD, Linux et les roadmaps en ont). | P3 | À faire (vu au sprint 8.4) |
-| 29 | Un test de bout en bout de l'examen blanc a échoué une fois sans changement de code, puis réussi deux fois (sprint 8.4) : probable dépendance au temps. À surveiller, et attendre explicitement l'état de l'interface entre les clics. | P3 | À surveiller |
+| 29 | Un test de bout en bout de l'examen blanc échouait parfois sans changement de code. | P3 | **Fait** (sprint 9.1) : la première question d'entraînement est tirée au hasard ; quand elle a plusieurs réponses, un clic ne suffit pas, il faut valider. Le test gère les deux cas |
 
 ## Ordre de traitement
 
