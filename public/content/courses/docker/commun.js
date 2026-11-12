@@ -38,6 +38,24 @@ app_env = os.environ["APP_ENV"]
 def health():
     return {"status": "ok", "env": app_env}
 `;
+/** Variante reliée à PostgreSQL : elle vérifie la connexion au démarrage (lignes 7 et 9). */
+export const MAIN_PY_DB = `import os
+
+import psycopg2
+from fastapi import FastAPI
+
+app = FastAPI(title="Boutique")
+database_url = os.environ["DATABASE_URL"]
+# Connexion vérifiée au démarrage : sans base joignable, l'API ne démarre pas.
+conn = psycopg2.connect(database_url)
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+`;
+export const REQS_DB = "fastapi==0.115.6\nuvicorn==0.32.1\npsycopg2-binary==2.9.10\n";
+export const DB_APP = { env: ["DATABASE_URL"], deps: [{ env: "DATABASE_URL" }], envLine: 7, dbLine: 9 };
 const PRODUITS = '[{"id":1,"nom":"Clavier","prix":49.9},{"id":2,"nom":"Souris","prix":19.9}]';
 
 /** Comportement simulé de l'application : rattaché au fichier source, il suit ce fichier dans les images. */

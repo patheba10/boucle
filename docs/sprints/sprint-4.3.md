@@ -4,8 +4,8 @@
 
 | Story | Points | Statut |
 |-------|--------|--------|
-| #31 US-4.1 Simulateur Docker (enabler) | 8 | En cours |
-| #32 US-4b Cours Docker et Compose | 8 | À faire |
+| #31 US-4.1 Simulateur Docker (enabler) | 8 | Terminé |
+| #32 US-4b Cours Docker et Compose | 8 | Terminé |
 
 **Capacité** : 16 points. Le sprint court sur plusieurs sessions : le journal ci-dessous dit où reprendre.
 
@@ -24,3 +24,4 @@
 - 11 nov. (soir) : `catalog.js`, `dockerfile.js` (hadolint + vérifications BuildKit), `engine.js` (build avec cache, conteneurs, réseaux, volumes, registre, HTTP), `cli.js` (commande docker, hadolint, critères), `compose.js` écrits. Premier scénario OK : build, cache, run -p, curl, logs. À faire ensuite : tests unitaires (erreurs de build, réseau et DNS, volumes, Compose, registre), panneau latéral du terminal, validateur, puis PR #31.
 - 12 nov. (nuit) : 12 tests unitaires Docker, panneau des conteneurs dans le terminal, défis de type fichier (`run`, `editorLang`), coloration des Dockerfile, documentation. PR #31 ouverte. Ensuite : cours Docker et Compose (#32), branche `us-4b/docker`.
 - 12 nov. (nuit) : PR #42 (simulateur) fusionnée. Branche `us-4b/docker` : cours enregistré (`courses/docker.js`, nav), chapitre 1 écrit et validé (dk-01 à dk-03). Prévu : dk-04 à dk-06 images (Dockerfile, cache et .dockerignore, images légères et sûres), dk-07 et dk-08 réseaux et volumes, dk-09 Compose, dk-10 registres et CI, dk-11 incident, dk-12 entretien.
+- 12 nov. (nuit) : cours complet, dk-01 à dk-12, validé (656 vérifications), tests unitaires et e2e verts. PR du cours puis release 0.11.0.

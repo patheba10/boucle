@@ -4,6 +4,11 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+### Ajouté
+- Cours **Docker et Compose** en 12 leçons : conteneurs et cycle de vie, images et couches, Dockerfile, cache et `.dockerignore`, images légères et sûres (non root, sans secret, hadolint, multi-étapes), réseaux, volumes et montages, Compose avec `healthcheck`, registres et CI, un incident à trois pannes et dix questions d'entretien (#32).
+- Simulateur Docker dans le terminal Linux : construction avec cache, BuildKit et hadolint, conteneurs, ports, réseaux et DNS, volumes, registre, Compose v2, panneau des conteneurs (#31).
+- Défis « fichier » : un Dockerfile ou un `compose.yaml` écrit dans l'éditeur, testé par une suite de commandes ; coloration des Dockerfile ; extraits de théorie avec une mise en place (`snippetSetup`).
+
 ## [0.10.0] — 2026-11-11
 
 Sprint 4.2 : le cours **Linux et Bash** est complet (21 leçons en 10 chapitres, avec des mises en situation et des questions d'entretien).

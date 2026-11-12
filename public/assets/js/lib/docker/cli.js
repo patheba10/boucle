@@ -147,7 +147,7 @@ export function execIn(sh, d, c, argv, io, o = {}) {
   const user = (o.user || c.user || "root").split(":")[0];
   const exe = argv[0]; const b = exe.split("/").pop();
   const builtin = ["ls", "cat", "env", "printenv", "id", "whoami", "pwd", "echo", "hostname", "ps", "touch", "mkdir", "getent", "date", "df", "uname", "rm", "head", "tail", "wc"];
-  const avail = (x) => (img.shell && builtin.includes(x)) || img.bins.includes(x) || (img.os === "alpine" && x === "wget");
+  const avail = (x) => (img.shell && builtin.includes(x)) || img.bins.includes(x) || (["alpine", "busybox"].includes(img.os) && ["wget", "ping", "nslookup"].includes(x));
   if (!avail(b) && !(["sh", "bash"].includes(b) && img.shell)) throw new DockerErr('OCI runtime exec failed: exec failed: unable to start container process: exec: "' + exe + '": executable file not found in $PATH: unknown', 126);
   const cwd = o.workdir || c.workdir || "/"; const abs = (p) => (p.startsWith("/") ? p : (cwd === "/" ? "" : cwd) + "/" + p).replace(/\/+/g, "/");
   const a = argv.slice(1);
@@ -190,6 +190,15 @@ export function execIn(sh, d, c, argv, io, o = {}) {
     }
     case "rm": return 0;
     case "df": io.out("Filesystem     1K-blocks     Used Available Use% Mounted on\noverlay         61202244 18234120  39826740  32% /\n"); return 0;
+    case "ping": case "nslookup": {
+      // BusyBox : résolution par le DNS de Docker (réseaux utilisateur seulement).
+      const host = a.filter((x) => !x.startsWith("-") && !/^\d+$/.test(x)).pop(); const t = d.resolveFrom(c, host);
+      if (b === "nslookup") { if (!t) { io.out("Server:\t\t127.0.0.11\nAddress:\t127.0.0.11:53\n\n** server can't find " + host + ": NXDOMAIN\n\n"); return 1; } io.out("Server:\t\t127.0.0.11\nAddress:\t127.0.0.11:53\n\nNon-authoritative answer:\nName:\t" + host + "\nAddress: " + t.ip + "\n\n"); return 0; }
+      if (!t) { io.err("ping: bad address '" + host + "'\n"); return 1; }
+      const n = +(a[a.indexOf("-c") + 1] || 1) || 1; let o2 = "PING " + host + " (" + t.ip + "): 56 data bytes\n";
+      for (let i = 0; i < n; i++) o2 += "64 bytes from " + t.ip + ": seq=" + i + " ttl=64 time=0.0" + (81 + i) + " ms\n";
+      io.out(o2 + "\n--- " + host + " ping statistics ---\n" + n + " packets transmitted, " + n + " packets received, 0% packet loss\nround-trip min/avg/max = 0.081/0.081/0.081 ms\n"); return 0;
+    }
     case "getent": { const t = d.resolveFrom(c, a[1]); if (!t) return 2; io.out(t.ip.padEnd(16) + a[1] + "\n"); return 0; }
     case "curl": case "wget": {
       const url = a.find((x) => /^https?:\/\/|^[\w.-]+(:\d+)?\//.test(x) && !x.startsWith("-")) || a.filter((x) => !x.startsWith("-")).pop();
