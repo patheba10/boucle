@@ -7,6 +7,7 @@ import { COMMANDS, makeWorld, addService, EXTRA_CHECKS, SETUP_HOOKS } from "./co
 import "../docker/cli.js";
 import "../k8s/kubectl.js";
 import "../prom/cli.js";
+import "../ansible/ansible.js";
 
 class ExitSig { constructor(code) { this.code = code; } }
 class ReturnSig { constructor(code) { this.code = code; } }

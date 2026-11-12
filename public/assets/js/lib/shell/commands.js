@@ -110,7 +110,7 @@ const CATALOG = {
     for (const f of ["access.log", "error.log"]) { if (sh.fs.exists("/var/log/nginx/" + f)) continue; const n = sh.fs.write("/var/log/nginx/" + f, "", "root"); n.owner = "www-data"; n.group = "adm"; n.mode = 0o640; }
     addService(sh, "nginx", { desc: "A high performance web server and a reverse proxy server", exec: "nginx: master process /usr/sbin/nginx -g daemon on; master_process on;", children: [{ cmd: "nginx: worker process", user: "www-data" }], ports: [80], pid: 1312, enabled: true, active: true, check: nginxCheck });
   },
-  jq: () => {}, htop: () => {}, tree: () => {}, "net-tools": () => {}, unzip: () => {}, git: () => {}, "python3": () => {},
+  jq: () => {}, htop: () => {}, tree: () => {}, "ansible-core": () => {}, ansible: () => {}, prometheus: () => {}, "net-tools": () => {}, unzip: () => {}, git: () => {}, "python3": () => {},
 };
 /** Vérifie la configuration nginx (accolades, points-virgules) comme « nginx -t ». */
 const ONE_ARG = new Set(["root", "alias", "proxy_pass", "include", "worker_processes", "client_max_body_size"]);
