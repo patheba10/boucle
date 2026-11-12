@@ -4,6 +4,13 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.22.0] — 2026-11-12
+
+Sprint 8.1 : cours **Électronique**, premier cours de l'étape 7 (hardware et embarqué).
+
+### Ajouté
+- Cours **Électronique** en 12 leçons : loi d'Ohm, puissance, résistances et série E12, lois de Kirchhoff, diviseur de tension et ADC, circuits RC, diodes et LED, transistor bipolaire et MOSFET en commutation, ampli-op, alimentations et autonomie sur batterie, questions d'entretien. Onze défis de dimensionnement en Python pur (#82).
+
 ## [0.21.0] — 2026-11-12
 
 Sprint 7.3 : chapitre **TensorFlow Lite** (LiteRT). L'étape 6 (deep learning) est terminée.
