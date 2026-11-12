@@ -4,6 +4,10 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.16.0] — 2026-11-12
+
+Sprint 5.3 : moteur d'examens blancs et préparation aux certifications AWS. L'étape 5 (cloud) est terminée : Terraform, AWS, certifications.
+
 ### Ajouté
 - Préparation aux certifications AWS : 69 questions pour Cloud Practitioner (CLF-C02) et 68 pour Solutions Architect Associate (SAA-C03), originales et classées par domaine officiel, avec explications ; entraînement par domaine et examens blancs complets ou courts (#56).
 - Moteur d'examens blancs : tirage pondéré par domaine, chronomètre, marques pour revoir, reprise après rechargement, score et détail par domaine, revue des erreurs (#63).
