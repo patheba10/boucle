@@ -4,6 +4,14 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.31.0] — 2026-11-12
+
+Sprint 10.2 : projets capstone Cloud et ML.
+
+### Ajouté
+- Projets **Cloud** : application web hautement disponible sur AWS, traitement de fichiers événementiel et serverless (#107).
+- Projets **ML** : du jeu de données à l'API de prédiction surveillée, classifieur d'images pour mobile de Keras à LiteRT.
+
 ## [0.30.0] — 2026-11-12
 
 Sprint 10.1 : projets capstone. Début de l'étape 9.
