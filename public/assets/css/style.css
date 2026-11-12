@@ -18,6 +18,7 @@
   --data: #0E8566;
   --git: #C2462B;
   --cicd: #5B4FD6;
+  --linux: #B5591B;
   --devops: #C9661A;
   --cloud: #2C7CC4;
   --ml: #A33A8C;
@@ -43,7 +44,7 @@
     --bg: #0E1020; --surface: #171A2D; --surface-2: #20243A; --ink: #E8E9F3; --muted: #9EA2BD; --line: #2A2E48;
     --accent: #FF7A4A; --accent-soft: #3A2219; --on-accent: #1A0C06;
     --ok: #45C48E; --ok-soft: #12322A; --bad: #FF7B72; --bad-soft: #3A1B1E;
-    --py: #7EA4FF; --cpp: #5BC2D6; --data: #4CCFA8; --git: #F27A5E; --cicd: #A49BFF; --devops: #F09A52; --cloud: #6DB4F5; --ml: #E07FCB;
+    --py: #7EA4FF; --cpp: #5BC2D6; --data: #4CCFA8; --git: #F27A5E; --cicd: #A49BFF; --linux: #F0A060; --devops: #F09A52; --cloud: #6DB4F5; --ml: #E07FCB;
     --code-bg: #0A0C18; --code-bg-2: #12152A; --code-line: #23284A;
     --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 4px 16px rgba(0, 0, 0, .25);
     color-scheme: dark;
@@ -53,7 +54,7 @@
   --bg: #0E1020; --surface: #171A2D; --surface-2: #20243A; --ink: #E8E9F3; --muted: #9EA2BD; --line: #2A2E48;
   --accent: #FF7A4A; --accent-soft: #3A2219; --on-accent: #1A0C06;
   --ok: #45C48E; --ok-soft: #12322A; --bad: #FF7B72; --bad-soft: #3A1B1E;
-  --py: #7EA4FF; --cpp: #5BC2D6; --data: #4CCFA8; --git: #F27A5E; --cicd: #A49BFF; --devops: #F09A52; --cloud: #6DB4F5; --ml: #E07FCB;
+  --py: #7EA4FF; --cpp: #5BC2D6; --data: #4CCFA8; --git: #F27A5E; --cicd: #A49BFF; --linux: #F0A060; --devops: #F09A52; --cloud: #6DB4F5; --ml: #E07FCB;
   --code-bg: #0A0C18; --code-bg-2: #12152A; --code-line: #23284A;
   --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 4px 16px rgba(0, 0, 0, .25);
   color-scheme: dark;
@@ -515,3 +516,13 @@ details.setup > .prose { padding: 0 22px 20px; }
 .qa summary { cursor: pointer; font-weight: 600; line-height: 1.4; }
 .qa details[open] summary { margin-bottom: 8px; }
 .qa details p { margin: 0; }
+
+/* Terminal Linux : contenu du dossier courant et services */
+.sh-ls, .sh-svc { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; font-size: 12.5px; max-height: 180px; overflow-y: auto; }
+.sh-ls li, .sh-svc li { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.sh-ls code, .sh-svc code { background: transparent; color: var(--code-fg); padding: 0; font-size: 12.5px; }
+.sh-ls .sh-mode { color: var(--code-dim); }
+.sh-ls .sh-own { color: var(--code-dim); font-family: var(--f-mono); min-width: 5ch; }
+.sh-ls .sh-dir { color: var(--tk-fn); font-weight: 600; }
+.sh-ls .sh-exe { color: var(--tk-str); font-weight: 600; }
+.sh-svc-wrap { display: flex; flex-direction: column; gap: 6px; }

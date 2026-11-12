@@ -4,6 +4,10 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+### Ajouté
+- **Terminal Linux simulé** (Ubuntu 24.04) : système de fichiers avec utilisateurs, groupes et droits ; Bash avec pipes, redirections, here-docs, boucles, conditions, fonctions et `set -euo pipefail` ; une centaine de commandes aux messages GNU, dont `sed`, `awk`, `sudo`, `systemctl`, `journalctl`, `apt`, `cron` et un réseau simulé. Saisie sur plusieurs lignes comme dans bash, défis vérifiés sur l'état de la machine ou sur la sortie, défis de scripts testés avec des arguments (#29).
+- Plan des étapes 4 (DevOps) et 5 (AWS et Terraform), ADR 0001 sur le choix des simulateurs.
+
 ## [0.8.0] — 2026-11-11
 
 Sprint 3.3 : le cours **CI/CD avec GitHub Actions** est complet (22 leçons en 12 chapitres, dont un projet et des questions d'entretien). La CI de Boucle applique ce qu'il enseigne : actions épinglées par SHA et Dependabot.

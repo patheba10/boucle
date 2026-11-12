@@ -19,7 +19,7 @@ npm run validate -- py-04   # une seule leçon
 pip install -r requirements.txt -r requirements-dev.txt
 python -m playwright install chromium
 npm run test:e2e            # parcours élève dans un vrai navigateur
-npm run test:unit           # simulateur Git et moteur des workflows
+npm run test:unit           # simulateurs Git et Linux, moteur des workflows
 ```
 
 ## Valider le contenu
@@ -66,6 +66,8 @@ Une leçon est un objet dans `public/content/courses/<cours>.js` :
 - `lang` (facultatif) sur une leçon : remplace le langage du cours pour cette leçon.
 - `practice` (facultatif, leçons sans défi) : `{ title, body }`, panneau de pratique à droite.
 - Blocs `~~~git` : exécutés dans un dépôt simulé neuf ; une ligne préfixée par `!` doit échouer.
+  - Linux (`lang` vaut `"sh"`) : terminal avec `setup` (`{ files, commands, cwd }` ; une commande préfixée par `#` tourne en root), `checks` (critères listés dans `evaluate` de `lib/shell/shell.js`) et `solution` (liste de commandes) ; ou script avec `kind: "script"`, `file`, `starter`, `solution` et `tests` (`{ args, stdin, out, outHas, code, checks }`).
+- Blocs `~~~sh` : exécutés dans un terminal Linux neuf ; une commande préfixée par `!` doit échouer. Dans les fichiers du cours Linux, le gabarit `R` permet d'écrire `\${…}`.
 - Blocs `~~~yaml` : bouton « Analyser » (problèmes et simulation). Ils doivent passer le lint, sauf avec l'option `erreurs` (extrait volontairement faux). Dans les fichiers du cours CI/CD, le gabarit `Y` permet d'écrire `\${{ … }}`.
 
 Pour lire un jeu de données dans un exercice, place le fichier dans `public/datasets/` (et complète son README), puis lis-le via `"data/<fichier>"`.
