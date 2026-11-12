@@ -612,7 +612,7 @@ export class Docker {
       let root = "/usr/share/nginx/html";
       const conf = this.readFile(c, "/etc/nginx/conf.d/default.conf"); const m = conf && /root\s+([^;]+);/.exec(conf.data); if (m) root = m[1].trim();
       if (L.kind === "static") root = c.workdir;
-      const f = this.readFile(c, join(root, path.endsWith("/") ? path + "index.html" : path));
+      const f = this.readFile(c, join(root, "." + (path.endsWith("/") ? path + "index.html" : path)));
       if (!f) { const body = "<html>\r\n<head><title>404 Not Found</title></head>\r\n<body>\r\n<center><h1>404 Not Found</h1></center>\r\n<hr><center>nginx/1.27.3</center>\r\n</body>\r\n</html>\r\n"; access(404, 153); return { status: 404, type: "text/html", body, server: "nginx/1.27.3" }; }
       access(200, bytes(f.data)); return { status: 200, type: "text/html", body: f.data, server: L.kind === "nginx" ? "nginx/1.27.3" : "SimpleHTTP/0.6 Python/3.12.8" };
     }
