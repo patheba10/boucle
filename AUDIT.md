@@ -33,7 +33,7 @@ Priorités : **P0** bloquant pour l'objectif, **P1** fort impact, **P2** confort
 | 12 | Aucun test : une solution fausse ou un énoncé incohérent passe inaperçu. | P0 | **Fait** : `npm run validate` (CPython, g++, interpréteur navigateur) + CI GitHub Actions |
 | 13 | Hébergement en artifact : interdit les téléchargements à l'exécution, donc pas de paquets Python. | P0 | **Fait** : dépôt GitHub privé + Vercel |
 | 14 | Boucle infinie Python : impossible à arrêter. | P1 | **Fait** : arrêt à 20 s, redémarrage du worker |
-| 15 | C++ limité à un sous-ensemble (pas de `string`, `vector`, classes). Brancher un vrai compilateur (API de compilation ou clang en WebAssembly). | P1 | À faire |
+| 15 | C++ limité à un sous-ensemble (pas de `string`, `vector`, classes). Brancher un vrai compilateur (API de compilation ou clang en WebAssembly). | P1 | En partie : le C est couvert par minic, vérifié contre gcc (sprint 8.3, ADR 0002) ; le C++ reste sur JSCPP |
 | 16 | Progression uniquement dans le navigateur : perdue si les données du site sont effacées, pas de multi-appareil. Ajouter export/import, puis synchronisation de compte. | P1 | À faire |
 | 17 | Premier lancement de Python lent (environ 10 Mo). Précharger en arrière-plan dès l'ouverture d'une leçon Python. | P2 | **Fait** (sprint 2.1) |
 | 18 | Éditeur minimal : pas d'autocomplétion, pas de touche Tab sur mobile. Évaluer CodeMirror 6, ou ajouter une barre de symboles sur mobile. | P2 | À faire |
@@ -45,6 +45,9 @@ Priorités : **P0** bloquant pour l'objectif, **P1** fort impact, **P2** confort
 | 24 | `npm run validate` relance un interpréteur Python par exécution : environ 1 min depuis scikit-learn. Garder un interpréteur vivant (serveur JSON en stdin/stdout) diviserait ce temps par 10. | P3 | À faire |
 | 25 | Le job e2e installe les dépendances de Chromium via apt : une panne des miroirs Ubuntu fait échouer la CI sans rapport avec le code (vu au sprint 3.1). Utiliser le Chrome déjà présent sur le runner (`CHROME_PATH`) ou mettre le navigateur en cache. | P2 | **Fait** (sprint 3.1) : le job e2e utilise Google Chrome du runner |
 | 26 | Le simulateur Git a son propre petit shell (echo, cat, ls…), distinct du terminal Linux. Les unifier éviterait deux comportements différents pour la même commande. | P3 | À faire |
+| 27 | La barre de navigation compte 20 liens : sur un écran de portable, les cours les plus récents (Électronique, Logique, C embarqué) sont hors de vue à droite. Regrouper les cours par étape dans un menu, ou une page « Cours ». | P2 | À faire (vu au sprint 8.4) |
+| 28 | Les cours ajoutés depuis l'étape 5 n'ont pas de couleur propre dans la feuille de style (seuls Python, C++, Data, Git, CI/CD, Linux et les roadmaps en ont). | P3 | À faire (vu au sprint 8.4) |
+| 29 | Un test de bout en bout de l'examen blanc a échoué une fois sans changement de code, puis réussi deux fois (sprint 8.4) : probable dépendance au temps. À surveiller, et attendre explicitement l'état de l'interface entre les clics. | P3 | À surveiller |
 
 ## Ordre de traitement
 

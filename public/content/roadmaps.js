@@ -99,6 +99,51 @@ export default [
   portfolio: "Une architecture trois tiers déployée en Terraform sur deux zones, avec CDN, base managée, alertes de coûts et un schéma d'architecture dans le README."
 },
 {
+  id: "iot", name: "Embarqué et IoT", kicker: "Du transistor à l'objet connecté",
+  intro: "L'électronique et la logique, le C des microcontrôleurs, les bus et les capteurs, un RTOS, puis l'IA embarquée : le parcours d'un ingénieur firmware ou IoT.",
+  stages: [
+    { title: "Électronique et logique", nodes: [
+      { id: "ei-elec", title: "Électronique de base", desc: "Loi d'Ohm, puissance, diviseurs, condensateurs, LED, transistors et MOSFET en commutation, alimentations. Savoir dimensionner sans rien griller.",
+        skills: ["loi d'Ohm", "diviseur de tension", "MOSFET logic level", "régulateurs", "autonomie sur batterie"], project: "Dimensionner et monter sur plaque d'essai une LED et un moteur commandés par un microcontrôleur, mesures au multimètre à l'appui.",
+        lessons: ["el-01", "el-05", "el-07", "el-09", "el-11"], links: [["Simulateur Falstad", "https://www.falstad.com/circuit/"]] },
+      { id: "ei-logique", title: "Logique numérique", desc: "Portes, complément à deux, bascules, registres, compteurs, machines à états : ce qui se passe sous le microcontrôleur.",
+        skills: ["algèbre de Boole", "complément à deux", "bascules et registres", "machines à états"], project: "Câbler dans Logisim un compteur modulo 10 relié à un afficheur 7 segments.",
+        lessons: ["ln-04", "ln-07", "ln-08", "ln-09"], links: [["Nand to Tetris", "https://www.nand2tetris.org/"]] }
+    ]},
+    { title: "Programmer le microcontrôleur", nodes: [
+      { id: "ei-c", title: "C embarqué", desc: "Types à largeur fixe, masques de bits, pointeurs, structures de registres et volatile. Lire et écrire un registre sans rien casser.",
+        skills: ["stdint.h", "masques de bits", "pointeurs", "volatile", "registres CMSIS"], project: "Faire clignoter une LED sur un STM32 ou un Raspberry Pi Pico en écrivant directement dans les registres, sans bibliothèque.",
+        lessons: ["em-02", "em-03", "em-04", "em-05"], links: [["Wokwi", "https://wokwi.com/"], ["Raspberry Pi Pico : documentation", "https://www.raspberrypi.com/documentation/microcontrollers/"]] },
+      { id: "ei-periph", title: "Périphériques et interruptions", desc: "GPIO et anti-rebond, timers et routines d'interruption, PWM, convertisseur analogique-numérique, sans jamais bloquer.",
+        skills: ["GPIO", "timers", "ISR", "PWM", "ADC"], project: "Un variateur : un potentiomètre lu par l'ADC règle la luminosité d'une LED en PWM, un bouton change de mode.",
+        lessons: ["em-06", "em-07", "em-08", "em-09"], links: [["ESP-IDF", "https://docs.espressif.com/projects/esp-idf/"]] }
+    ]},
+    { title: "Communiquer", nodes: [
+      { id: "ei-bus", title: "Bus et capteurs", desc: "UART et tampon circulaire, I2C, SPI ; lire une datasheet ; déboguer à l'analyseur logique.",
+        skills: ["UART", "I2C", "SPI", "datasheets", "analyseur logique"], project: "Lire un capteur I2C (BME280) et envoyer ses mesures sur la liaison série, trames vérifiées à l'analyseur logique.",
+        lessons: ["em-10", "em-11", "em-14", "em-15"], links: [["PulseView (sigrok)", "https://sigrok.org/wiki/PulseView"]] },
+      { id: "ei-iot", title: "Objets connectés", desc: "Wi-Fi et Bluetooth Low Energy, MQTT, sécurité des communications (TLS, identité de l'appareil), mises à jour à distance.",
+        skills: ["MQTT", "BLE", "TLS", "mises à jour OTA"], project: "Un ESP32 publie ses mesures en MQTT vers un tableau de bord, avec reconnexion automatique et mise à jour à distance.",
+        links: [["MQTT", "https://mqtt.org/"], ["AWS IoT Core", "https://docs.aws.amazon.com/iot/"]] }
+    ]},
+    { title: "Systèmes", nodes: [
+      { id: "ei-rtos", title: "Temps réel et énergie", desc: "Super-boucle et ordonnancement, FreeRTOS (tâches, files, mutex), veille profonde, watchdog.",
+        skills: ["FreeRTOS", "files et mutex", "inversion de priorité", "veille profonde", "watchdog"], project: "Porter le projet capteur sur FreeRTOS avec trois tâches et mesurer la consommation en veille.",
+        lessons: ["em-12", "em-13"], links: [["FreeRTOS", "https://www.freertos.org/"]] },
+      { id: "ei-pcb", title: "Conception de cartes", desc: "Schéma, empreintes, routage et fabrication avec KiCad ; prototypage dans Wokwi.",
+        skills: ["KiCad", "ERC / DRC", "plan de masse", "Gerber"], project: "Dessiner et faire fabriquer la carte du capteur connecté (LDO, microcontrôleur, connecteur SWD).",
+        lessons: ["em-16"], links: [["KiCad", "https://www.kicad.org/"]] }
+    ]},
+    { title: "IA embarquée", nodes: [
+      { id: "ei-tinyml", title: "TinyML", desc: "Un modèle entraîné en Keras, quantifié en int8, converti en LiteRT et exécuté sur microcontrôleur.",
+        skills: ["quantification int8", "LiteRT", "LiteRT for Microcontrollers", "CMSIS-NN"], project: "Reconnaître trois gestes avec l'accéléromètre d'une carte, le modèle tournant sur la carte elle-même.",
+        lessons: ["dl-17", "dl-18", "dl-20", "em-17"], links: [["LiteRT (Google AI Edge)", "https://ai.google.dev/edge/litert"]] }
+    ]}
+  ],
+  certs: ["IPC CID (Certified Interconnect Designer), pour la conception de circuits imprimés", "AWS Certified Solutions Architect – Associate, pour la partie cloud des objets connectés"],
+  portfolio: "Un objet connecté complet : carte dessinée dans KiCad, firmware en C sans bibliothèque lourde (interruptions, bus, veille), mesures publiées en MQTT, et si possible un modèle TinyML. Montre les mesures à l'oscilloscope et la consommation : c'est ce qui distingue un ingénieur firmware."
+},
+{
   id: "ml", name: "ML", kicker: "Des données au modèle en production",
   intro: "Les maths utiles, le ML classique, le deep learning, puis le MLOps et les applications LLM.",
   stages: [

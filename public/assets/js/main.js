@@ -427,7 +427,7 @@ function refreshSteps(x) {
 
 function pageRoadmaps() {
   return '<div class="crumbs"><a href="#home">Accueil</a><span>/</span><span>Roadmaps</span></div>' +
-    '<section style="display:flex;flex-direction:column;gap:10px"><h1 style="font-size:clamp(30px,4vw,42px);font-weight:800">Roadmaps métier</h1><p class="lead">Trois parcours pour viser un poste : chaque étape liste les compétences, un mini-projet pour ton portfolio et des ressources officielles. Coche ce que tu maîtrises.</p></section>' +
+    '<section style="display:flex;flex-direction:column;gap:10px"><h1 style="font-size:clamp(30px,4vw,42px);font-weight:800">Roadmaps métier</h1><p class="lead">Quatre parcours pour viser un poste : chaque étape liste les compétences, un mini-projet pour ton portfolio et des ressources officielles. Coche ce que tu maîtrises.</p></section>' +
     '<div class="grid3">' + ROADMAPS.map(r => { const p = rmProgress(r); const nodes = r.stages.reduce((a, s) => a + s.nodes.length, 0); return '<a class="card rm-card" href="#' + r.id + '" style="--c:' + color(r.id) + '"><span class="k">' + esc(r.kicker) + "</span><h3>" + r.name + "</h3><p>" + esc(r.intro) + '</p><div class="skills"><span class="chip">' + r.stages.length + " paliers</span><span class=\"chip\">" + nodes + " étapes</span><span class=\"chip\">" + r.certs.length + ' certifications</span></div><div class="bar"><i style="width:' + p.pct + '%"></i></div><div class="meta-row"><span>' + p.d + " / " + p.n + " acquises</span><span>" + p.pct + " %</span></div></a>"; }).join("") + "</div>";
 }
 
