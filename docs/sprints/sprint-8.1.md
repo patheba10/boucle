@@ -17,12 +17,13 @@
 ## Journal
 
 - 12 nov. : cours en 12 leçons (deux chapitres : les bases, les composants) et entretien ; 11 défis. Sorties attendues calculées par script ; les valeurs des MOSFET ont été recoupées avec leurs datasheets (AO3400 : 32 mΩ à 2,5 V). 944 vérifications, 94 tests unitaires, 15 tests de bout en bout hors ligne, parité navigateur comprise.
+- 12 nov. : PR #86, les trois jobs verts. Fusionnée ; version 0.22.0.
 
 ## Revue de sprint
 
 | Story | Points | Livré |
 |-------|--------|-------|
-| #82 Électronique | 8 | Oui |
+| #82 Électronique | 8 | Oui (PR #86) |
 
 Vélocité : 8 points sur 8. Version 0.22.0.
 
