@@ -449,13 +449,19 @@ HTTP_HOOKS.push((sh, host, port, path, ip) => {
   if (!c || !c.listen || c.listen.port !== f.cport || c.listen.host === "127.0.0.1") return { error: [52, "Empty reply from server"] };
   return cl.rt.http(c, f.cport, path);
 });
-SETUP_HOOKS.push((sh, setup) => {
+const k8sHook = (sh, setup) => {
   if (!setup.k8s) return;
   sh.k8s = new Cluster(sh, setup.k8s);
   sh.fs.mkdir(sh.home() + "/.kube", "eleve", { parents: true });
   sh.fs.write(sh.home() + "/.kube/config", "apiVersion: v1\nkind: Config\ncurrent-context: kind-boucle\n", "eleve");
-  for (const [p, text] of Object.entries(setup.k8s.apply || {})) { for (const d of sh.k8s.parse(text, p)) sh.k8s.put(d); sh.k8s.reconcile(); sh.k8s.tick(30); sh.k8s.reconcile(); }
-});
+};
+// Les objets de départ sont créés après les commandes de mise en place (images construites et poussées).
+k8sHook.after = (sh, setup) => {
+  if (!setup.k8s) return;
+  for (const text of [].concat(setup.k8s.apply || [])) { for (const d of sh.k8s.parse(text, "setup.yaml")) sh.k8s.put(d); sh.k8s.reconcile(); sh.k8s.tick(30); sh.k8s.reconcile(); }
+  sh.k8s.tick(60);
+};
+SETUP_HOOKS.push(k8sHook);
 
 /* ----- critères ----- */
 EXTRA_CHECKS.k8s = (sh, v, push) => {
