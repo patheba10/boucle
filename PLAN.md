@@ -73,7 +73,7 @@ Ordre choisi avec Demba : DevOps, puis Cloud (AWS), puis le reste du socle entre
 
 ## Étape 6 — Deep learning : TensorFlow et TensorFlow Lite
 
-1. Réseaux de neurones : neurones, activation, perte, descente de gradient (codés à la main avec NumPy pour comprendre).
+1. Réseaux de neurones : neurones, activation, perte, descente de gradient (codés à la main avec NumPy pour comprendre). Fait au sprint 7.1 (#73) : cours « Deep learning », chapitres 1 et 2, 9 leçons.
 2. TensorFlow et Keras : modèles séquentiels, entraînement, callbacks, CNN, transfert d'apprentissage.
 3. TensorFlow Lite : conversion, quantification, inférence sur téléphone et Raspberry Pi, TFLite Micro sur microcontrôleur.
 
