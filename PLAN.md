@@ -89,7 +89,7 @@ TensorFlow ne tourne pas dans Pyodide : les exercices TensorFlow sont validés e
 
 ## Étape 8 — Préparation aux entretiens
 
-1. Structures de données et complexité.
+1. Structures de données et complexité. Fait au sprint 9.1 (#94) : cours « Algorithmique », chapitre 1, 9 leçons ; chaque structure codée à la main et éprouvée sur de grandes entrées.
 2. Patterns d'algorithmes : deux pointeurs, fenêtre glissante, hachage, piles, BFS et DFS, tas, programmation dynamique, recherche binaire.
 3. System design : load balancer, cache, base SQL vs NoSQL, files de messages (Kafka, SQS), scalabilité.
 4. Entretiens spécifiques : DevOps / SRE, ML, embarqué.

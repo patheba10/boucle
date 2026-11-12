@@ -42,3 +42,33 @@ test("boucle.pytest et boucle.mutants : le fichier de l'élève est lancé par p
   assert.match(rate.out, /^sur le code correct : 1 test\(s\) en échec, ils doivent tous réussir\n  test_faux : failed\n$/);
   assert.equal(py("x = 1\n#@boucle\nimport pytest\nboucle.mutants({}, [])\n").out, "aucun test trouvé : les fonctions de test doivent commencer par test_\n");
 });
+
+test("démontage après exécution : les objets de l'élève sont vidés un par un, les conteneurs partagés intacts", () => {
+  // Dans un seul processus : on exécute le code de l'élève, puis on vérifie ce que _demonter a fait.
+  const r = py(`import harness, sys
+code = '''
+import sys
+class Noeud:
+    def __init__(self, v, s=None):
+        self.v, self.s = v, s
+class Fente:
+    __slots__ = ("v", "s")
+    def __init__(self, v, s=None):
+        self.v, self.s = v, s
+tete = None
+for i in range(50000):
+    tete = Noeud(i, tete)
+f = Fente(1, Fente(2))
+chemins = sys.path
+garde = [tete, f]
+sys.modules["__temoin_boucle__"] = garde
+print("construit")
+'''
+res = harness.run(code)
+garde = sys.modules.pop("__temoin_boucle__")
+print(res["out"].strip(), res["err"])
+print(len(sys.path) > 0, len(garde), vars(garde[0]), hasattr(garde[1], "v"))
+`);
+  assert.equal(r.err, null);
+  assert.equal(r.out, "construit None\nTrue 2 {} False\n");
+});

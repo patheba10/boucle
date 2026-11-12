@@ -5,6 +5,7 @@ Utilisé à deux endroits, pour que le navigateur et la CI se comportent pareil 
 - en CI, par scripts/run_py.py avec CPython.
 """
 import base64
+import collections
 import io
 import sys
 import traceback
@@ -243,6 +244,54 @@ class _Outils:
             print("erreur %d (%s) : %s" % (i, desc, "détectée" if c != 0 else "NON détectée"))
 
 
+def _demonter(namespace, limite=3_000_000):
+    """Démonte les objets créés par le code de l'élève avant de les libérer.
+
+    Dans Pyodide, la pile C est petite : libérer d'un coup une longue chaîne d'objets liés (une liste chaînée de
+    100 000 nœuds, un arbre dégénéré) est récursif et fait planter le worker, souvent plus tard, quand le ramasse-miettes
+    passe. On garde donc en vie toutes les instances des classes de l'élève, on vide leurs attributs, puis on les
+    relâche : chacune est libérée seule, sans récursion. Les conteneurs (listes, dictionnaires) sont seulement parcourus,
+    jamais vidés, pour ne jamais toucher un objet partagé avec une bibliothèque."""
+    gardes, vus = [], set()
+    a_voir = [v for k, v in namespace.items() if k != "boucle"]
+    while a_voir and len(vus) < limite:
+        o = a_voir.pop()
+        if id(o) in vus:
+            continue
+        t = type(o)
+        if t in (list, tuple, set, frozenset) or isinstance(o, collections.deque):
+            vus.add(id(o))
+            a_voir.extend(o)
+        elif t is dict:
+            vus.add(id(o))
+            a_voir.extend(o.values())
+        elif getattr(t, "__module__", None) == "__main__" and not isinstance(o, type):
+            vus.add(id(o))
+            gardes.append(o)
+            d = getattr(o, "__dict__", None)
+            if isinstance(d, dict):
+                a_voir.extend(d.values())
+            for cls in t.__mro__:
+                fentes = getattr(cls, "__slots__", ())
+                for nom in (fentes,) if isinstance(fentes, str) else fentes:
+                    if nom not in ("__dict__", "__weakref__") and hasattr(o, nom):
+                        a_voir.append(getattr(o, nom))
+    for o in gardes:
+        d = getattr(o, "__dict__", None)
+        if isinstance(d, dict):
+            d.clear()
+        for cls in type(o).__mro__:
+            fentes = getattr(cls, "__slots__", ())
+            for nom in (fentes,) if isinstance(fentes, str) else fentes:
+                if nom not in ("__dict__", "__weakref__"):
+                    try:
+                        delattr(o, nom)
+                    except (AttributeError, TypeError):
+                        pass
+    namespace.clear()
+    gardes.clear()
+
+
 def run(code, stdin=""):
     out = io.StringIO()
     saved = sys.stdout, sys.stderr, sys.stdin
@@ -275,6 +324,10 @@ def run(code, stdin=""):
         figures = _collect_figures()
     except Exception:
         figures = []
+    try:
+        _demonter(namespace)
+    except Exception:  # noqa: BLE001 — le démontage ne doit jamais masquer le résultat
+        pass
     text = out.getvalue()
     if len(text) > MAX_OUT:
         text = text[:MAX_OUT] + "\n… (sortie tronquée)"
