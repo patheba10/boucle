@@ -4,6 +4,10 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.18.0] — 2026-11-12
+
+Sprint 6.2 : cours **API et tests** (FastAPI, pytest). L'étape 5 bis est terminée : SQL, API, tests.
+
 ### Ajouté
 - Cours **API et tests** en 11 leçons : HTTP et REST, appeler une API, FastAPI (routes, paramètres, validation Pydantic, CRUD et codes de statut, authentification par dépendances), pytest (premiers tests, fixtures et paramétrage, tester une API, mocks) et onze questions d'entretien (#68).
 - Défis de tests vérifiés par mutation : les tests de l'élève doivent réussir sur le bon code et détecter chaque erreur glissée par le vérificateur.
