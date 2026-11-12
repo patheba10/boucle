@@ -4,6 +4,10 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.20.0] — 2026-11-12
+
+Sprint 7.2 : Keras dans le navigateur (minikeras), vérifié avec le vrai TensorFlow ; chapitre Keras du cours Deep learning.
+
 ### Ajouté
 - Deep learning, chapitre **Keras** (6 leçons) : premier modèle, classer des chiffres, callbacks et courbes, réseaux convolutifs, transfert d'apprentissage, sauvegarder et servir un modèle (#74).
 - minikeras : Keras 3 réimplémenté en NumPy pour exécuter le code Keras dans le navigateur, où TensorFlow n'existe pas ; un job CI vérifie chaque défi avec le vrai TensorFlow.
