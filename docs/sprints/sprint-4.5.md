@@ -23,3 +23,23 @@
 - 12 nov. : `lib/ansible/ansible.js` (ansible-playbook et ansible, modules, Jinja2, handlers, check et diff, idempotence) ; 5 tests unitaires d'exploitation verts (68 en tout). PR #48 ensuite, puis le cours (#35).
 - 12 nov. : PR #49 (simulateurs) fusionnée. Branche `us-4d/exploitation` : cours enregistré, chapitre observabilité validé (ex-01 à ex-05). Prévu : ex-06 SLO (Python), ex-07 incidents, ex-08 à ex-10 Ansible, ex-11 entretien.
 - 12 nov. : cours complet (ex-01 à ex-11) validé (718 vérifications), tests unitaires et e2e verts. PR du cours puis release 0.13.0 : l'étape 4 (DevOps) est terminée. Étape suivante dans PLAN.md : étape 5, Cloud (Terraform, AWS).
+
+## Livré
+
+- Simulateurs Prometheus (PromQL, règles, alertes, `promtool`) et Ansible (`ansible-playbook`, `ansible`) dans le terminal (PR #49). 5 tests unitaires.
+- Cours Exploitation et SRE (PR #50) : 11 leçons, 9 défis (4 requêtes PromQL, un fichier d'alertes, 2 playbooks, un défi Python, un terminal Ansible), 22 questions de quiz.
+- Version 0.13.0. L'étape 4 (DevOps) est terminée.
+
+## Rétrospective
+
+**Ce qui a marché**
+- Des séries temporelles calculées exactement (compteurs dont la pente change à un instant connu) : les résultats de PromQL tombent juste (2,4 erreurs par seconde, 30 % sur /panier), ce qui permet de comparer la requête de l'élève à une référence sans tolérance floue.
+- Brancher Prometheus et Ansible sur le terminal existant : `curl` interroge l'API d'alertes, `systemctl reload` recharge les règles, et Ansible réutilise apt, useradd et systemctl simulés. L'idempotence vient de l'état réel de la machine.
+- Les tests unitaires ont trouvé un lien symbolique jamais reconnu comme déjà en place (le module `file` suivait le lien), qui cassait l'idempotence.
+
+**Ce qui a coincé**
+- L'horodatage de référence était faux d'un an au premier essai (2025 au lieu de 2026), repéré en lisant la réponse JSON des alertes.
+- Une boucle Jinja2 rendait ses expressions avec les variables du niveau supérieur : `{{ n }}` inconnue dans `{% for n in … %}`.
+
+**On change**
+- Calculer les constantes (horodatages, valeurs attendues) avec du code et les vérifier par un test, plutôt que de les écrire à la main.
