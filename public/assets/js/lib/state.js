@@ -17,6 +17,8 @@ export function save() {
   try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* ignoré */ }
 }
 export function resetAll() { S = blank(); save(); }
+/** Remplace toute la progression (import d'une sauvegarde déjà validée). */
+export function remplacer(etat) { S = Object.assign(blank(), etat); save(); }
 
 export function markDay() {
   const t = today();

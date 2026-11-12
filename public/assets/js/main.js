@@ -6,7 +6,8 @@ import { rater, reussir, aReviser, prochaine, cle as cleRev, decoder } from "./l
 import { indicesDe, indicesHTML, libelleIndice } from "./lib/indices.js";
 import { I } from "./lib/icons.js";
 import { esc, $, $$, inl, norm, color, today, toast as rawToast } from "./lib/util.js";
-import { S, save, resetAll, markDay, streak, level, ls, XP_PER_LEVEL } from "./lib/state.js";
+import { S, save, resetAll, remplacer, markDay, streak, level, ls, XP_PER_LEVEL } from "./lib/state.js";
+import { exporter, importer, nomFichier } from "./lib/sauvegarde.js";
 import { highlight } from "./lib/highlight.js";
 import { editorHTML, mountEditor } from "./lib/editor.js";
 import { run, isPyReady, preloadPy } from "./lib/engines.js";
@@ -570,8 +571,22 @@ function render() {
   else if (ROADMAPS.some(r => r.id === route)) { const r = ROADMAPS.find(r => r.id === route); el.innerHTML = pageRoadmap(r); bind = () => bindRoadmap(r); }
   else if (byId(route)) { const x = byId(route); el.innerHTML = pageLesson(x); bind = () => bindLesson(x); }
   else el.innerHTML = pageHome();
-  el.insertAdjacentHTML("beforeend", '<p class="foot">Ta progression est enregistrée dans ce navigateur. <button type="button" id="wipe">Réinitialiser la progression</button></p>');
+  el.insertAdjacentHTML("beforeend", '<p class="foot">Ta progression est enregistrée dans ce navigateur. <button type="button" id="export">Exporter</button> · <button type="button" id="import">Importer</button><input type="file" id="import-fichier" accept="application/json,.json" hidden> · <button type="button" id="wipe">Réinitialiser la progression</button></p>');
   setNav(route); updateStats(); if (bind) bind();
+  /* Sauvegarde (audit #16) : un fichier JSON à recharger sur un autre navigateur. */
+  $("#export").addEventListener("click", () => {
+    const url = URL.createObjectURL(new Blob([exporter(S)], { type: "application/json" }));
+    const a = document.createElement("a"); a.href = url; a.download = nomFichier(today()); document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000); rawToast("Progression exportée", I.check);
+  });
+  const fichier = $("#import-fichier");
+  $("#import").addEventListener("click", () => fichier.click());
+  fichier.addEventListener("change", async () => {
+    const f = fichier.files[0]; if (!f) return;
+    const r = importer(await f.text());
+    if (!r.ok) { rawToast(r.erreur, I.x); return; }
+    remplacer(r.etat); render(); rawToast("Progression importée : " + S.xp + " XP", I.check);
+  });
   const w = $("#wipe"); let armed = false;
   w.addEventListener("click", () => {
     if (!armed) { armed = true; w.textContent = "Confirmer : tout effacer ?"; setTimeout(() => { armed = false; w.textContent = "Réinitialiser la progression"; }, 4000); return; }
