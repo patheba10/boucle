@@ -17,12 +17,12 @@ Priorités : **P0** bloquant pour l'objectif, **P1** fort impact, **P2** confort
 | 1 | Aucun contenu sur la data (NumPy, pandas, Matplotlib, scikit-learn), Git, SQL, cloud, TensorFlow ou hardware. | P0 | Étapes 2 à 8 |
 | 2 | Un seul défi par leçon : pas assez de répétition pour ancrer une notion. Viser 3 défis gradués (facile, moyen, entretien). | P1 | À faire |
 | 3 | Aucune révision : une erreur de quiz n'est jamais reproposée. Ajouter une file de révision espacée (J+1, J+3, J+7). | P1 | À faire |
-| 4 | Pas de projet guidé en plusieurs étapes, alors que les recruteurs regardent des projets. | P1 | Étape 9 |
+| 4 | Pas de projet guidé en plusieurs étapes, alors que les recruteurs regardent des projets. | P1 | **Fait** (étape 9) : 8 projets capstone avec jalons, 2 par roadmap |
 | 5 | Rien pour préparer les entretiens : structures de données, patterns d'algorithmes, system design, questions comportementales. | P1 | Étape 8 |
 | 6 | Un seul format d'exercice (QCM). Ajouter « prédire la sortie », « compléter le code », « remettre les lignes dans l'ordre ». | P2 | À faire |
 | 7 | Un seul indice, révélé d'un coup. Passer à des indices progressifs. | P2 | À faire |
 | 8 | Théorie parfois courte, sans schéma. Ajouter des diagrammes (mémoire, pointeurs, Git, circuits). | P2 | En continu |
-| 9 | Les roadmaps ne reflètent pas la progression réelle dans les cours. | P2 | À faire |
+| 9 | Les roadmaps ne reflètent pas la progression réelle dans les cours. | P2 | **Fait** (sprint 10.3) : une étape affiche ses leçons terminées et se coche d'elle-même quand toutes le sont |
 
 ## Technique
 

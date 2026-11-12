@@ -34,7 +34,11 @@ function lessonState(l) {
 }
 function courseProgress(c) { const d = c.lessons.filter(l => lessonState(l).done).length; return { d, n: c.lessons.length, pct: Math.round(100 * d / c.lessons.length) }; }
 function nextLesson(c) { return (c || null) ? c.lessons.find(l => !lessonState(l).done) : null; }
-function rmProgress(r) { const ids = r.stages.flatMap(s => s.nodes.map(n => n.id)); const d = ids.filter(id => S.roadmap[id]).length; return { d, n: ids.length, pct: Math.round(100 * d / ids.length) }; }
+/* Une étape de roadmap est acquise si l'élève l'a cochée, ou si toutes ses leçons liées sont terminées. */
+function nodeLessons(n) { const xs = (n.lessons || []).map(id => byId(id)).filter(Boolean); return { d: xs.filter(x => lessonState(x.l).done).length, n: xs.length }; }
+function nodeAuto(n) { const k = nodeLessons(n); return k.n > 0 && k.d === k.n; }
+function nodeOn(n) { return !!S.roadmap[n.id] || nodeAuto(n); }
+function rmProgress(r) { const nodes = r.stages.flatMap(s => s.nodes); const d = nodes.filter(nodeOn).length; return { d, n: nodes.length, pct: Math.round(100 * d / nodes.length) }; }
 
 /** Tout le code Python d'une leçon (pour précharger les paquets qu'elle importe). */
 function lessonCode(l) {
@@ -428,7 +432,7 @@ function refreshSteps(x) {
 
 function pageRoadmaps() {
   return '<div class="crumbs"><a href="#home">Accueil</a><span>/</span><span>Roadmaps</span></div>' +
-    '<section style="display:flex;flex-direction:column;gap:10px"><h1 style="font-size:clamp(30px,4vw,42px);font-weight:800">Roadmaps métier</h1><p class="lead">Quatre parcours pour viser un poste : chaque étape liste les compétences, un mini-projet pour ton portfolio et des ressources officielles. Coche ce que tu maîtrises.</p></section>' +
+    '<section style="display:flex;flex-direction:column;gap:10px"><h1 style="font-size:clamp(30px,4vw,42px);font-weight:800">Roadmaps métier</h1><p class="lead">Quatre parcours pour viser un poste : chaque étape liste les compétences, un mini-projet pour ton portfolio et des ressources officielles. Coche ce que tu maîtrises : une étape se coche aussi d\'elle-même quand toutes ses leçons sont terminées.</p></section>' +
     '<div class="grid3">' + ROADMAPS.map(r => { const p = rmProgress(r); const nodes = r.stages.reduce((a, s) => a + s.nodes.length, 0); return '<a class="card rm-card" href="#' + r.id + '" style="--c:' + color(r.id) + '"><span class="k">' + esc(r.kicker) + "</span><h3>" + r.name + "</h3><p>" + esc(r.intro) + '</p><div class="skills"><span class="chip">' + r.stages.length + " paliers</span><span class=\"chip\">" + nodes + " étapes</span><span class=\"chip\">" + r.certs.length + ' certifications</span></div><div class="bar"><i style="width:' + p.pct + '%"></i></div><div class="meta-row"><span>' + p.d + " / " + p.n + " acquises</span><span>" + p.pct + " %</span></div></a>"; }).join("") + "</div>";
 }
 
@@ -439,9 +443,10 @@ function pageRoadmap(r) {
     '<section class="card rm-hero"><span class="k">' + esc(r.kicker) + "</span><h1>Roadmap " + r.name + '</h1><p class="lead">' + esc(r.intro) + '</p><div class="prog"><div class="bar"><i id="rm-bar" style="width:' + p.pct + '%"></i></div><b id="rm-count">' + p.d + " / " + p.n + "</b></div></section>" +
     r.stages.map((s, si) => '<section class="stage"><div class="stage-h"><span class="no">' + String(si + 1).padStart(2, "0") + "</span><h2>" + esc(s.title) + "</h2><span>" + s.nodes.length + ' étapes</span></div><div class="nodes">' +
       s.nodes.map(n => {
-        const on = !!S.roadmap[n.id];
-        const lessons = (n.lessons || []).map(id => { const x = byId(id); return x ? '<a class="int" href="#' + id + '">Leçon : ' + esc(x.l.title) + "</a>" : ""; }).join("");
-        return '<article class="card rnode' + (on ? " done" : "") + '" data-node="' + n.id + '"><div class="rnode-h"><h3>' + esc(n.title) + '</h3><label class="check"><input type="checkbox" id="chk-' + n.id + '"' + (on ? " checked" : "") + '><span class="bx">' + I.check + "</span>Acquis</label></div>" +
+        const on = nodeOn(n), auto = nodeAuto(n), k = nodeLessons(n);
+        const lessons = (n.lessons || []).map(id => { const x = byId(id); return x ? '<a class="int" href="#' + id + '">' + (lessonState(x.l).done ? "✓ " : "") + "Leçon : " + esc(x.l.title) + "</a>" : ""; }).join("");
+        return '<article class="card rnode' + (on ? " done" : "") + '" data-node="' + n.id + '"><div class="rnode-h"><h3>' + esc(n.title) + '</h3><label class="check"' + (auto ? ' title="Acquis : toutes les leçons liées sont terminées"' : "") + '><input type="checkbox" id="chk-' + n.id + '"' + (on ? " checked" : "") + (auto ? " disabled" : "") + '><span class="bx">' + I.check + "</span>Acquis</label></div>" +
+          (k.n ? '<span class="mono" data-lecons>' + k.d + " / " + k.n + " leçon" + (k.n > 1 ? "s" : "") + " terminée" + (k.d > 1 ? "s" : "") + "</span>" : "") +
           "<p>" + esc(n.desc) + '</p><div class="skills">' + n.skills.map(k => '<span class="chip">' + esc(k) + "</span>").join("") + "</div>" +
           '<div class="project"><b>Mini-projet</b>' + esc(n.project) + "</div>" +
           '<div class="links">' + lessons + n.links.map(([t, u]) => '<a href="' + esc(u) + '" target="_blank" rel="noopener">' + esc(t) + "</a>").join("") + "</div></article>";
@@ -450,7 +455,7 @@ function pageRoadmap(r) {
       '<div class="card"><h3>Projet portfolio</h3><p>' + esc(r.portfolio) + "</p></div></section>" + projetsDeRoadmap(S, PROJETS, r.id, color) + "</div>";
 }
 function bindRoadmap(r) {
-  $$("[data-node] input").forEach(inp => inp.addEventListener("change", () => {
+  $$("[data-node] input:not([disabled])").forEach(inp => inp.addEventListener("change", () => {
     const art = inp.closest("[data-node]"); const id = art.dataset.node;
     if (inp.checked) { S.roadmap[id] = true; art.classList.add("done"); markDay(); toast("Étape acquise"); } else { delete S.roadmap[id]; art.classList.remove("done"); }
     save(); const p = rmProgress(r); $("#rm-bar").style.width = p.pct + "%"; $("#rm-count").textContent = p.d + " / " + p.n; updateStats();
