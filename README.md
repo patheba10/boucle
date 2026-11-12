@@ -58,7 +58,7 @@ Une leçon est un objet dans `public/content/courses/<cours>.js` :
 - `section` (facultatif) : nom du chapitre affiché sur la page du cours
 - `setup` (facultatif) : panneau « Sur ta machine », même syntaxe que `theory`. Blocs `~~~ps` (PowerShell) et `~~~bash` affichés sans exécution
 - `quiz` : liste de `{ q, options, answer, explain }`
-- `challenge` : `{ prompt, starter, solution, hint, ... }`
+- `challenge` : `{ prompt, starter, solution, hint, ... }` ; `hint` est révélé phrase par phrase, ou `hints` (liste du plus général au plus précis) le remplace
   - Python : `expected` (sortie exacte), plus `tests` optionnel, du code ajouté après celui de l'élève.
   - C++ : `tests`, une liste de `{ input, expected }`.
   - C (cours dont `lang` vaut `"c"`) : `starter` et `solution` ne contiennent que des fonctions ; `tests` est du C avec le `main` qui les appelle, et `expected` la sortie exacte. Le programme peut inclure `"mcu.h"` (microcontrôleur simulé). `npm run validate` l'exécute avec minic (l'interpréteur du navigateur) et le compile avec gcc (`-Wall -Wextra -Werror -fwrapv`) : les deux sorties doivent être identiques. Les blocs `~~~c` de la théorie suivent la même règle ; `norun` pour du code qui ne peut pas tourner (adresses physiques, boucle infinie), `avertissement` pour un extrait qui montre exprès un piège signalé par gcc.
