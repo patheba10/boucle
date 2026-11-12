@@ -1,6 +1,6 @@
 {
   "name": "boucle",
-  "version": "0.29.0",
+  "version": "0.30.0",
   "private": true,
   "type": "module",
   "description": "Plateforme d'apprentissage : Python, C++, data, Git, hardware et roadmaps métier.",

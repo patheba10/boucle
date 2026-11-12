@@ -16,12 +16,13 @@
 ## Journal
 
 - 12 nov. : vue, données, validation et test de bout en bout (un jalon coché survit au rechargement et apparaît dans la liste). Une capture d'écran a montré des accents graves affichés tels quels : remplacés par @@ @@ et interdits par la validation. 1 112 vérifications, 102 tests unitaires, 16 tests de bout en bout.
+- 12 nov. : PR #109, les trois jobs verts. Fusionnée ; version 0.30.0.
 
 ## Revue de sprint
 
 | Story | Points | Livré |
 |-------|--------|-------|
-| #106 Page Projets et capstones DevOps | 8 | Oui |
+| #106 Page Projets et capstones DevOps | 8 | Oui (PR #109) |
 
 Vélocité : 8 points sur 8. Version 0.30.0.
 
