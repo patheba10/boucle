@@ -147,7 +147,7 @@ export function execIn(sh, d, c, argv, io, o = {}) {
   const user = (o.user || c.user || "root").split(":")[0];
   const exe = argv[0]; const b = exe.split("/").pop();
   const builtin = ["ls", "cat", "env", "printenv", "id", "whoami", "pwd", "echo", "hostname", "ps", "touch", "mkdir", "getent", "date", "df", "uname", "rm", "head", "tail", "wc"];
-  const avail = (x) => (img.shell && builtin.includes(x)) || img.bins.includes(x) || (img.os === "alpine" && x === "wget");
+  const avail = (x) => (img.shell && builtin.includes(x)) || img.bins.includes(x) || (["alpine", "busybox"].includes(img.os) && ["wget", "ping", "nslookup"].includes(x));
   if (!avail(b) && !(["sh", "bash"].includes(b) && img.shell)) throw new DockerErr('OCI runtime exec failed: exec failed: unable to start container process: exec: "' + exe + '": executable file not found in $PATH: unknown', 126);
   const cwd = o.workdir || c.workdir || "/"; const abs = (p) => (p.startsWith("/") ? p : (cwd === "/" ? "" : cwd) + "/" + p).replace(/\/+/g, "/");
   const a = argv.slice(1);
@@ -190,6 +190,15 @@ export function execIn(sh, d, c, argv, io, o = {}) {
     }
     case "rm": return 0;
     case "df": io.out("Filesystem     1K-blocks     Used Available Use% Mounted on\noverlay         61202244 18234120  39826740  32% /\n"); return 0;
+    case "ping": case "nslookup": {
+      // BusyBox : résolution par le DNS de Docker (réseaux utilisateur seulement).
+      const host = a.filter((x) => !x.startsWith("-") && !/^\d+$/.test(x)).pop(); const t = d.resolveFrom(c, host);
+      if (b === "nslookup") { if (!t) { io.out("Server:\t\t127.0.0.11\nAddress:\t127.0.0.11:53\n\n** server can't find " + host + ": NXDOMAIN\n\n"); return 1; } io.out("Server:\t\t127.0.0.11\nAddress:\t127.0.0.11:53\n\nNon-authoritative answer:\nName:\t" + host + "\nAddress: " + t.ip + "\n\n"); return 0; }
+      if (!t) { io.err("ping: bad address '" + host + "'\n"); return 1; }
+      const n = +(a[a.indexOf("-c") + 1] || 1) || 1; let o2 = "PING " + host + " (" + t.ip + "): 56 data bytes\n";
+      for (let i = 0; i < n; i++) o2 += "64 bytes from " + t.ip + ": seq=" + i + " ttl=64 time=0.0" + (81 + i) + " ms\n";
+      io.out(o2 + "\n--- " + host + " ping statistics ---\n" + n + " packets transmitted, " + n + " packets received, 0% packet loss\nround-trip min/avg/max = 0.081/0.081/0.081 ms\n"); return 0;
+    }
     case "getent": { const t = d.resolveFrom(c, a[1]); if (!t) return 2; io.out(t.ip.padEnd(16) + a[1] + "\n"); return 0; }
     case "curl": case "wget": {
       const url = a.find((x) => /^https?:\/\/|^[\w.-]+(:\d+)?\//.test(x) && !x.startsWith("-")) || a.filter((x) => !x.startsWith("-")).pop();
@@ -226,7 +235,7 @@ function runSpec(sh, d, o, rest, io, quietPull) {
   let img = d.image(ref);
   if (!img) {
     if (!quietPull) io.err("Unable to find image '" + canon(ref) + "' locally\n");
-    const p = pullOut(d, ref); if (!p.ok) throw new DockerErr("docker: " + d.pullError(ref) + ".\n\nRun 'docker run --help' for more information", 125);
+    const p = pullOut(d, ref, true); if (!p.ok) throw new DockerErr("docker: " + d.pullError(ref) + ".\n\nRun 'docker run --help' for more information", 125);
     if (!quietPull) io.err(p.text.replace(/\n[^\n]*\n$/, "\n"));
     img = d.image(ref);
   }
@@ -243,12 +252,12 @@ function runSpec(sh, d, o, rest, io, quietPull) {
   const health = o.healthCmd ? { test: ["CMD-SHELL", o.healthCmd], interval: o.healthInterval || "30s" } : undefined;
   return d.create({ imageObj: img, imageRef: ref, name: o.name, cmd: rest.slice(1), entrypoint: o.entrypoint !== undefined ? (o.entrypoint ? [o.entrypoint] : []) : undefined, env, ports, mounts, network: o.network, restart: o.restart, user: o.user, workdir: o.workdir, rm: o.rm, healthcheck: health, aliases: o.aliases, labels: Object.fromEntries((o.labels || []).map((l) => l.split("="))) });
 }
-function pullOut(d, ref) {
+function pullOut(d, ref, fromRun = false) {
   const c = canon(ref); const had = d.image(ref);
   const img = had || d.pullBase(ref);
   if (!img) return { ok: false };
   const tag = c.slice(c.lastIndexOf(":") + 1); const repo = c.slice(0, c.lastIndexOf(":"));
-  let t = (String(ref).includes(":") ? "" : "Using default tag: latest\n") + tag + ": Pulling from " + (repo.includes("/") ? repo : "library/" + repo) + "\n";
+  let t = (String(ref).includes(":") || fromRun ? "" : "Using default tag: latest\n") + tag + ": Pulling from " + (repo.includes("/") ? repo : "library/" + repo) + "\n";
   if (had) return { ok: true, text: (String(ref).includes(":") ? "" : "Using default tag: latest\n") + tag + ": Pulling from " + (repo.includes("/") ? repo : "library/" + repo) + "\nDigest: sha256:" + hash("digest:" + c) + "\nStatus: Image is up to date for " + c + "\n" + fullName(c) + "\n" };
   const nl = Math.max(1, Math.min(6, Math.round(Math.log2(d.size(img) / 1e6 + 2))));
   for (let i = 0; i < nl; i++) t += hash("layer" + c + i, 12) + ": Pull complete\n";
@@ -582,6 +591,7 @@ HTTP_HOOKS.push((sh, host, port, path, ip) => (sh.docker && ip === "127.0.0.1" ?
 SETUP_HOOKS.push((sh, setup) => {
   if (!setup.docker) return;
   sh.docker = new Docker(sh, setup.docker);
+  sh.docker.runShort = (c, argv) => { let out = ""; const io = { out: (s) => { out += s; }, err: (s) => { out += s; } }; let code; try { code = execIn(sh, sh.docker, c, argv, io); } catch (e) { out += e.message + "\n"; code = e.status || 1; } return { code, out }; };
   if (!sh.fs.groups.docker) sh.fs.addGroup("docker", 988);
   if (setup.docker.group !== false && !sh.fs.groups.docker.members.includes(sh.user)) sh.fs.groups.docker.members.push(sh.user);
   addService(sh, "docker", { desc: "Docker Application Container Engine", exec: "/usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock", ports: [], pid: 912, enabled: true, active: true });

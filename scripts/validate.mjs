@@ -130,7 +130,7 @@ for (const c of COURSES) for (const l of c.lessons) {
     }
     if (lang === "sh") {
       if (/norun/.test(opts)) continue;
-      const sh = createShell();
+      const sh = createShell(l.snippetSetup || c.snippetSetup || {});
       for (const raw of splitCommands(code)) {
         const attendu = !raw.startsWith("!"); const r = sh.run(raw.replace(/^!\s*/, ""));
         (r.code === 0) === attendu ? ok() : fail(l.id, "extrait Linux : « " + raw.split("\n")[0] + " » " + (attendu ? "échoue : " + (r.err || r.out).split("\n")[0] : "devait échouer"));

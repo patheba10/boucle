@@ -58,6 +58,7 @@ function theoryHTML(src, lang, canRun) {
   }
   return h;
 }
+let snipSetup = {}; // mise en place des extraits Linux de la leçon affichée (Docker installé, fichiers…)
 function bindSnippets(root) {
   $$(".snippet", root).forEach(sn => {
     const b = $(".run", sn); if (!b) return;
@@ -65,7 +66,7 @@ function bindSnippets(root) {
       const lang = sn.dataset.lang, code = $("textarea", sn).value;
       let res = $(".res", sn); if (!res) { res = document.createElement(lang === "yaml" ? "div" : "pre"); res.className = "res" + (lang === "yaml" ? " wf-res" : ""); sn.appendChild(res); }
       if (lang === "git") { res.innerHTML = runSnippetHTML(code); return; }
-      if (lang === "sh") { res.innerHTML = runShSnippet(code); return; }
+      if (lang === "sh") { res.innerHTML = runShSnippet(code, snipSetup); return; }
       if (lang === "yaml") { mountReport(res, () => code, null); return; }
       b.disabled = true; res.innerHTML = statusHTML(firstLoad(lang));
       try { const r = await run(lang, code, sn.dataset.stdin || "", t => { res.innerHTML = statusHTML(t); }); res.innerHTML = consoleHTML(r, lang); }
@@ -216,6 +217,7 @@ function pageLesson(x) {
 
 function bindLesson(x) {
   const { c, l } = x; const lang = l.lang || c.lang; const L = ls(l.id); const ch = l.challenge;
+  snipSetup = l.snippetSetup || c.snippetSetup || {};
   bindSnippets(app());
   if (lang === "py") preloadPy(lessonCode(l));
   $$("[data-jump]").forEach(a => a.addEventListener("click", e => { e.preventDefault(); const t = document.getElementById(a.dataset.jump); if (t) t.scrollIntoView({ behavior: "smooth", block: "start" }); }));
@@ -492,7 +494,7 @@ function render() {
   const el = app(); let bind = null;
   const course = COURSES.find(c => c.route === route);
   if (course) { el.innerHTML = pageCourse(course); }
-  else if (route === "installer") { el.innerHTML = pageInstaller(); bind = () => bindSnippets(app()); }
+  else if (route === "installer") { el.innerHTML = pageInstaller(); bind = () => { snipSetup = {}; bindSnippets(app()); }; }
   else if (route === "roadmaps") el.innerHTML = pageRoadmaps();
   else if (route === "atelier") { el.innerHTML = pageAtelier(); bind = bindAtelier; }
   else if (ROADMAPS.some(r => r.id === route)) { const r = ROADMAPS.find(r => r.id === route); el.innerHTML = pageRoadmap(r); bind = () => bindRoadmap(r); }

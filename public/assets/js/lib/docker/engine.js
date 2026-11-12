@@ -437,7 +437,7 @@ export class Docker {
     if (shellForm && !img.shell) throw new DockerErr('docker: Error response from daemon: failed to create task for container: failed to create shim task: OCI runtime create failed: runc create failed: unable to start container process: error during container init: exec: "/bin/sh": stat /bin/sh: no such file or directory: unknown.', 127);
     const base = String(exe).split("/").pop();
     const fileExe = exe.startsWith("/") || exe.startsWith("./") ? this.readFile(c, join(c.workdir, exe)) : null;
-    if (!fileExe && !img.bins.includes(base) && !["sh", "echo", "sleep", "env", "cat", "ls", "true", "printenv", "id", "whoami"].includes(base) || (base === "sh" && !img.shell)) {
+    if (!fileExe && !img.bins.includes(base) && !["sh", "echo", "sleep", "env", "cat", "ls", "true", "printenv", "id", "whoami"].includes(base) && !(["ping", "nslookup"].includes(base) && ["alpine", "busybox"].includes(img.os)) || (base === "sh" && !img.shell)) {
       const msg = 'exec: "' + exe + '": ' + (exe.includes("/") ? "stat " + exe + ": no such file or directory" : "executable file not found in $PATH");
       if (shellForm) { c.state = "exited"; c.exitCode = 127; c.startedAt = this.t; c.logs.push((img.os === "alpine" ? "/bin/sh: " : "/bin/sh: 1: ") + exe + ": not found"); return; }
       c.state = "created";
@@ -462,6 +462,11 @@ export class Docker {
     if (["sh", "bash"].includes(b) && a[1] === "-c") return this.behave(c, words(a.slice(2).join(" ")), img);
     if (b === "sleep") { c.listen = null; return; }
     if (["env", "printenv"].includes(b)) return exit(0, ...Object.entries(c.env).map(([k, v]) => k + "=" + v));
+    // Commandes courtes (cat, ls, id…) : elles s'exécutent puis le conteneur s'arrête avec leur code.
+    if (["cat", "ls", "id", "whoami", "pwd", "uname", "date", "hostname", "head", "tail", "wc", "df", "ping", "nslookup", "getent"].includes(b) && this.runShort) {
+      c.state = "running"; const r = this.runShort(c, a); return exit(r.code, ...r.out.replace(/\n$/, "").split("\n"));
+    }
+    if (b === "true" || b === "false") return exit(b === "true" ? 0 : 1);
     if (b === "nginx" || img.app === "nginx" && b === "/docker-entrypoint.sh") {
       log("/docker-entrypoint.sh: /docker-entrypoint.d/ is not empty, will attempt to perform configuration", "/docker-entrypoint.sh: Configuration complete; ready for start up", "2026/11/12 09:30:00 [notice] 1#1: nginx/1.27.3", "2026/11/12 09:30:00 [notice] 1#1: start worker processes");
       c.listen = { port: 80, host: "0.0.0.0", kind: "nginx" }; return;
@@ -520,7 +525,7 @@ export class Docker {
       }
       file = join(c.workdir, a[1] || "index.js");
       if (!this.readFile(c, file)) return exit(1, "node:internal/modules/cjs/loader:1228", "  throw err;", "  ^", "", "Error: Cannot find module '" + file + "'", "    at Module._resolveFilename (node:internal/modules/cjs/loader:1225:15)", "", "Node.js v20.18.1");
-    } else if (fileExe || this.readFile(c, join(c.workdir, a[0]))) { file = join(c.workdir, a[0]); kind = "script"; }
+    } else if (this.readFile(c, join(c.workdir, a[0]))) { file = join(c.workdir, a[0]); kind = "script"; }
     else { return; /* commande longue inconnue : on la considère en cours d'exécution */ }
     // Spécification de l'application, rattachée au fichier source copié dans l'image.
     const f = this.readFile(c, file); const spec = (f && f.origin && this.apps[f.origin]) || {};
@@ -545,7 +550,7 @@ export class Docker {
       const [, scheme, du, dpw, dhost, dport0, ddb] = m; const dport = +(dport0 || (scheme.startsWith("postgres") ? 5432 : scheme === "redis" ? 6379 : 80));
       const pg = scheme.startsWith("postgres");
       const target = this.resolveFrom(c, dhost);
-      const fail = (msg) => exit(1, ...(lang === "python" ? ["Traceback (most recent call last):", '  File "' + file + '", line ' + (spec.dbLine || 12) + ", in <module>", "    " + (pg ? "conn = psycopg2.connect(DATABASE_URL)" : "client.ping()")] : []), msg);
+      const fail = (msg) => exit(1, ...(lang === "python" ? ["Traceback (most recent call last):", '  File "' + file + '", line ' + (spec.dbLine || 12) + ", in <module>", "    " + (pg ? "conn = psycopg2.connect(" + String(dep.env || "DATABASE_URL").toLowerCase() + ")" : "client.ping()")] : []), msg);
       if (dhost === "localhost" || dhost === "127.0.0.1") return fail(pg ? 'psycopg2.OperationalError: connection to server at "localhost" (127.0.0.1), port ' + dport + " failed: Connection refused\n\tIs the server running on that host and accepting TCP/IP connections?" : "redis.exceptions.ConnectionError: Error 111 connecting to localhost:" + dport + ". Connection refused.");
       if (!target) return fail(pg ? 'psycopg2.OperationalError: could not translate host name "' + dhost + '" to address: Name or service not known' : "redis.exceptions.ConnectionError: Error -2 connecting to " + dhost + ":" + dport + ". Name or service not known.");
       const ok = target.c.state === "running" && target.c.listen && target.c.listen.port === dport;
