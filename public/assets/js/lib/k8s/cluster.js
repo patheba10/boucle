@@ -130,7 +130,7 @@ export class Cluster {
   list(kind, ns = this.ns) { return Object.values(this.objs).filter((o) => o.kind === kind && (ns === null || KINDS[kind].cluster || o.metadata.namespace === ns)).sort((a, b) => a.metadata.name.localeCompare(b.metadata.name)); }
   event(obj, type, reason, msg, from = "kubelet") {
     const last = this.events.find((e) => e.uid === obj.metadata.uid && e.reason === reason && e.msg === msg);
-    if (last) { last.count++; last.last = this.t; return; }
+    if (last) { if (last.last !== this.t) { last.count++; last.last = this.t; } return; }
     this.events.push({ uid: obj.metadata.uid, kind: obj.kind, name: obj.metadata.name, ns: obj.metadata.namespace || "default", type, reason, msg, from, count: 1, first: this.t, last: this.t });
   }
   /** Crée ou remplace un objet. Renvoie « created », « configured » ou « unchanged ». */
@@ -140,20 +140,19 @@ export class Cluster {
     const k = this.key(kind, ns, o.metadata.name); const old = this.objs[k];
     const fresh = clone(o); fresh.metadata = { ...fresh.metadata, ...(ns ? { namespace: ns } : {}) };
     if (kind === "Secret" && fresh.stringData) { fresh.data = { ...(fresh.data || {}), ...Object.fromEntries(Object.entries(fresh.stringData).map(([a, b]) => [a, btoa(unescape(encodeURIComponent(String(b))))])) }; delete fresh.stringData; }
+    // Valeurs par défaut de l'API server, avant la comparaison (sinon tout semblerait modifié).
+    if (kind === "Service") { fresh.spec.type = fresh.spec.type || "ClusterIP"; for (const [i, p] of fresh.spec.ports.entries()) { p.protocol = p.protocol || "TCP"; if (p.targetPort === undefined) p.targetPort = p.port; if (fresh.spec.type === "NodePort" && !p.nodePort) p.nodePort = (old && old.spec.ports[i] && old.spec.ports[i].nodePort) || 30000 + parseInt(hash(k + p.port).slice(0, 4), 16) % 2768; } fresh.spec.clusterIP = fresh.spec.clusterIP || (old ? old.spec.clusterIP : "10.96." + (parseInt(hash(k).slice(0, 2), 16) % 200 + 10) + "." + (parseInt(hash(k).slice(2, 4), 16) % 250 + 2)); }
+    if (kind === "Secret") fresh.type = fresh.type || "Opaque";
+    if (kind === "Deployment") { fresh.spec.replicas = fresh.spec.replicas ?? 1; fresh.spec.strategy = fresh.spec.strategy || { type: "RollingUpdate", rollingUpdate: { maxSurge: "25%", maxUnavailable: "25%" } }; if (fresh.spec.strategy.type === undefined) fresh.spec.strategy.type = "RollingUpdate"; fresh.spec.revisionHistoryLimit = fresh.spec.revisionHistoryLimit ?? 10; }
     if (old) {
-      const same = stable(old.spec || old.data || {}) === stable(fresh.spec || fresh.data || {}) && stable(old.metadata.labels || {}) === stable(fresh.metadata.labels || {});
+      const same = stable(old.spec || old.data || {}) === stable(fresh.spec || fresh.data || {}) && stable(old.metadata.labels || {}) === stable(fresh.metadata.labels || {}) && stable(old.rules || old.subjects || {}) === stable(fresh.rules || fresh.subjects || {});
       if (same) return "unchanged";
       fresh.metadata = { ...old.metadata, labels: fresh.metadata.labels, annotations: { ...(old.metadata.annotations || {}), ...(fresh.metadata.annotations || {}) } };
       fresh.metadata.generation = (old.metadata.generation || 1) + 1; fresh.status = old.status;
-      if (kind === "Service") fresh.spec.clusterIP = old.spec.clusterIP;
       this.objs[k] = fresh; return "configured";
     }
     fresh.metadata.uid = hash("uid:" + k + ":" + this.seq++).replace(/^(.{8})(.{4})(.{4})(.{4})(.{12}).*/, "$1-$2-$3-$4-$5");
     fresh.metadata.creationTimestamp = system ? -86400 : this.t; fresh.metadata.generation = 1; fresh.status = fresh.status || {};
-    if (kind === "Service" && !fresh.spec.clusterIP) fresh.spec.clusterIP = "10.96." + (parseInt(hash(k).slice(0, 2), 16) % 200 + 10) + "." + (parseInt(hash(k).slice(2, 4), 16) % 250 + 2);
-    if (kind === "Service") { fresh.spec.type = fresh.spec.type || "ClusterIP"; for (const p of fresh.spec.ports) { p.protocol = p.protocol || "TCP"; if (p.targetPort === undefined) p.targetPort = p.port; if (fresh.spec.type === "NodePort" && !p.nodePort) p.nodePort = 30000 + parseInt(hash(k + p.port).slice(0, 4), 16) % 2768; } }
-    if (kind === "Secret") fresh.type = fresh.type || "Opaque";
-    if (kind === "Deployment") { fresh.spec.replicas = fresh.spec.replicas ?? 1; fresh.spec.strategy = fresh.spec.strategy || { type: "RollingUpdate", rollingUpdate: { maxSurge: "25%", maxUnavailable: "25%" } }; fresh.spec.revisionHistoryLimit = fresh.spec.revisionHistoryLimit ?? 10; }
     this.objs[k] = fresh; return "created";
   }
   remove(obj) {

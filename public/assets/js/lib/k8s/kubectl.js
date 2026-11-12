@@ -14,9 +14,9 @@ function age(c, t0) {
   if (s < 3600 * 3) return Math.floor(s / 60) + "m";
   return Math.floor(s / 3600) + "h";
 }
-const table = (rows) => {
+const table = (rows, gap = 3) => {
   const w = rows[0].map((_, i) => Math.max(...rows.map((r) => String(r[i]).length)));
-  return rows.map((r) => r.map((x, i) => (i === r.length - 1 ? String(x) : String(x).padEnd(w[i] + 3))).join("").replace(/\s+$/, "")).join("\n") + "\n";
+  return rows.map((r) => r.map((x, i) => (i === r.length - 1 ? String(x) : String(x).padEnd(w[i] + gap))).join("").replace(/\s+$/, "")).join("\n") + "\n";
 };
 
 /** État affiché d'un Pod (colonne STATUS). */
@@ -102,7 +102,7 @@ function rowsFor(cl, kind, items, o) {
   return { head: (nsCol ? ["NAMESPACE"] : []).concat(head).concat(o.showLabels ? ["LABELS"] : []), rows: items.map((x) => (nsCol ? [x.metadata.namespace || ""] : []).concat(row(x)).concat(o.showLabels ? [sel(x.metadata.labels) || "<none>"] : [])) };
 }
 function endpointsList(cl, ns) {
-  return cl.list("Service", ns).map((s) => { cl.syncEndpoints(s); const tp = (sp, p) => (typeof sp.targetPort === "string" ? ((p.spec.containers[0].ports || []).find((x) => x.name === sp.targetPort) || {}).containerPort : sp.targetPort); const eps = s.metadata.name === "kubernetes" ? "172.18.0.2:6443" : s.endpoints.flatMap((e) => s.spec.ports.map((sp) => e.ip + ":" + tp(sp, e.pod))); return { ...s, kind: "Endpoints", eps: eps.length ? (eps.length > 3 ? eps.slice(0, 3).join(",") + " + " + (eps.length - 3) + " more..." : eps.join(",")) : "<none>" }; });
+  return cl.list("Service", ns).map((s) => { cl.syncEndpoints(s); const tp = (sp, p) => (typeof sp.targetPort === "string" ? ((p.spec.containers[0].ports || []).find((x) => x.name === sp.targetPort) || {}).containerPort : sp.targetPort); const eps = s.metadata.name === "kubernetes" ? ["172.18.0.2:6443"] : s.endpoints.flatMap((e) => s.spec.ports.map((sp) => e.ip + ":" + tp(sp, e.pod))); return { ...s, kind: "Endpoints", eps: eps.length ? (eps.length > 3 ? eps.slice(0, 3).join(",") + " + " + (eps.length - 3) + " more..." : eps.join(",")) : "<none>" }; });
 }
 function toYaml(obj) {
   const o = clone(obj); delete o.endpoints; delete o.notReady; delete o.eps;
@@ -130,7 +130,7 @@ function eventsBlock(cl, obj) {
   const ev = cl.events.filter((e) => e.uid === obj.metadata.uid);
   if (!ev.length) return "Events:                   <none>\n";
   const rows = [["Type", "Reason", "Age", "From", "Message"], ["----", "------", "----", "----", "-------"], ...ev.map((e) => [e.type, e.reason, e.count > 1 ? age(cl, e.last) + " (x" + e.count + " over " + age(cl, e.first) + ")" : age(cl, e.first), e.from, e.msg])];
-  return "Events:\n" + table(rows).split("\n").filter(Boolean).map((l) => "  " + l).join("\n") + "\n";
+  return "Events:\n" + table(rows, 2).split("\n").filter(Boolean).map((l) => "  " + l).join("\n") + "\n";
 }
 const kv = (m, ind = 18) => { const e = Object.entries(m || {}); return e.length ? e.map(([k, v], i) => (i ? " ".repeat(ind) : "") + k + "=" + v).join("\n") : "<none>"; };
 function containerBlock(cl, c, cs, p) {
