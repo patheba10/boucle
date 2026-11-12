@@ -4,6 +4,14 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.30.0] — 2026-11-12
+
+Sprint 10.1 : projets capstone. Début de l'étape 9.
+
+### Ajouté
+- Page **Projets** : des projets capstone de niveau portfolio, avec cahier des charges, architecture cible, jalons cochables et sauvegardés, critères de réussite et leçons liées ; chaque roadmap affiche ses projets (#106).
+- Deux projets DevOps : plateforme de déploiement d'une API, laboratoire d'incidents et d'astreinte.
+
 ## [0.29.0] — 2026-11-12
 
 Sprint 9.4 : entretiens par métier et comportemental. L'étape 8 (préparation aux entretiens) est terminée.
