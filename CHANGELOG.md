@@ -4,6 +4,14 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.21.0] — 2026-11-12
+
+Sprint 7.3 : chapitre **TensorFlow Lite** (LiteRT). L'étape 6 (deep learning) est terminée.
+
+### Ajouté
+- Deep learning, chapitre **TensorFlow Lite** (5 leçons) : conversion en .tflite, quantification int8 codée en NumPy, quantifier un modèle et mesurer la perte, interpréteur `ai_edge_litert`, téléphone, Raspberry Pi et microcontrôleur ; deux questions d'entretien sur le déploiement (#75).
+- Option d'extrait `~~~py tf` : code qui demande le vrai TensorFlow, affiché sans bouton Exécuter et vérifié par le job CI TensorFlow (`ai-edge-litert` ajouté).
+
 ## [0.20.0] — 2026-11-12
 
 Sprint 7.2 : Keras dans le navigateur (minikeras), vérifié avec le vrai TensorFlow ; chapitre Keras du cours Deep learning.

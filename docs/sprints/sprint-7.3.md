@@ -15,12 +15,13 @@
 ## Journal
 
 - 12 nov. : chapitre « TensorFlow Lite », 5 leçons (conversion, quantification, quantifier un modèle et mesurer, interpréteur LiteRT, téléphone, Raspberry Pi et microcontrôleur) ; deux questions d'entretien sur le déploiement et la quantification. Les sorties attendues ont été calculées par script, pas à la main : un arrondi float32 donnait -1 là où le calcul exact donnait 0. 911 vérifications, 94 tests unitaires, 11 vérifications avec TensorFlow, 15 tests de bout en bout hors ligne.
+- 12 nov. : PR #80, les trois jobs verts (11 vérifications avec TensorFlow 2.21 et ai-edge-litert en CI). Fusionnée ; version 0.21.0.
 
 ## Revue de sprint
 
 | Story | Points | Livré |
 |-------|--------|-------|
-| #75 TensorFlow Lite et l'IA embarquée | 5 | Oui |
+| #75 TensorFlow Lite et l'IA embarquée | 5 | Oui (PR #80) |
 
 Vélocité : 5 points sur 5. Version 0.21.0. L'étape 6 (deep learning) est terminée : 20 leçons, de NumPy à LiteRT.
 
