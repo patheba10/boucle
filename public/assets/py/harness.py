@@ -163,6 +163,20 @@ def _prepare_asgi(code):
     starlette.testclient.TestClient = fastapi.testclient.TestClient = _ClientDeTest
 
 
+def _prepare_keras(code):
+    """TensorFlow n'existe pas dans Pyodide : sans lui, « keras » et « tensorflow » désignent minikeras (même API, en NumPy)."""
+    if "keras" not in code and "tensorflow" not in code:
+        return
+    try:
+        import tensorflow  # noqa: F401 — le vrai, en CI (vérification avec TensorFlow)
+        return
+    except ImportError:
+        pass
+    import minikeras
+    minikeras.Layer._compteur = {}
+    minikeras.installer()
+
+
 class _Outils:
     """Objet « boucle » disponible dans le code des tests d'un défi (après la ligne #@boucle)."""
 
@@ -237,6 +251,7 @@ def run(code, stdin=""):
     err, line = None, None
     _prepare_matplotlib(code)
     _prepare_asgi(code)
+    _prepare_keras(code)
     namespace = {"__name__": "__main__", "boucle": _Outils(code)}
     if "\n#@boucle" in code or code.startswith("#@boucle"):
         # Défi de tests : le code de l'élève est un fichier de tests, lancé par pytest (boucle.pytest / boucle.mutants).

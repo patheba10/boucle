@@ -46,7 +46,7 @@ def test_accueil(page):
 
 
 def test_pages_principales_sans_erreur(page):
-    for route in ["python", "data", "git", "cicd", "cpp", "roadmaps", "devops", "installer", "atelier", "py-01", "np-01", "git-01", "git-12", "ci-01", "ci-20", "ci-22", "linux", "lx-01", "lx-10", "lx-14", "lx-19", "lx-21", "docker", "dk-01", "dk-06", "dk-09", "dk-11", "dk-12", "kubernetes", "k8s-01", "k8s-05", "k8s-07", "k8s-12", "exploitation", "ex-02", "ex-06", "ex-10", "ex-11", "terraform", "tf-02", "tf-05", "tf-08", "tf-11", "aws", "aws-02", "aws-04", "aws-08", "aws-12", "sql", "sql-01", "sql-10", "sql-16", "api", "api-04", "api-09", "api-11", "dl", "dl-05", "dl-09", "certifs", "cert-clf", "cert-saa", "cpp-10"]:
+    for route in ["python", "data", "git", "cicd", "cpp", "roadmaps", "devops", "installer", "atelier", "py-01", "np-01", "git-01", "git-12", "ci-01", "ci-20", "ci-22", "linux", "lx-01", "lx-10", "lx-14", "lx-19", "lx-21", "docker", "dk-01", "dk-06", "dk-09", "dk-11", "dk-12", "kubernetes", "k8s-01", "k8s-05", "k8s-07", "k8s-12", "exploitation", "ex-02", "ex-06", "ex-10", "ex-11", "terraform", "tf-02", "tf-05", "tf-08", "tf-11", "aws", "aws-02", "aws-04", "aws-08", "aws-12", "sql", "sql-01", "sql-10", "sql-16", "api", "api-04", "api-09", "api-11", "dl", "dl-05", "dl-09", "dl-10", "dl-13", "dl-15", "certifs", "cert-clf", "cert-saa", "cpp-10"]:
         page.goto(page.base + "#" + route)
         expect(page.locator("#app")).not_to_be_empty()
     assert page.errors == []
@@ -189,6 +189,16 @@ def test_api_et_pytest_reels(page):
     expect(page.locator(".console")).to_contain_text("2 passed", timeout=PY_TIMEOUT)
     page.click('[data-act="check"]')
     expect(page.locator(".verdict.no")).to_contain_text("NON détectée", timeout=PY_TIMEOUT)
+    assert page.errors == []
+
+
+@pytest.mark.skipif(OFFLINE, reason="numpy est un paquet Pyodide servi par le CDN")
+def test_keras_dans_le_navigateur(page):
+    """Le code Keras de la théorie tourne dans le navigateur avec minikeras (TensorFlow n'existe pas dans Pyodide)."""
+    page.goto(page.base + "#dl-10")
+    page.locator(".snippet .run").first.click()
+    expect(page.locator(".snippet .res").first).to_contain_text("Total params: 65", timeout=PY_TIMEOUT)
+    expect(page.locator(".snippet .res").first).to_contain_text("exactitude finale")
     assert page.errors == []
 
 

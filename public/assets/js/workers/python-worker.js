@@ -18,6 +18,8 @@ async function init() {
   pyodide = await loadPyodide({ indexURL: INDEX_URL });
   const harness = await (await fetch(new URL("../../py/harness.py", self.location))).text();
   pyodide.FS.writeFile(HOME + "/boucle_harness.py", harness);
+  // Keras en NumPy, utilisé à la place de TensorFlow (absent de Pyodide) : voir harness._prepare_keras
+  pyodide.FS.writeFile(HOME + "/minikeras.py", await (await fetch(new URL("../../py/minikeras.py", self.location))).text());
   pyodide.runPython(
     "import os, sys, json\n" +
     "sys.path.insert(0, '" + HOME + "')\n" +

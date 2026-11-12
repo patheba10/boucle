@@ -1,0 +1,5 @@
+# Vérification du code Keras avec le vrai TensorFlow (job CI « Vérifier le code Keras avec TensorFlow »).
+# Dans le navigateur, minikeras (public/assets/py/minikeras.py) remplace TensorFlow, absent de Pyodide.
+tensorflow-cpu==2.21.0
+scikit-learn==1.7.0
+matplotlib==3.9.4
