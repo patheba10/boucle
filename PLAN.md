@@ -53,7 +53,7 @@ Amélioration technique jointe : nouveaux formats d'exercice, « commandes à ta
 
 Ordre choisi avec Demba : DevOps, puis Cloud (AWS), puis le reste du socle entreprise. Décision d'architecture : [docs/adr/0001-simulateurs-devops.md](docs/adr/0001-simulateurs-devops.md).
 
-1. **Linux et Bash** (#30) : arborescence, fichiers, permissions et utilisateurs, processus et services (systemd, journaux), traitement de texte (grep, sort, cut, sed, awk), pipes et redirections, variables et scripts Bash, réseau (curl, ss, dig), SSH et cron. Terminal Linux simulé (#29) et défis de scripts testés.
+1. **Linux et Bash** (#30, terminé au sprint 4.2, version 0.10.0, 21 leçons) : arborescence, fichiers, permissions et utilisateurs, processus et services (systemd, journaux), traitement de texte (grep, sort, cut, sed, awk), pipes et redirections, variables et scripts Bash, réseau (curl, ss, dig), SSH et cron. Terminal Linux simulé (#29) et défis de scripts testés.
 2. **Docker et Compose** (#32) : images et couches, Dockerfile (cache, multi-étapes, utilisateur non root), conteneurs, ports, volumes, réseaux, Compose, registres, sécurité des images. Simulateur Docker (#31) et lint de Dockerfile.
 3. **Kubernetes** (#34) : architecture, Pods, Deployments et rollouts, Services et Ingress, ConfigMaps et Secrets, sondes, ressources et autoscaling, stockage, RBAC, Helm, dépannage (CrashLoopBackOff, ImagePullBackOff, Pending). Cluster simulé et `kubectl` (#33).
 4. **Exploitation** (#35) : observabilité (métriques, logs, traces, Prometheus et PromQL, Grafana, alertes), SRE (SLI, SLO, budget d'erreur, incidents, post-mortems), gestion de configuration avec Ansible.
