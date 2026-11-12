@@ -4,8 +4,8 @@
 
 | Story | Points | Statut |
 |-------|--------|--------|
-| #63 US-5.2 Moteur d'examens blancs (enabler) | 3 | En cours |
-| #56 US-5c Préparation aux certifications AWS | 5 | À faire |
+| #63 US-5.2 Moteur d'examens blancs (enabler) | 3 | Terminé |
+| #56 US-5c Préparation aux certifications AWS | 5 | Terminé |
 
 **Capacité** : 8 points.
 
@@ -19,3 +19,21 @@
 ## Journal
 
 - 12 nov. : issue #63 et branche `us-5.2/examens`. Moteur, vues, styles et 4 tests unitaires écrits ; parcours vérifié dans Chromium (bureau et mobile, sans débordement). Une revue des captures a ajouté la mention « ton choix » sur les réponses de l'élève : sans elle, une réponse multiple incomplète semblait juste. Le moteur part seul en PR ; les banques suivent dans #56.
+- 12 nov. : #63 fusionné (PR #64). Branche `us-5c/certifs-aws` : 69 questions CLF-C02 et 68 SAA-C03, au moins un examen complet tirable par certification ; test de bout en bout d'un examen court. Les explications ne citent jamais une position (« la dernière option ») puisque les options sont mélangées.
+
+## Revue de sprint
+
+| Story | Points | Livré |
+|-------|--------|-------|
+| #63 Moteur d'examens blancs | 3 | Oui (PR #64) |
+| #56 Préparation aux certifications AWS | 5 | Oui |
+
+Vélocité : 8 points sur 8. Version 0.16.0. Le milestone « Étape 5 — Cloud » est terminé.
+
+## Rétrospective
+
+**Ce qui a marché.** Un moteur pur sous Node, testé avant l'interface : les quotas, le tirage et la correction n'ont pas bougé une fois branchés. Vérifier le format des examens sur les pages officielles avant d'écrire, plutôt que de se fier à un site tiers qui annonçait une version « SAA-C04 » que la page officielle ne mentionne pas.
+
+**Ce qui a coincé.** Les banques écrites avec la bonne réponse presque toujours en premier : sans incidence pour l'élève (les options sont mélangées), mais une explication citait « la dernière option ». Le contrôle des banques ne le voyait pas ; il le vérifie maintenant.
+
+**À essayer.** Enrichir les banques au fil des cours (cible : deux examens complets distincts par certification).

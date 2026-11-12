@@ -62,7 +62,7 @@ Ordre choisi avec Demba : DevOps, puis Cloud (AWS), puis le reste du socle entre
 
 1. Terraform (#53, terminé au sprint 5.1, version 0.14.0, 11 leçons) : HCL, providers, ressources, variables et outputs, state distant et verrou, modules, `plan` / `apply`, simulés dans le navigateur.
 2. AWS (#55, terminé au sprint 5.2, version 0.15.0, 12 leçons ; CLI `aws`, IAM et joignabilité réseau simulés, #54) : modèle de responsabilité partagée, IAM (évaluateur de politiques JSON), réseau (VPC, sous-réseaux, routage, security groups), calcul (EC2, ECS, EKS, Lambda), stockage et bases (S3, EBS, RDS, DynamoDB), CloudWatch, architectures résilientes, coûts. Exercices de conception, et labs guidés sur le niveau gratuit d'AWS.
-3. Préparation aux certifications AWS Cloud Practitioner puis Solutions Architect Associate.
+3. Préparation aux certifications AWS (#56, terminé au sprint 5.3, version 0.16.0) : banques de questions originales par domaine officiel pour Cloud Practitioner (CLF-C02) et Solutions Architect Associate (SAA-C03), entraînement par domaine et examens blancs chronométrés (moteur réutilisable, #63).
 
 ## Étape 5 bis — Socle entreprise : SQL et API
 
