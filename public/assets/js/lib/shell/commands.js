@@ -784,7 +784,7 @@ C("apt apt-get", (sh, args, io) => {
 });
 
 /* ----- réseau ----- */
-function resolve(sh, host) { if (host === "localhost" || host === "127.0.0.1" || host === sh.host) return "127.0.0.1"; return sh.net.dns[host] || null; }
+function resolve(sh, host) { if (host === "localhost" || host === "127.0.0.1" || host === sh.host || /\.localhost$/.test(host)) return "127.0.0.1"; return sh.net.dns[host] || null; }
 export function httpFor(sh, url) {
   const m = /^(https?):\/\/([^/:]+)(?::(\d+))?(\/[^?#]*)?(\?[^#]*)?/.exec(url); if (!m) return { error: [3, "URL using bad/illegal format or missing URL"] };
   const [, scheme, host, port0, path0 = "/"] = m; const port = +(port0 || (scheme === "https" ? 443 : 80)); const path = path0;

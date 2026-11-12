@@ -400,7 +400,21 @@ function run(sh, cl, args, io) {
       const allowed = cl.list("RoleBinding", o.n || sns).some((b) => (b.subjects || []).some((s) => s.name === sa) && cl.list("Role", o.n || sns).some((r) => r.metadata.name === b.roleRef.name && (r.rules || []).some((rule) => (rule.verbs || []).some((v) => v === vb || v === "*") && (rule.resources || []).some((x) => x === kindOf(res) && false || KINDS[kindOf(res)] && x === KINDS[kindOf(res)].plural || x === "*"))));
       io.out(allowed ? "yes\n" : "no\n"); return allowed ? 0 : 1;
     }
-    case "top": io.err("error: Metrics API not available\n(metrics-server n'est pas installé sur ce cluster simulé.)\n"); return 1;
+    case "top": {
+      // metrics-server est installé : consommation simulée, stable, proportionnelle aux requests.
+      if (o._[0] === "nodes" || o._[0] === "node" || o._[0] === "no") { io.out(table([["NAME", "CPU(cores)", "CPU(%)", "MEMORY(bytes)", "MEMORY(%)"], [cl.node.name, "312m", "15%", "1530Mi", "38%"]])); return 0; }
+      const pods = cl.list("Pod", o.A ? null : ns).filter((p) => cl.podReady(p) && selectorMatch(o.l, p.metadata.labels));
+      if (!pods.length) { io.err("No resources found in " + ns + " namespace.\n"); return 0; }
+      const load = (p) => { const h = cl.list("HorizontalPodAutoscaler", p.metadata.namespace).find((x) => matches({ app: x.spec.scaleTargetRef.name }, p.metadata.labels)); return h && h.metadata.annotations && h.metadata.annotations["boucle/cpu"] ? +h.metadata.annotations["boucle/cpu"] : 30; };
+      io.out(table([["NAME", "CPU(cores)", "MEMORY(bytes)"], ...pods.map((p) => [p.metadata.name, Math.max(1, Math.round((cl.requests(p.spec).cpu || 10) * load(p) / 100)) + "m", (40 + parseInt(p.metadata.uid.slice(0, 2), 16) % 30) + "Mi"])])); return 0;
+    }
+    case "autoscale": {
+      const { kinds, names } = target(o, cl, false); const d = must(cl, kinds[0], names[0], ns);
+      if (!o.max || o.max === true) throw new K8sErr("error: --max=MAXPODS is required and must be at least 1, max replicas must be >= min replicas");
+      const h = { apiVersion: "autoscaling/v2", kind: "HorizontalPodAutoscaler", metadata: { name: names[0], namespace: ns }, spec: { scaleTargetRef: { apiVersion: "apps/v1", kind: "Deployment", name: names[0] }, minReplicas: +(o.min || 1), maxReplicas: +o.max, metrics: [{ type: "Resource", resource: { name: "cpu", target: { type: "Utilization", averageUtilization: +(o["cpu-percent"] || 80) } } }] } };
+      if (cl.get("HorizontalPodAutoscaler", names[0], ns)) throw new K8sErr('Error from server (AlreadyExists): horizontalpodautoscalers.autoscaling "' + names[0] + '" already exists');
+      cl.put(h); cl.reconcile(); io.out("horizontalpodautoscaler.autoscaling/" + names[0] + " autoscaled\n"); return 0;
+    }
     case "edit": io.err("(kubectl edit ouvre un éditeur : non simulé ici. Modifie le fichier YAML puis kubectl apply -f, ou utilise kubectl set / kubectl scale.)\n"); return 1;
     case "explain": io.err("(kubectl explain n'est pas simulé : la référence des champs est sur kubernetes.io/docs/reference.)\n"); return 1;
     default: throw new K8sErr('error: unknown command "' + verb + '" for "kubectl"\n\nDid you mean this?\n\tget\n\tapply\n\tdescribe');
@@ -443,7 +457,23 @@ COMMANDS.kind = (sh, args, io) => {
 HTTP_HOOKS.push((sh, host, port, path, ip) => {
   const cl = sh.k8s; if (!cl || ip !== "127.0.0.1") return null;
   cl.reconcile();
-  const f = cl.forwards.find((x) => x.lp === port); if (!f) return null;
+  const f = cl.forwards.find((x) => x.lp === port);
+  if (!f && port === 80 && cl.ingress) {
+    // Contrôleur ingress-nginx de kind, publié sur le port 80 de la machine.
+    for (const ing of cl.list("Ingress", null)) for (const rule of ing.spec.rules || []) {
+      if (rule.host && rule.host !== host) continue;
+      for (const p of ((rule.http || {}).paths || [])) {
+        const ok = p.pathType === "Exact" ? path === p.path : path === p.path || path.startsWith(p.path.replace(/\/$/, "") + "/") || p.path === "/";
+        if (!ok) continue;
+        const b = (p.backend || {}).service || {}; const s = cl.get("Service", b.name, ing.metadata.namespace);
+        if (!s) return { status: 503, type: "text/html", body: "<html>\r\n<head><title>503 Service Temporarily Unavailable</title></head>\r\n<body>\r\n<center><h1>503 Service Temporarily Unavailable</h1></center>\r\n<hr><center>nginx</center>\r\n</body>\r\n</html>\r\n", server: "nginx" };
+        const r = cl.svcHttp(s, (b.port || {}).number, path);
+        return r.error ? { status: 503, type: "text/html", body: "<html>\r\n<head><title>503 Service Temporarily Unavailable</title></head>\r\n<body>\r\n<center><h1>503 Service Temporarily Unavailable</h1></center>\r\n<hr><center>nginx</center>\r\n</body>\r\n</html>\r\n", server: "nginx" } : r;
+      }
+    }
+    return { status: 404, type: "text/html", body: "<html>\r\n<head><title>404 Not Found</title></head>\r\n<body>\r\n<center><h1>404 Not Found</h1></center>\r\n<hr><center>nginx</center>\r\n</body>\r\n</html>\r\n", server: "nginx" };
+  }
+  if (!f) return null;
   const pod = cl.get("Pod", f.pod, f.ns);
   if (!pod) return { error: [52, "Empty reply from server"] };
   const c = cl.rt.container(cl.ctrName(pod), { must: false });

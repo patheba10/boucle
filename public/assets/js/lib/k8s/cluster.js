@@ -96,6 +96,14 @@ export function validate(o, file) {
     }
     if (s.type && !["ClusterIP", "NodePort", "LoadBalancer", "ExternalName"].includes(s.type)) where('The Service "' + name + '" is invalid: spec.type: Unsupported value: "' + s.type + '": supported values: "ClusterIP", "ExternalName", "LoadBalancer", "NodePort"');
   }
+  if (kind === "Ingress") {
+    unknown(s, ["ingressClassName", "rules", "tls", "defaultBackend"], "spec.");
+    (s.rules || []).forEach((r, i) => ((r.http || {}).paths || []).forEach((pp, j) => {
+      if (!pp.pathType) where('The Ingress "' + name + '" is invalid: spec.rules[' + i + "].http.paths[" + j + "].pathType: Required value: pathType must be specified");
+      else if (!["Prefix", "Exact", "ImplementationSpecific"].includes(pp.pathType)) where('The Ingress "' + name + '" is invalid: spec.rules[' + i + "].http.paths[" + j + '].pathType: Unsupported value: "' + pp.pathType + '": supported values: "Exact", "ImplementationSpecific", "Prefix"');
+      if (!((pp.backend || {}).service || {}).name) where('The Ingress "' + name + '" is invalid: spec.rules[' + i + "].http.paths[" + j + "].backend: Invalid value: \"\": resource or service backend is required");
+    }));
+  }
   if (kind === "ConfigMap" || kind === "Secret") {
     unknown(o, ["apiVersion", "kind", "metadata", "data", "stringData", "type", "immutable"], "");
     for (const [k, v] of Object.entries(o.data || {})) if (typeof v !== "string") where('Error from server (BadRequest): error when creating "' + file + '": ' + kind + ' in version "v1" cannot be handled as a ' + kind + ": json: cannot unmarshal " + typeof v + ' into Go struct field ' + kind + ".data of type " + (kind === "Secret" ? "[]uint8" : "string"));
@@ -113,7 +121,7 @@ export class Cluster {
     if (sh.docker) this.rt.registry = sh.docker.registry; // images poussées avec docker push
     for (const [ref, img] of Object.entries(setup.registry || {})) this.rt.registry[ref] = img;
     this.rt.addNetwork("kind", "bridge", "10.244.0");
-    this.ns = "default";
+    this.ns = "default"; this.ingress = !!setup.ingress;
     for (const n of ["default", "kube-system", "kube-public", "kube-node-lease", ...(setup.namespaces || [])]) this.put({ apiVersion: "v1", kind: "Namespace", metadata: { name: n } }, true);
     this.put({ apiVersion: "v1", kind: "Node", metadata: { name: this.node.name, labels: { "kubernetes.io/hostname": this.node.name, "node-role.kubernetes.io/control-plane": "" } } }, true);
     this.put({ apiVersion: "v1", kind: "Service", metadata: { name: "kubernetes", namespace: "default" }, spec: { type: "ClusterIP", clusterIP: "10.96.0.1", ports: [{ name: "https", port: 443, targetPort: 6443, protocol: "TCP" }] } }, true);
