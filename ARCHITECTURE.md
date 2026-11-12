@@ -81,6 +81,16 @@ ES modules natifs, sans framework ni étape de build.
 
 `lib/shterm.js` affiche le terminal, le dossier courant et les services ; il exécute aussi les extraits de théorie et les tests des défis de scripts. Une commande non simulée le dit clairement.
 
+**Docker.** `lib/docker/` se branche sur le terminal Linux (`docker` et `hadolint` sont des commandes comme les autres ; `curl`, `cat` et l'éditeur de fichiers restent ceux du terminal) :
+
+- `catalog.js` : images de base avec leurs tailles réelles, tailles des paquets apt, apk, pip et npm ;
+- `dockerfile.js` : analyse du Dockerfile, règles de hadolint (codes et messages réels) et avertissements de BuildKit (`JSONArgsRecommended`, `SecretsUsedInArgOrEnv`…) ;
+- `engine.js` : construction avec cache de couches, contexte et `.dockerignore`, multi-étapes, conteneurs, ports publiés, réseaux et DNS, volumes et montages, politiques de redémarrage, registre ;
+- `compose.js` : Compose v2 (interpolation et `.env`, `depends_on` avec `service_healthy`, réseau et volumes du projet, `down -v`, validation du fichier) ;
+- `cli.js` : sorties au format de Docker 27 et critères déclaratifs (`images`, `containers`, `volumes`, `networks`, `pushed`, `http`, `dockerfile`).
+
+Le comportement d'une application (modules Python requis, routes, variables d'environnement, base de données) est décrit dans la mise en place du défi et rattaché au fichier source copié dans l'image. L'élève doit donc vraiment copier le bon fichier, installer les dépendances, écouter sur `0.0.0.0`, publier le bon port et mettre les conteneurs sur le même réseau.
+
 ### 4. Vérification d'un défi
 
 1. **Python.** Le code de l'élève est exécuté, suivi d'un marqueur puis du code de test caché. Seule la sortie produite après le marqueur est comparée à `expected`, après normalisation des espaces. On teste donc le comportement d'une fonction, et pas seulement ce qui est affiché.
@@ -125,6 +135,7 @@ La CI GitHub Actions lance cette validation à chaque push, puis publie `public/
 |--------|-------|--------------------|
 | Simulateur Git | `npm run test:unit` (node:test) | 16 scénarios : commits, .gitignore, diff, branches, fusions et conflits, rebase interrompu, reset, revert, stash, cherry-pick, tags, push rejeté puis pull |
 | Terminal Linux | `npm run test:unit` (node:test) | 11 tests : navigation et messages GNU, redirections et pipes, expansions, droits et sudo, services et journal, processus et cron, unités systemd, scripts, défis de scripts, options POSIX, configuration nginx, critères |
+| Simulateur Docker | `npm run test:unit` (node:test) | 12 tests : étapes et cache de construction, `.dockerignore`, erreurs de BuildKit, hadolint, multi-étapes et non root, ports et `127.0.0.1`, plantages, réseaux et DNS, volumes, redémarrage, montages, registre, Compose, droits, défi de type fichier |
 | Moteur des workflows | `npm run test:unit` (node:test) | 17 tests, dont un qui passe la vraie CI de Boucle au lint : erreurs YAML traduites, lint, expressions, filtres de branches et de chemins, simulation (PR, push, tag, échec en cascade, étape `if: failure()`), critères, numéros de ligne |
 | Contenu | `npm run validate` | Chaque extrait, chaque solution (doit passer) et chaque code de départ (doit échouer), avec CPython, g++ et JSCPP |
 | Bout en bout | `npm run test:e2e` (pytest + Playwright) | Accueil, pages principales sans erreur JS, chaque solution de défi dans le vrai navigateur, jeux de données, boucle infinie, NumPy + figure, terminal Git, défi et extrait YAML, absence de débordement sur mobile |

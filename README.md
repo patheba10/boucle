@@ -66,7 +66,7 @@ Une leçon est un objet dans `public/content/courses/<cours>.js` :
 - `lang` (facultatif) sur une leçon : remplace le langage du cours pour cette leçon.
 - `practice` (facultatif, leçons sans défi) : `{ title, body }`, panneau de pratique à droite.
 - Blocs `~~~git` : exécutés dans un dépôt simulé neuf ; une ligne préfixée par `!` doit échouer.
-  - Linux (`lang` vaut `"sh"`) : terminal avec `setup` (`{ files, services, procs, commands, cwd }` ; une commande préfixée par `#` tourne en root), `checks` (critères listés dans `evaluate` de `lib/shell/shell.js`) et `solution` (liste de commandes) ; ou script avec `kind: "script"`, `file`, `starter`, `solution` et `tests` (`{ args, stdin, out, outHas, code, checks }`).
+  - Linux (`lang` vaut `"sh"`) : terminal avec `setup` (`{ files, services, procs, commands, cwd }` ; une commande préfixée par `#` tourne en root), `checks` (critères listés dans `evaluate` de `lib/shell/shell.js`) et `solution` (liste de commandes) ; ou script avec `kind: "script"`, `file`, `starter`, `solution` et `tests` (`{ args, stdin, out, outHas, code, checks }`). Pour un fichier qui ne s'exécute pas (Dockerfile, `compose.yaml`), `run` donne la suite de commandes lancée à chaque test, `editorLang` la coloration (`docker`, `yaml`). Avec `setup.docker` (`{ images, apps }`), le terminal a Docker.
 - Blocs `~~~sh` : exécutés dans un terminal Linux neuf ; une commande préfixée par `!` doit échouer. Dans les fichiers du cours Linux, le gabarit `R` permet d'écrire `\${…}`.
 - Blocs `~~~yaml` : bouton « Analyser » (problèmes et simulation). Ils doivent passer le lint, sauf avec l'option `erreurs` (extrait volontairement faux). Dans les fichiers du cours CI/CD, le gabarit `Y` permet d'écrire `\${{ … }}`.
 

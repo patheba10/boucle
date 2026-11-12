@@ -180,8 +180,8 @@ function pageLesson(x) {
         '<button class="tb" type="button" data-act="hint">' + I.bulb + "Indice</button>" +
         '<button class="tb" type="button" data-act="sol">' + I.eye + "Solution</button>" +
         '<button class="tb" type="button" data-act="reset">' + I.reset + "Réinitialiser</button></div>" +
-        editorHTML("ed-" + l.id, lang, code) +
-        '<div class="ide-actions"><button class="btn sm primary" type="button" data-act="check">' + I.check + (lang === "sh" ? "Tester le script" : "Vérifier") + '</button><span class="kbd">' + (lang === "sh" ? "Le script est lancé avec plusieurs jeux d'arguments" : "Le pipeline se redessine pendant que tu écris") + "</span></div>" +
+        editorHTML("ed-" + l.id, ch.editorLang || lang, code) +
+        '<div class="ide-actions"><button class="btn sm primary" type="button" data-act="check">' + I.check + esc(ch.checkLabel || (lang === "sh" ? "Tester le script" : "Vérifier")) + '</button><span class="kbd">' + esc(ch.checkNote || (lang === "sh" ? "Le script est lancé avec plusieurs jeux d'arguments" : "Le pipeline se redessine pendant que tu écris")) + "</span></div>" +
         (lang === "yaml" ? '<div class="wf-live" aria-live="polite"></div>' : "") +
       "</div><div data-slot=\"hint\"></div><div data-slot=\"verdict\"></div></section>";
   } else if (ch) {
@@ -325,7 +325,7 @@ function bindScriptChallenge(x, L) {
   const slot = $('[data-slot="verdict"]');
   function doCheck() {
     const res = runScriptTests(ch, ed.get()); const ok = res.every(r => r.ok);
-    slot.innerHTML = critHTML(res.map(r => ({ ok: r.ok, label: r.label })), "Bravo, ton script passe tous les tests.") +
+    slot.innerHTML = critHTML(res.map(r => ({ ok: r.ok, label: r.label })), ch.okMsg || "Bravo, ton script passe tous les tests.") +
       res.filter(r => !r.ok).slice(0, 1).map(r => '<div class="hint-box"><b>Premier test qui échoue :</b> <code>' + esc(r.cmd) + "</code>" + (r.detail ? " (" + esc(r.detail) + ")" : "") + '<pre class="out">' + esc((r.got.out + r.got.err).trim() || "(rien affiché)") + "</pre>" + (r.expected !== undefined ? "Attendu :<pre class=\"out\">" + esc(r.expected.trim()) + "</pre>" : "") + "</div>").join("");
     if (ok && !L.ch) { L.ch = true; gain(Math.round(Math.round(l.xp * 0.6) * (L.sol ? 0.5 : 1)), L.sol ? "défi réussi (solution vue)" : "défi réussi"); refreshSteps(x); }
     else if (!ok) { L.fails = (L.fails || 0) + 1; save(); }

@@ -22,3 +22,4 @@
 
 - 11 nov. : branche `us-4.1/simulateur-docker` créée, conception ci-dessus.
 - 11 nov. (soir) : `catalog.js`, `dockerfile.js` (hadolint + vérifications BuildKit), `engine.js` (build avec cache, conteneurs, réseaux, volumes, registre, HTTP), `cli.js` (commande docker, hadolint, critères), `compose.js` écrits. Premier scénario OK : build, cache, run -p, curl, logs. À faire ensuite : tests unitaires (erreurs de build, réseau et DNS, volumes, Compose, registre), panneau latéral du terminal, validateur, puis PR #31.
+- 12 nov. (nuit) : 12 tests unitaires Docker, panneau des conteneurs dans le terminal, défis de type fichier (`run`, `editorLang`), coloration des Dockerfile, documentation. PR #31 ouverte. Ensuite : cours Docker et Compose (#32), branche `us-4b/docker`.

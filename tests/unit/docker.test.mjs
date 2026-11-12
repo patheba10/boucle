@@ -213,3 +213,12 @@ test("droits : sans le groupe docker, permission refusée", () => {
   assert.equal(run(sh, "docker ps").code, 0);
   assert.equal(createShell({}).run("docker ps").code, 127);
 });
+
+test("défi « fichier » : un Dockerfile testé par une suite de commandes", async () => {
+  const { runScriptTests } = await import("../../public/assets/js/lib/shterm.js");
+  const ch = { file: API + "/Dockerfile", run: ["docker build -t api:1.0 .", "docker run -d --name api -p 8080:8000 api:1.0", "curl -s localhost:8080/health"],
+    setup: { files: { [API + "/main.py"]: "x\n", [API + "/requirements.txt"]: "fastapi\nuvicorn\n" }, docker: { images: ["python:3.12-slim"], apps: { [API + "/main.py"]: { requires: ["fastapi"], routes: { "/health": [200, "ok"] } } } }, cwd: API },
+    tests: [{ outHas: "ok", checks: { containers: { api: { status: "running" } } } }] };
+  assert.equal(runScriptTests(ch, DF)[0].ok, true);
+  assert.equal(runScriptTests(ch, DF.replace('"--host", "0.0.0.0", ', ""))[0].ok, false);
+});
