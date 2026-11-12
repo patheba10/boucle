@@ -163,7 +163,7 @@ for (const c of COURSES) for (const l of c.lessons) {
       continue;
     }
     if (lang !== "py" && lang !== "cpp") continue; // terminal, powershell… : non exécutés
-    if (/norun/.test(opts)) continue;
+    if (/norun|\btf\b/.test(opts)) continue; // tf : vérifié par scripts/verifier_tf.mjs
     const stdin = ((/stdin:(.*)$/.exec(opts) || [])[1] || "").trim();
     if (lang === "py") {
       const r = runPy(code, stdin);

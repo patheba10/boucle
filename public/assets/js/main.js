@@ -51,9 +51,10 @@ function theoryHTML(src, lang, canRun) {
     if (parts[i].trim()) h += inl(parts[i]);
     if (i + 3 < parts.length) {
       const l = parts[i + 1], opts = parts[i + 2], code = parts[i + 3];
-      const runnable = canRun && (l === "py" || l === "cpp" || l === "git" || l === "yaml" || l === "sh" || l === "sql") && !/norun/.test(opts);
+      const runnable = canRun && (l === "py" || l === "cpp" || l === "git" || l === "yaml" || l === "sh" || l === "sql") && !/norun|\btf\b/.test(opts);
       const stdin = (/stdin:(.*)$/.exec(opts) || [])[1];
-      h += '<div class="snippet" data-lang="' + l + '"' + (stdin ? ' data-stdin="' + esc(stdin.trim()) + '"' : "") + '><div class="snippet-bar"><span class="lbl">' + (LANG_LABEL[l] || l) + (stdin ? " · entrée : " + esc(stdin.trim()) : "") + "</span>" +
+      const tfOnly = /\btf\b/.test(opts); // code TensorFlow : vérifié en CI avec le vrai TensorFlow, à exécuter sur sa machine ou dans Colab
+      h += '<div class="snippet" data-lang="' + l + '"' + (stdin ? ' data-stdin="' + esc(stdin.trim()) + '"' : "") + '><div class="snippet-bar"><span class="lbl">' + (LANG_LABEL[l] || l) + (tfOnly ? " · TensorFlow (sur ta machine ou dans Colab)" : "") + (stdin ? " · entrée : " + esc(stdin.trim()) : "") + "</span>" +
         (runnable ? '<button class="run" type="button">' + I.play + (l === "yaml" ? "Analyser" : "Exécuter") + "</button>" : "") + "</div><pre>" + highlight(code, l) + '</pre><textarea hidden>' + esc(code) + "</textarea></div>";
     }
   }

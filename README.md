@@ -54,7 +54,7 @@ scripts/validate.mjs           validation du contenu
 Une leçon est un objet dans `public/content/courses/<cours>.js` :
 
 - `id`, `title`, `xp`
-- `theory` : HTML. `@@code@@` donne du code en ligne. Un bloc `~~~py` ... `~~~` est exécutable. Options du bloc : `norun`, ou `stdin:…` pour fournir une entrée.
+- `theory` : HTML. `@@code@@` donne du code en ligne. Un bloc `~~~py` ... `~~~` est exécutable. Options du bloc : `norun`, `tf` (code qui demande le vrai TensorFlow, comme la conversion LiteRT : affiché sans bouton, ignoré par `npm run validate`, exécuté par `scripts/verifier_tf.mjs`), ou `stdin:…` pour fournir une entrée.
 - `section` (facultatif) : nom du chapitre affiché sur la page du cours
 - `setup` (facultatif) : panneau « Sur ta machine », même syntaxe que `theory`. Blocs `~~~ps` (PowerShell) et `~~~bash` affichés sans exécution
 - `quiz` : liste de `{ q, options, answer, explain }`

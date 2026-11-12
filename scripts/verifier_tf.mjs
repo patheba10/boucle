@@ -20,7 +20,7 @@ let n = 0, ko = 0;
 const fail = (id, msg) => { ko++; console.log("✗ " + id + " — " + msg); };
 for (const c of COURSES) for (const l of c.lessons) {
   for (const [, lang, opts, code] of (l.theory || "").matchAll(/~~~(\w+)([^\n]*)\n([\s\S]*?)\n~~~/g)) {
-    if (lang !== "py" || /norun/.test(opts) || !usesKeras(code)) continue;
+    if (lang !== "py" || /norun/.test(opts) || !(usesKeras(code) || /\btf\b/.test(opts))) continue;
     n++; const r = run(code); r.err ? fail(l.id, "extrait de théorie : " + r.err) : process.stdout.write(".");
   }
   const ch = l.challenge;

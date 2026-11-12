@@ -75,7 +75,7 @@ Ordre choisi avec Demba : DevOps, puis Cloud (AWS), puis le reste du socle entre
 
 1. Réseaux de neurones : neurones, activation, perte, descente de gradient (codés à la main avec NumPy pour comprendre). Fait au sprint 7.1 (#73) : cours « Deep learning », chapitres 1 et 2, 9 leçons.
 2. TensorFlow et Keras : modèles séquentiels, entraînement, callbacks, CNN, transfert d'apprentissage. Fait au sprint 7.2 (#74) : chapitre « Keras », 6 leçons, exécutées dans le navigateur par minikeras et vérifiées en CI avec le vrai TensorFlow.
-3. TensorFlow Lite : conversion, quantification, inférence sur téléphone et Raspberry Pi, TFLite Micro sur microcontrôleur.
+3. TensorFlow Lite : conversion, quantification, inférence sur téléphone et Raspberry Pi, TFLite Micro sur microcontrôleur. Fait au sprint 7.3 (#75) : chapitre « TensorFlow Lite », 5 leçons ; la quantification se code en NumPy dans le navigateur, la conversion et l'interpréteur LiteRT sont vérifiés en CI.
 
 TensorFlow ne tourne pas dans Pyodide : les exercices TensorFlow sont validés en CI avec le vrai TensorFlow, et chaque leçon s'ouvre aussi dans Google Colab.
 
