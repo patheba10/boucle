@@ -1,4 +1,6 @@
 """Tests de bout en bout : les parcours essentiels d'un élève, dans un vrai navigateur."""
+import re
+
 import pytest
 from playwright.sync_api import expect
 
@@ -44,9 +46,35 @@ def test_accueil(page):
 
 
 def test_pages_principales_sans_erreur(page):
-    for route in ["python", "data", "git", "cicd", "cpp", "roadmaps", "devops", "installer", "atelier", "py-01", "np-01", "git-01", "git-12", "ci-01", "ci-20", "ci-22", "linux", "lx-01", "lx-10", "lx-14", "lx-19", "lx-21", "docker", "dk-01", "dk-06", "dk-09", "dk-11", "dk-12", "kubernetes", "k8s-01", "k8s-05", "k8s-07", "k8s-12", "exploitation", "ex-02", "ex-06", "ex-10", "ex-11", "terraform", "tf-02", "tf-05", "tf-08", "tf-11", "aws", "aws-02", "aws-04", "aws-08", "aws-12", "cpp-10"]:
+    for route in ["python", "data", "git", "cicd", "cpp", "roadmaps", "devops", "installer", "atelier", "py-01", "np-01", "git-01", "git-12", "ci-01", "ci-20", "ci-22", "linux", "lx-01", "lx-10", "lx-14", "lx-19", "lx-21", "docker", "dk-01", "dk-06", "dk-09", "dk-11", "dk-12", "kubernetes", "k8s-01", "k8s-05", "k8s-07", "k8s-12", "exploitation", "ex-02", "ex-06", "ex-10", "ex-11", "terraform", "tf-02", "tf-05", "tf-08", "tf-11", "aws", "aws-02", "aws-04", "aws-08", "aws-12", "certifs", "cert-clf", "cert-saa", "cpp-10"]:
         page.goto(page.base + "#" + route)
         expect(page.locator("#app")).not_to_be_empty()
+    assert page.errors == []
+
+
+def test_examen_blanc_court(page):
+    """Entraînement par domaine, puis examen blanc court : réponses, marque, fin, résultat par domaine."""
+    page.goto(page.base + "#cert-clf")
+    page.click("[data-practice=facturation]")
+    page.locator(".opt").first.click()
+    expect(page.locator(".explain")).to_be_visible()
+    page.goto(page.base + "#home")
+    page.goto(page.base + "#cert-clf")
+    page.click("[data-exam='20']")
+    expect(page.locator("[data-timer]")).to_have_text(re.compile(r"^\d\d:\d\d$"))
+    for i in range(20):
+        page.locator(".opt").first.click()
+        if i < 19:
+            page.click("[data-next]")
+    page.click("[data-flag]")
+    expect(page.locator(".exam-grid .cell.flag")).to_have_count(1)
+    page.click("[data-finish]")
+    page.click("[data-yes]")
+    expect(page.locator(".exam-res h2")).to_contain_text("/ 1000")
+    assert page.locator(".exam-res .cert-dom").count() == 4
+    page.goto(page.base + "#home")
+    page.goto(page.base + "#cert-clf")
+    expect(page.locator(".cert-hist li")).to_have_count(1)
     assert page.errors == []
 
 

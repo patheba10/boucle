@@ -66,6 +66,7 @@ export function lintCert(cert) {
     if (ids.has(q.id)) w("identifiant en double"); ids.add(q.id);
     if (!doms.has(q.d)) w("domaine inconnu " + q.d);
     if (!q.q || !q.explain) w("énoncé ou explication manquant");
+    if (/\b(première|deuxième|troisième|dernière) (option|réponse)\b|\b(option|réponse) [A-E]\b/i.test(q.explain || "")) w("l'explication cite une position d'option, or les options sont mélangées");
     if (!Array.isArray(q.options) || q.options.length < 4) w("il faut au moins 4 options");
     if (new Set(q.options).size !== q.options.length) w("options en double");
     const a = answers(q);
