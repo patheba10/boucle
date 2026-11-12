@@ -24,3 +24,4 @@
 - 12 nov. : `lib/terraform/terraform.js` écrit et branché (init, validate, fmt, plan, apply, destroy, output, state, import, force-unlock, backend s3 avec verrou, dérive). Premier scénario OK : VPC + sous-réseaux avec count, apply, plan vide, destroy dans l'ordre. Prochaine étape : tests unitaires `tests/unit/terraform.test.mjs`, puis PR #52.
 - 12 nov. : 5 tests unitaires Terraform verts (73 en tout), documentation. PR #52 ensuite, puis le cours Terraform (#53).
 - 12 nov. : PR #57 (Terraform simulé) fusionnée. Branche `us-5a/cours-terraform` pour le cours (#53). Critères `tf` : remote, fmt, valid ajoutés.
+- 12 nov. : chapitres 1 et 2 du cours Terraform validés (tf-01 à tf-07). Reste : tf-08 état distant, tf-09 import et dérive, tf-10 équipe et CI, tf-11 entretien ; puis e2e, docs, PR, release 0.14.0.
