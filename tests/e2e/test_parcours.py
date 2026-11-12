@@ -44,7 +44,7 @@ def test_accueil(page):
 
 
 def test_pages_principales_sans_erreur(page):
-    for route in ["python", "data", "git", "cicd", "cpp", "roadmaps", "devops", "installer", "atelier", "py-01", "np-01", "git-01", "git-12", "ci-01", "ci-20", "ci-22", "cpp-10"]:
+    for route in ["python", "data", "git", "cicd", "cpp", "roadmaps", "devops", "installer", "atelier", "py-01", "np-01", "git-01", "git-12", "ci-01", "ci-20", "ci-22", "linux", "lx-01", "lx-10", "cpp-10"]:
         page.goto(page.base + "#" + route)
         expect(page.locator("#app")).not_to_be_empty()
     assert page.errors == []
@@ -108,14 +108,15 @@ def test_parite_navigateur_toutes_les_solutions(page):
     page.goto(page.base)
     lessons = page.evaluate("""import('./content/index.js').then(m => m.COURSES.flatMap(c =>
         c.lessons.filter(l => l.challenge).map(l => ({ id: l.id, course: c.id, lang: l.lang || c.lang,
-            solution: (l.lang || c.lang) === "git" ? l.challenge.solution : null }))))""")
+            term: (l.lang || c.lang) === "git" || ((l.lang || c.lang) === "sh" && l.challenge.kind !== "script"),
+            solution: Array.isArray(l.challenge.solution) ? l.challenge.solution : null }))))""")
     if OFFLINE:
         lessons = [l for l in lessons if l["course"] != "data"]
     assert lessons, "aucun défi trouvé"
     echecs = []
     for lesson in lessons:
         page.goto(page.base + "#" + lesson["id"])
-        if lesson["lang"] == "git":
+        if lesson["term"]:
             for cmd in lesson["solution"]:
                 page.fill(".gterm-in", cmd)
                 page.press(".gterm-in", "Enter")
@@ -196,3 +197,26 @@ def test_extrait_yaml_analyse(page):
     expect(res).to_contain_text("Aucune erreur de structure")
     res.locator(".wf-tabs button", has_text="un push sur feature").click()
     expect(res).to_contain_text("ne démarre pas")
+
+
+def test_terminal_linux(page):
+    """Terminal Linux : messages GNU, droits, commandes sur plusieurs lignes, verdict."""
+    page.goto(page.base + "#lx-05")
+    term = page.locator(".gterm-in")
+    for cmd in ["cd ~/deploiement", "./deploy.sh", "chmod 700 deploy.sh", "./deploy.sh"]:
+        term.fill(cmd)
+        term.press("Enter")
+    out = page.locator(".gterm-out")
+    expect(out).to_contain_text("bash: ./deploy.sh: Permission denied")
+    expect(out).to_contain_text("deploiement")
+    expect(page.locator(".sh-cwd")).to_have_text("/home/eleve/deploiement")
+    expect(page.locator(".sh-ls")).to_contain_text("-rwx------")
+    # Une boucle tapée sur plusieurs lignes, comme dans bash (invite « > »)
+    for line in ["for f in a b; do", "echo fichier-$f", "done"]:
+        term.fill(line)
+        term.press("Enter")
+    expect(out).to_contain_text("fichier-b")
+    page.click('[data-act="check"]')
+    expect(page.locator('[data-slot="verdict"] .verdict.no')).to_be_visible()
+    expect(page.locator('[data-slot="verdict"] .crit li.ok', has_text="deploy.sh a les droits 700")).to_have_count(1)
+    expect(page.locator('[data-slot="verdict"] .crit li.no')).to_have_count(3)
