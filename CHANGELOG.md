@@ -4,6 +4,13 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.34.0] — 2026-11-12
+
+Sprint 11.2 : révision espacée.
+
+### Ajouté
+- **Révisions** : une question de quiz ratée revient après 1, 3 puis 7 jours, et quitte la liste après trois bonnes réponses de suite ; carte sur l'accueil et page dédiée (#116).
+
 ## [0.33.0] — 2026-11-12
 
 Sprint 11.1 : navigation.
