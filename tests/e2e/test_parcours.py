@@ -228,7 +228,8 @@ def test_parite_navigateur_toutes_les_solutions(page):
     lessons = page.evaluate("""import('./content/index.js').then(m => m.COURSES.flatMap(c =>
         c.lessons.filter(l => l.challenge).map(l => ({ id: l.id, course: c.id, lang: l.lang || c.lang,
             term: (l.lang || c.lang) === "git" || ((l.lang || c.lang) === "sh" && l.challenge.kind !== "script"),
-            solution: Array.isArray(l.challenge.solution) ? l.challenge.solution : null }))))""")
+            solution: Array.isArray(l.challenge.solution) ? l.challenge.solution : null,
+            defis: (l.defis || []).length }))))""")
     if OFFLINE:
         lessons = [l for l in lessons if l["course"] not in ("data", "sql", "api", "dl", "embarque")]  # paquets numpy, sqlite3, fastapi, pycparser… du CDN
     assert lessons, "aucun défi trouvé"
@@ -251,6 +252,18 @@ def test_parite_navigateur_toutes_les_solutions(page):
             continue
         if "ok" not in (verdict.get_attribute("class") or ""):
             echecs.append(lesson["id"] + " : " + page.locator(".console").inner_text()[:200])
+        for k in range(1, lesson["defis"] + 1):  # défis gradués, un onglet chacun
+            page.click(f'[data-defi="{k}"]')
+            page.click('[data-act="sol"]')
+            page.click('[data-act="sol"]')
+            page.click('[data-act="check"]')
+            try:
+                verdict.wait_for(timeout=PY_TIMEOUT)
+            except Exception:
+                echecs.append(f"{lesson['id']} défi {k} : aucun verdict affiché")
+                continue
+            if "ok" not in (verdict.get_attribute("class") or ""):
+                echecs.append(f"{lesson['id']} défi {k} : " + page.locator(".console").inner_text()[:200])
     assert not echecs, "Solutions refusées dans le navigateur :\n" + "\n".join(echecs)
 
 
@@ -414,4 +427,28 @@ def test_exercices_courts(page):
     expect(page.locator("[data-ex-chip]")).to_contain_text("Réussis")
     page.reload()
     expect(page.locator("#exercices .ex.fait")).to_have_count(3)
+    assert page.errors == []
+
+
+def test_defis_gradues(page):
+    """Un défi gradué a son onglet, son code et sa progression, séparés du défi principal."""
+    page.goto(page.base + "#al-13")
+    onglets = page.locator("[data-defi]")
+    expect(onglets).to_have_count(2)
+    expect(onglets.nth(0)).to_have_attribute("aria-selected", "true")
+    onglets.nth(1).click()
+    expect(page.locator("#defi h2")).to_contain_text("Entretien")
+    page.click('[data-act="check"]')  # le code de départ (min) fait trop de lectures
+    expect(page.locator(".verdict.no")).to_be_visible(timeout=PY_TIMEOUT)
+    page.click('[data-act="sol"]')
+    page.click('[data-act="sol"]')
+    page.click('[data-act="check"]')
+    expect(page.locator(".verdict.ok")).to_be_visible(timeout=PY_TIMEOUT)
+    expect(page.locator('[data-defi="1"]')).to_have_class(re.compile("fait"))
+    expect(page.locator("#xp")).to_have_text("15 XP")
+    page.locator('[data-defi="0"]').click()
+    expect(page.locator("#defi h2")).to_have_text("Défi")
+    expect(page.locator('[data-defi="0"]')).not_to_have_class(re.compile("fait"))
+    page.reload()
+    expect(page.locator('[data-defi="1"]')).to_have_class(re.compile("fait"))
     assert page.errors == []

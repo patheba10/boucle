@@ -20,6 +20,7 @@ import { lintCert, buildExam, grade } from "../public/assets/js/lib/exam.js";
 import { sqlRunProgram, sqlCheckProgram, parseSqlCheck } from "../public/assets/js/lib/sql.js";
 import { cProgram } from "../public/assets/js/lib/engines.js";
 import { trous, codeComplet, codeOrdre, verifierOrdre, melange } from "../public/assets/js/lib/exercices.js";
+import { NIVEAUX, LANGS_DEFIS } from "../public/assets/js/lib/defis.js";
 import { runScript, evaluate as evaluateGit } from "../public/assets/js/lib/gitsim.js";
 import { lint as lintWorkflow, evaluate as evaluateWorkflow } from "../public/assets/js/lib/workflow.js";
 import { createShell, evaluate as evaluateShell } from "../public/assets/js/lib/shell/shell.js";
@@ -151,6 +152,38 @@ function verifierExercices(c, l) {
   });
 }
 
+/* ---------- Défis gradués (lib/defis.js) ---------- */
+// Même exigence que le défi principal : la solution passe, le code de départ échoue.
+function verifierDefisGradues(c, l) {
+  const defis = l.defis || [], lang = l.lang || c.lang, vus = new Set();
+  if (defis.length && !l.challenge) return fail(l.id, "défis gradués sans défi principal");
+  for (const d of defis) {
+    const ou = l.id + " défi " + d.niveau;
+    if (!NIVEAUX[d.niveau]) { fail(l.id, "niveau de défi inconnu : " + d.niveau); continue; }
+    if (vus.has(d.niveau)) { fail(ou, "un seul défi par niveau"); continue; }
+    vus.add(d.niveau);
+    if (!LANGS_DEFIS.includes(lang)) { fail(ou, "langage sans défis gradués : " + lang); continue; }
+    const manque = ["prompt", "starter", "solution", "expected"].filter((k) => d[k] == null).concat(d.hint || (d.hints || []).length ? [] : ["hint"]);
+    if (manque.length) { fail(ou, "champ manquant : " + manque.join(", ")); continue; }
+    if (lang === "py") {
+      const s = pyCheck(d, d.solution); s.pass ? ok() : fail(ou, "la solution échoue : " + (s.err || JSON.stringify(s.got)));
+      pyCheck(d, d.starter).pass ? fail(ou, "le code de départ passe déjà les tests") : ok();
+    } else if (lang === "c") {
+      for (const [name, runner] of [["gcc", runGcc], ["navigateur", runMinic]]) { const s = cCheck(d, d.solution, runner); s.pass ? ok() : fail(ou, "solution (" + name + ") échoue : " + (s.err || JSON.stringify(s.got))); }
+      cCheck(d, d.starter, runMinic).pass ? fail(ou, "le code de départ passe déjà les tests") : ok();
+    } else if (lang === "cpp") {
+      for (const [name, runner] of [["g++", runGpp], ["navigateur", runJscpp]]) { const s = cppCheck(d, d.solution, runner); s.pass ? ok() : fail(ou, "solution (" + name + ") échoue : " + (s.err || JSON.stringify(s.got))); }
+      cppCheck(d, d.starter, runJscpp).pass ? fail(ou, "le code de départ passe déjà les tests") : ok();
+    } else {
+      const db = d.db || l.db || c.db || "";
+      const sol = runPy(sqlCheckProgram(d, db, d.solution)); const vs = parseSqlCheck(sol.out).verdict;
+      sol.err || !vs || !vs.ok ? fail(ou, "la solution SQL échoue : " + (sol.err || (vs ? vs.note : sol.out.slice(-200)))) : ok();
+      const st = runPy(sqlCheckProgram(d, db, d.starter)); const vt = parseSqlCheck(st.out).verdict;
+      !st.err && vt && vt.ok ? fail(ou, "le code de départ SQL passe déjà") : ok();
+    }
+  }
+}
+
 /* ---------- Structure ---------- */
 const ids = new Set();
 const routes = new Set(["home", "roadmaps", "atelier", "installer", "projets", "certifs", "cours", "revision"]);
@@ -265,6 +298,7 @@ for (const c of COURSES) for (const l of c.lessons) {
     }
   }
   verifierExercices(c, l);
+  verifierDefisGradues(c, l);
   const ch = l.challenge;
   if (!ch) continue;
   const clang = l.lang || c.lang;
