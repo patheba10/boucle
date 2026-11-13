@@ -39,8 +39,8 @@ Priorités : **P0** bloquant pour l'objectif, **P1** fort impact, **P2** confort
 | 18 | Éditeur minimal : pas d'autocomplétion, pas de touche Tab sur mobile. Évaluer CodeMirror 6, ou ajouter une barre de symboles sur mobile. | P2 | À faire |
 | 19 | Pas de mode hors-ligne. En faire une PWA (manifest + service worker). | P2 | **Fait** (0.41.0) : site installable, mis en cache à l'installation ; Python et C++ hors ligne après une première utilisation |
 | 20 | Pas de tests de l'interface. Ajouter des tests Playwright en CI. | P2 | **Fait** (sprint 2.1) : 10 tests e2e |
-| 21 | En-têtes de sécurité de base seulement. Ajouter une Content-Security-Policy. | P2 | À faire |
-| 22 | Le C++ tourne sur le fil principal (par tranches, donc l'interface reste réactive, mais pas isolée). | P3 | À faire |
+| 21 | En-têtes de sécurité de base seulement. Ajouter une Content-Security-Policy. | P2 | **Fait** (0.42.0) : script-src 'self' sans inline ni eval, en balise meta et en en-tête Vercel avec frame-ancestors et HSTS ; e2e en échec sur toute violation |
+| 22 | Le C++ tourne sur le fil principal (par tranches, donc l'interface reste réactive, mais pas isolée). | P3 | **Fait** (0.42.0) : JSCPP dans un Web Worker, arrêté s'il ne répond plus |
 | 23 | Aucune mesure d'usage. Vercel Web Analytics suffirait. | P3 | À faire |
 | 24 | `npm run validate` relance un interpréteur Python par exécution : environ 1 min depuis scikit-learn. Garder un interpréteur vivant (serveur JSON en stdin/stdout) diviserait ce temps par 10. | P3 | À faire |
 | 25 | Le job e2e installe les dépendances de Chromium via apt : une panne des miroirs Ubuntu fait échouer la CI sans rapport avec le code (vu au sprint 3.1). Utiliser le Chrome déjà présent sur le runner (`CHROME_PATH`) ou mettre le navigateur en cache. | P2 | **Fait** (sprint 3.1) : le job e2e utilise Google Chrome du runner |

@@ -4,7 +4,7 @@
 
 | Story | Points | Statut |
 |-------|--------|--------|
-| #140 C-2 Content-Security-Policy | 5 | En cours |
+| #140 C-2 Content-Security-Policy | 5 | Terminé |
 
 ## Conception
 
@@ -18,3 +18,18 @@
 
 - 13 nov. : worker C++ (`workers/cpp-worker.js`), `runCpp` réécrit autour de lui ; politique dans `index.html` et `vercel.json` ; écoute des violations dans les tests ; tests de la politique et de la boucle infinie C++.
 - 13 nov. : un premier test vérifiait qu'`eval` était bloqué, mais `page.evaluate` de Playwright n'est pas soumis à la politique de la page. Remplacé par l'injection d'un script inline, le vrai scénario d'un XSS.
+- 13 nov. : PR #144, les trois jobs verts (dont la parité navigateur : toutes les solutions C++ passent dans le worker). Fusionnée ; version 0.42.0.
+
+## Revue de sprint
+
+| Story | Points | Livré |
+|-------|--------|-------|
+| #140 Content-Security-Policy (et AUDIT #22) | 5 | Oui (PR #144) |
+
+## Rétrospective
+
+**Ce qui a marché.** Inventorier ce que la page charge avant d'écrire la politique : le seul blocage (eval dans JSCPP) est apparu tout de suite, et la solution a réglé un deuxième point de l'audit.
+
+**Ce qui a coincé.** Un outil de test peut contourner ce qu'on teste (`page.evaluate` ignore la CSP). Tester le scénario réel, pas un raccourci.
+
+**À essayer.** Les deux leçons DevOps reprennent ces deux sprints comme cas concret.
