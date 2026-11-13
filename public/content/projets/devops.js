@@ -75,5 +75,40 @@ export default [
     extensions: ["Automatiser une partie de la remédiation (redémarrage, bascule) et en mesurer l'effet.", "Ajouter le traçage distribué avec OpenTelemetry."],
     lecons: ["ex-02", "ex-06", "ex-10", "ex-11"],
     liens: [["Google SRE Book", "https://sre.google/sre-book/table-of-contents/"], ["k6", "https://grafana.com/docs/k6/latest/"]]
+  },
+  {
+    id: "pj-site-durci", roadmap: "devops", titre: "Site statique installable, hors ligne et durci", niveau: "Intermédiaire", duree: "2 à 3 semaines",
+    resume: "Prendre un site statique (portfolio, documentation) et le rendre installable, utilisable sans réseau et protégé par des en-têtes de sécurité stricts, le tout vérifié par la CI.",
+    technos: ["Service worker", "Web App Manifest", "Content-Security-Policy", "HSTS", "GitHub Actions", "Playwright", "Lighthouse"],
+    contexte: `<p>Ton portfolio sera ouvert par des recruteurs, parfois dans le métro, parfois par un outil d'audit de sécurité. Le projet reprend ce qui a été fait sur Boucle lui-même (versions 0.41 et 0.42) : un site qui s'installe, s'ouvre hors ligne et reçoit la meilleure note aux audits d'en-têtes, sans casser au déploiement suivant. Ce qui compte : chaque garantie est vérifiée par un test en CI, pas seulement constatée à la main.</p>`,
+    exigences: [
+      "Un manifeste complet (nom, icônes 192 et 512 dont une maskable, couleurs, affichage autonome) : Lighthouse ne signale aucun problème d'installabilité.",
+      "Un service worker : précache de tout le site à l'installation, réseau d'abord pour les pages, cache d'abord pour les fichiers versionnés, suppression des anciens caches à l'activation.",
+      "La liste de précache et sa version (empreinte du contenu) générées par un script ; la CI échoue si elles sont périmées.",
+      "Une Content-Security-Policy sans 'unsafe-inline' ni 'unsafe-eval' pour les scripts, introduite d'abord en Report-Only, avec frame-ancestors en en-tête.",
+      "HSTS d'au moins 180 jours, X-Content-Type-Options, Referrer-Policy et Permissions-Policy, servis par l'hébergeur (Vercel, Netlify, Cloudflare ou nginx).",
+      "Des tests Playwright en CI : site ouvert réseau coupé, aucune violation de CSP dans la console, un script inline injecté qui ne s'exécute pas."
+    ],
+    architecture: `dépôt ──push──▶ GitHub Actions ─┬─ script de précache (--check)
+                                ├─ tests Playwright : hors ligne, CSP
+                                └─ déploiement ──▶ hébergeur
+                                                      │ en-têtes : CSP, HSTS, nosniff…
+navigateur ◀────────────────────────────────────────────┘
+   └─ service worker : précache │ réseau d'abord (pages) │ cache d'abord (versionné)`,
+    jalons: [
+      { id: "installable", titre: "Installable", livrables: ["Manifeste et icônes, lien dans la page", "Rapport Lighthouse sans problème d'installabilité"] },
+      { id: "hors-ligne", titre: "Hors ligne", livrables: ["Service worker avec ses trois stratégies, script de précache vérifié en CI", "Test Playwright réseau coupé"] },
+      { id: "csp", titre: "Content-Security-Policy", livrables: ["Inventaire des ressources chargées, politique en Report-Only, violations corrigées", "Politique appliquée, test d'un script inline bloqué"] },
+      { id: "entetes", titre: "En-têtes et audit", livrables: ["En-têtes configurés chez l'hébergeur, vérifiés avec curl -I", "Note A ou mieux sur securityheaders.com et Mozilla Observatory, captures dans le README"] }
+    ],
+    criteres: [
+      "Le site s'ouvre réseau coupé, y compris une page jamais visitée, et un correctif publié arrive au visiteur dès sa visite suivante en ligne.",
+      "La CI échoue si un fichier change sans que la liste de précache soit régénérée.",
+      "Aucune violation de CSP dans la console sur l'ensemble des pages (test automatisé).",
+      "securityheaders.com et Mozilla Observatory donnent A ou mieux ; le README explique chaque en-tête et chaque exception gardée."
+    ],
+    extensions: ["Signaler les violations de CSP vers un point de collecte (report-to).", "Un bandeau « nouvelle version disponible » piloté par le service worker.", "Remplacer les styles inline par des classes pour retirer 'unsafe-inline' de style-src."],
+    lecons: ["ci-23", "ci-24", "ci-07", "ci-16"],
+    liens: [["web.dev : PWA", "https://web.dev/learn/pwa/"], ["MDN : Content-Security-Policy", "https://developer.mozilla.org/fr/docs/Web/HTTP/Headers/Content-Security-Policy"], ["Mozilla Observatory", "https://developer.mozilla.org/en-US/observatory"]]
   }
 ];

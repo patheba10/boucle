@@ -3,5 +3,6 @@ import py from "./py.js";
 import algo from "./algo.js";
 import sql from "./sql.js";
 import embarque from "./embarque.js";
+import devops from "./devops.js";
 
-export const DEFIS = { ...py, ...algo, ...sql, ...embarque };
+export const DEFIS = { ...py, ...algo, ...sql, ...embarque, ...devops };
