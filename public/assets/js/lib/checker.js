@@ -100,7 +100,9 @@ export function consoleHTML(r, lang, userLines) {
     const e = explainErr(lang, r.err, r.line, userLines);
     h += (h && !h.endsWith("\n") ? "\n" : "") + '<span class="err">' + esc(e.msg) + "</span>" + (e.tip ? '\n<span class="dim">→ ' + esc(e.tip) + "</span>" : "");
   }
-  for (const f of r.figs || []) h += '<img class="fig" alt="Figure produite par le programme" src="data:image/png;base64,' + f + '">';
+  // Une figure est une image PNG en base64 produite par le worker : tout autre texte est ignoré (le programme de
+  // l'élève tourne dans le même interpréteur et pourrait glisser autre chose dans la liste).
+  for (const f of (r.figs || []).filter((x) => typeof x === "string" && /^[A-Za-z0-9+/]+=*$/.test(x))) h += '<img class="fig" alt="Figure produite par le programme" src="data:image/png;base64,' + f + '">';
   if (!r.out && !r.err && !(r.figs && r.figs.length)) h += '<span class="dim">(aucune sortie)</span>';
   return h;
 }

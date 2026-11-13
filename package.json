@@ -9,13 +9,14 @@
     "validate": "node scripts/validate.mjs",
     "test:e2e": "python3 -m pytest -q tests/e2e",
     "precache": "node scripts/precache.mjs",
+    "audit": "node scripts/audit.mjs",
     "test:unit": "node --test 'tests/unit/**/*.test.mjs'"
   },
   "engines": {
     "node": ">=20"
   },
   "devDependencies": {
-    "js-yaml": "^4.1.0",
+    "js-yaml": "4.3.2",
     "JSCPP": "2.0.6"
   }
 }

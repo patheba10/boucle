@@ -1,4 +1,4 @@
-# Dependabot propose une PR quand une action utilisée par la CI publie une nouvelle version.
+# Dependabot propose une PR quand une dépendance publie une nouvelle version.
 # Les actions sont épinglées sur un SHA : Dependabot met à jour le SHA et le commentaire de version.
 version: 2
 updates:
@@ -11,3 +11,23 @@ updates:
         patterns: ["*"]
     commit-message:
       prefix: ci
+
+  # js-yaml et JSCPP. Une mise à jour de JSCPP doit aussi recopier public/assets/vendor/ :
+  # tests/unit/vendor.test.mjs échoue tant que ce n'est pas fait.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: deps
+
+  # Seuls les outils de test : les bibliothèques de requirements.txt suivent les versions de Pyodide
+  # et se mettent à jour avec lui (voir SECURITY.md).
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: monthly
+    allow:
+      - dependency-name: playwright
+    commit-message:
+      prefix: deps

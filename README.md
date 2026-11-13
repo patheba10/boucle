@@ -21,6 +21,7 @@ python -m playwright install chromium
 npm run test:e2e            # parcours élève dans un vrai navigateur
 npm run test:unit           # simulateurs Git et Linux, moteur des workflows
 npm run precache            # après toute modification de public/ : liste du service worker (hors ligne)
+npm run audit               # failles connues des dépendances npm et Python (pip-audit requis)
 ```
 
 ## Valider le contenu
@@ -94,7 +95,7 @@ Un nouveau cours se déclare avec `route` (son adresse, ex. `data`) et `badge` (
 ## Moteurs d'exécution
 
 - Python : [Pyodide](https://pyodide.org) 0.29.5, chargé depuis jsDelivr. Les paquets (numpy, pandas, scikit-learn, matplotlib…) se chargent à la demande selon les `import`.
-- C++ : [JSCPP](https://github.com/felixhao28/JSCPP) 2.0.6, un interpréteur pédagogique (iostream, types de base, fonctions, tableaux, pointeurs).
+- C++ : [JSCPP](https://github.com/felixhao28/JSCPP) 2.0.6 (servi par le site, dans un Web Worker), un interpréteur pédagogique (iostream, types de base, fonctions, tableaux, pointeurs).
 - Git : simulateur maison (`lib/gitsim.js`).
 - GitHub Actions : moteur maison (`lib/workflow.js`) qui lit le YAML avec [js-yaml](https://github.com/nodeca/js-yaml) 4.1.0 (copié dans `assets/js/vendor/`, licence MIT), signale les erreurs et simule les événements.
 

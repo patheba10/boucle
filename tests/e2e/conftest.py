@@ -3,7 +3,6 @@
 Variables d'environnement facultatives (utiles hors CI, sans accès au CDN) :
 - CHROME_PATH            navigateur Chrome/Chromium à utiliser au lieu de celui de Playwright
 - BOUCLE_PYODIDE_DIR     copie locale de Pyodide (paquet npm « pyodide ») servie à la place du CDN
-- BOUCLE_JSCPP_FILE      copie locale de JSCPP.es5.min.js servie à la place du CDN
 Sans ces variables, les tests utilisent les vrais CDN, comme en production.
 """
 import functools
@@ -17,7 +16,6 @@ from playwright.sync_api import sync_playwright
 
 PUBLIC = Path(__file__).resolve().parents[2] / "public"
 PYODIDE_DIR = os.environ.get("BOUCLE_PYODIDE_DIR")
-JSCPP_FILE = os.environ.get("BOUCLE_JSCPP_FILE")
 OFFLINE = bool(PYODIDE_DIR)
 
 CONTENT_TYPES = {"wasm": "application/wasm", "js": "text/javascript", "json": "application/json", "zip": "application/zip"}
@@ -64,8 +62,6 @@ def _contexte(browser, service_workers="block"):
     context.route("**/fonts.g*/**", lambda r: r.abort())
     if PYODIDE_DIR:
         context.route("https://cdn.jsdelivr.net/pyodide/**", _serve_pyodide)
-    if JSCPP_FILE:
-        context.route("https://cdn.jsdelivr.net/npm/JSCPP**", lambda r: r.fulfill(path=JSCPP_FILE, headers={"content-type": "text/javascript"}))
     return context
 
 
