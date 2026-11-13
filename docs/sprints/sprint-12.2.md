@@ -4,7 +4,7 @@
 
 | Story | Points | Statut |
 |-------|--------|--------|
-| #128 B-2 Exercices dans les cours | 5 | En cours |
+| #128 B-2 Exercices dans les cours | 5 | Terminé |
 
 ## Conception
 
@@ -18,3 +18,20 @@
 - 12 nov. : 94 exercices sur 46 leçons (13 Python, 18 Algorithmique, 15 C embarqué). Chaque réponse est vérifiée par exécution ; aucune prédiction écrite à la main n'était fausse.
 - 12 nov. : le délimiteur de trou `[[ ]]` créait de faux trous dans du Python valide (`[[] for _ in range(n)]`, listes de listes). Remplacé par `⟦ ⟧`, qui n'apparaît dans aucun langage du site ; test unitaire ajouté.
 - 12 nov. : sur téléphone, l'indentation des lignes à ordonner est réduite de moitié pour que le code reste lisible.
+- 12 nov. : PR #132, les trois jobs verts. Fusionnée ; version 0.38.0.
+
+## Revue de sprint
+
+| Story | Points | Livré |
+|-------|--------|-------|
+| #128 Exercices dans les cours | 5 | Oui (PR #132) |
+
+Vélocité : 5 points sur 5. Version 0.38.0. 1 212 vérifications, 114 tests unitaires.
+
+## Rétrospective
+
+**Ce qui a marché.** Écrire la réponse attendue avant d'exécuter : la validation sert de relecture, et elle a confirmé les 94 prédictions.
+
+**Ce qui a coincé.** Un format de trou choisi pour être facile à taper entrait en collision avec du code ordinaire. Il faut tester un format sur de vrais exemples avant de le figer.
+
+**À essayer.** Défis gradués (B-3) : plusieurs défis par leçon, du plus simple au niveau entretien.
