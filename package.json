@@ -8,6 +8,7 @@
     "dev": "python3 -m http.server 5173 --directory public",
     "validate": "node scripts/validate.mjs",
     "test:e2e": "python3 -m pytest -q tests/e2e",
+    "precache": "node scripts/precache.mjs",
     "test:unit": "node --test 'tests/unit/**/*.test.mjs'"
   },
   "engines": {

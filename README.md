@@ -20,6 +20,7 @@ pip install -r requirements.txt -r requirements-dev.txt
 python -m playwright install chromium
 npm run test:e2e            # parcours élève dans un vrai navigateur
 npm run test:unit           # simulateurs Git et Linux, moteur des workflows
+npm run precache            # après toute modification de public/ : liste du service worker (hors ligne)
 ```
 
 ## Valider le contenu
