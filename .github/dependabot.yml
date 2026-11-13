@@ -18,6 +18,12 @@ updates:
     directory: /
     schedule:
       interval: monthly
+    ignore:
+      # 2.0.7 et suivantes n'ont plus de version navigateur (dist/) : le site reste sur 2.0.6 (voir SECURITY.md).
+      - dependency-name: JSCPP
+      # js-yaml 5 est une réécriture complète : mise à jour majeure à planifier à part, avec les tests YAML.
+      - dependency-name: js-yaml
+        update-types: ["version-update:semver-major"]
     commit-message:
       prefix: deps
 
