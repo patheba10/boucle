@@ -68,6 +68,26 @@ jobs:
       - name: npm audit et pip-audit (exceptions justifiées dans scripts/audit.mjs)
         run: npm run audit
 
+  base-de-donnees:
+    name: Base de données (Supabase, RLS)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: supabase/setup-cli@689adcfb80d947100a1eab127289b97d1fb07b13 # v3.2.0
+        with:
+          version: 2.122.1
+
+      - name: Démarrer Postgres avec les migrations
+        run: supabase db start
+
+      - name: Tests pgTAP (droits et règles de sécurité par ligne)
+        run: supabase test db
+
+      - name: Lint de la base (search_path, droits)
+        run: supabase db lint --level warning --fail-on error
+
   e2e:
     name: Tests e2e (navigateur)
     runs-on: ubuntu-latest
@@ -122,7 +142,7 @@ jobs:
 
   deploy-github-pages:
     name: Publier sur GitHub Pages
-    needs: [validate-content, audit, e2e, tensorflow]
+    needs: [validate-content, audit, base-de-donnees, e2e, tensorflow]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
