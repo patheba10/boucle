@@ -4,6 +4,16 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.44.0] — 2026-11-13
+
+Sprint 15.1 : suites de l'audit de sécurité.
+
+### Sécurité
+- **js-yaml 4.3.2** (au lieu de 4.1.0) : corrige une pollution de prototype et plusieurs dénis de service, dans la CI comme dans le navigateur (#148).
+- **JSCPP servi par le site** : le C++ ne dépend plus d'un CDN tiers ; les copies de bibliothèques sont vérifiées par empreinte.
+- **Audit des dépendances à chaque CI** (npm audit, pip-audit), requis avant publication ; **analyse CodeQL** ; Dependabot étendu à npm et pip ; `SECURITY.md`.
+- La console n'affiche une figure que si c'est une image base64 valide.
+
 ## [0.43.0] — 2026-11-13
 
 Sprint 14.3 : exercices DevOps sur la mise en production d'un site. Fin du milestone « Hors ligne et sécurité ».
