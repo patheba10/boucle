@@ -24,6 +24,7 @@ class FauxSupabase:
         self.utilisateurs = {"ada@exemple.org": {"id": "11111111-1111-1111-1111-111111111111", "nom": "Ada Lovelace"}}
         self.appels = []
         self.progression = {"donnees": {}, "revision": 1}
+        self.avant_ecriture = None
 
     def _user(self, email):
         u = self.utilisateurs[email]
@@ -83,6 +84,19 @@ class FauxSupabase:
             return self._json(route, 200, self._user(email)) if email else self._erreur(route, 401, "bad_jwt", "invalid JWT")
         if chemin == "/auth/v1/authorize":
             return route.fulfill(status=200, content_type="text/html", body="<p>Page du fournisseur</p>")
+        if chemin == "/rest/v1/progressions":
+            u = self._connecte(req)
+            return self._json(route, 200, {"donnees": self.progression["donnees"], "revision": self.progression["revision"]} if u else None)
+        if chemin == "/rest/v1/rpc/enregistrer_progression":
+            if not self._connecte(req):
+                return self._json(route, 401, {"code": "42501", "message": "connexion requise", "details": None, "hint": None})
+            if self.avant_ecriture:  # un autre appareil écrit juste avant
+                f, self.avant_ecriture = self.avant_ecriture, None
+                f(self)
+            if corps.get("revision_attendue") != self.progression["revision"]:
+                return self._json(route, 409, {"code": "40001", "message": "progression modifiée sur un autre appareil", "details": None, "hint": None})
+            self.progression = {"donnees": corps["donnees"], "revision": self.progression["revision"] + 1}
+            return self._json(route, 200, self.progression["revision"])
         if chemin == "/rest/v1/profils":
             u = self._connecte(req)
             if not u:

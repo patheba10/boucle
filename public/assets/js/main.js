@@ -8,7 +8,8 @@ import { exercicesHTML, bindExercices } from "./lib/exercices.js";
 import { defisDe, defiFait, solutionVue, cleCode, xpDefi, marquerFait, marquerSolution, ongletsHTML, NIVEAUX } from "./lib/defis.js";
 import { I } from "./lib/icons.js";
 import { esc, $, $$, inl, norm, color, today, toast as rawToast } from "./lib/util.js";
-import { S, save, resetAll, remplacer, markDay, streak, level, ls, XP_PER_LEVEL } from "./lib/state.js";
+import { S, save, resetAll, remplacer, markDay, streak, level, ls, XP_PER_LEVEL, surSauvegarde } from "./lib/state.js";
+import { Synchro, memes } from "./lib/synchro.js";
 import { exporter, importer, nomFichier } from "./lib/sauvegarde.js";
 import { highlight } from "./lib/highlight.js";
 import { actif as comptesActifs, obtenirClient, surChangement, pageApresConnexion, lireProfil } from "./lib/compte.js";
@@ -606,7 +607,7 @@ function render() {
   else if (ROADMAPS.some(r => r.id === route)) { const r = ROADMAPS.find(r => r.id === route); el.innerHTML = pageRoadmap(r); bind = () => bindRoadmap(r); }
   else if (byId(route)) { const x = byId(route); el.innerHTML = pageLesson(x); bind = () => bindLesson(x); }
   else el.innerHTML = pageHome();
-  el.insertAdjacentHTML("beforeend", '<p class="foot">Ta progression est enregistrée dans ce navigateur. <button type="button" id="export">Exporter</button> · <button type="button" id="import">Importer</button><input type="file" id="import-fichier" accept="application/json,.json" hidden> · <button type="button" id="wipe">Réinitialiser la progression</button></p>');
+  el.insertAdjacentHTML("beforeend", '<p class="foot"><span id="synchro">' + texteSynchro() + '</span> <button type="button" id="export">Exporter</button> · <button type="button" id="import">Importer</button><input type="file" id="import-fichier" accept="application/json,.json" hidden> · <button type="button" id="wipe">Réinitialiser la progression</button></p>');
   setNav(route); updateStats(); if (bind) bind();
   /* Sauvegarde (audit #16) : un fichier JSON à recharger sur un autre navigateur. */
   $("#export").addEventListener("click", () => {
@@ -639,15 +640,38 @@ if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
 window.addEventListener("offline", () => toast("Hors ligne : Boucle continue avec sa copie locale", I.bolt));
 window.addEventListener("online", () => toast("De retour en ligne", I.check));
 
-/* Comptes (Supabase) : désactivés si config.js est vide. Le lien de l'en-tête suit la session. */
+/* Comptes (Supabase) : désactivés si config.js est vide. Le lien de l'en-tête suit la session ; connecté, la
+   progression se synchronise avec le compte (lib/synchro.js). */
 const PAGES_COMPTE = ["connexion", "inscription", "mot-de-passe-oublie", "nouveau-mot-de-passe", "compte"];
-let profilCourant = null;
+// var : render() lit ces variables dès le premier affichage, avant que cette partie du module soit exécutée.
+var profilCourant = null, synchro = null, statutSynchro = "";
+function texteSynchro() {
+  if (!synchro) return "Ta progression est enregistrée dans ce navigateur.";
+  return { synchro: "Synchronisation…", erreur: "Hors ligne : ta progression sera envoyée au retour du réseau." }[statutSynchro] || "Ta progression est synchronisée avec ton compte.";
+}
+function majSynchro(statut) { statutSynchro = statut; const el = $("#synchro"); if (el) el.textContent = texteSynchro(); }
+surSauvegarde(() => { if (synchro) synchro.planifier(); });
+window.addEventListener("online", () => { if (synchro) synchro.planifier(); });
+document.addEventListener("visibilitychange", () => {
+  // Retour sur l'onglet : un autre appareil a peut-être avancé.
+  if (synchro && document.visibilityState === "visible") synchro.demarrer().catch(() => {});
+});
+async function lancerSynchro(session) {
+  if (synchro && synchro.utilisateur === session.user.id) return;
+  if (synchro) synchro.arreter();
+  synchro = new Synchro({
+    client: await obtenirClient(), utilisateur: session.user.id, etat: () => S, onStatut: majSynchro,
+    remplacer: (etat) => { const avant = S; remplacer(etat, true); if (!memes(avant, S)) { updateStats(); render(); } }
+  });
+  synchro.demarrer().catch(() => majSynchro("erreur"));
+}
 majEntete(null);
 if (comptesActifs()) {
   surChangement((evenement, session) => {
     const route = (location.hash || "#home").slice(1);
     if (evenement === "PASSWORD_RECOVERY") { location.hash = "#nouveau-mot-de-passe"; render(); return; }
-    if (!session) profilCourant = null;
+    if (!session) { profilCourant = null; if (synchro) { synchro.arreter(); synchro = null; majSynchro(""); } }
+    else lancerSynchro(session);
     majEntete(profilCourant);
     if (session && (evenement === "SIGNED_IN" || evenement === "INITIAL_SESSION")) {
       lireProfil().then((p) => { profilCourant = p; majEntete(p); }).catch(() => {});
