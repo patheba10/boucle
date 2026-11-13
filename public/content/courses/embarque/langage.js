@@ -189,32 +189,6 @@ int main(void) {
       { q: "Quelle instruction met à 0 le bit 3 de reg sans toucher aux autres ?", options: ["reg = 0;", "reg &= ~(1u << 3);", "reg |= (0 << 3);", "reg ^= 3;"], answer: 1, explain: "Le masque ~(1u << 3) a tous ses bits à 1 sauf le bit 3." },
       { q: "Pourquoi écrire 1u << 31 plutôt que 1 << 31 ?", options: ["C'est plus lisible", "1 est un int signé : le décaler dans le bit de signe est un comportement indéfini", "Pour aller plus vite", "C'est pareil"], answer: 1, explain: "Avec un non signé, le résultat est bien défini : 0x80000000." }
     ],
-    exercices: [
-      { type: "sortie", code: C`#include <stdio.h>
-#include <stdint.h>
-
-int main(void) {
-    uint8_t r = 0x0F;
-    r |= (1u << 7);
-    r &= ~(1u << 0);
-    printf("0x%02X\n", r);
-    return 0;
-}`, reponse: "0x8E",
-        explain: "0x0F | 0x80 donne 0x8F : le bit 7 passe à 1. Le masque ~(1u << 0) a tous ses bits à 1 sauf le bit 0, qui est donc effacé : 0x8E." },
-      { type: "trous", code: C`#include <stdio.h>
-#include <stdint.h>
-
-int main(void) {
-    uint32_t reg = 0;
-    reg [[|=]] (1u << 5);   /* met le bit 5 à 1 sans toucher aux autres */
-    unsigned actif = (reg [[>>]] 5) & 1u;
-    printf("%u\n", actif);
-    return 0;
-}`, attendu: "1",
-        explain: C`@@|=@@ allume un bit ; pour le lire, on le décale jusqu'à la position 0 avec @@>>@@ puis on isole ce bit avec @@& 1u@@.` },
-      { type: "ordre", lignes: ["#include <stdio.h>", "int main(void) {", "    unsigned x = 0xF0u;", "    x ^= 0xFFu;", "    printf(\"0x%02X\\n\", x);", "    return 0;", "}"], attendu: "0x0F",
-        explain: C`Le XOR avec 0xFF inverse les 8 bits bas : 0xF0 devient 0x0F. Il faut l'appliquer avant l'affichage.` }
-    ],
     challenge: {
       prompt: `<p>Écris @@uint32_t champ_lire(uint32_t reg, unsigned pos, unsigned largeur)@@, @@uint32_t champ_ecrire(uint32_t reg, unsigned pos, unsigned largeur, uint32_t val)@@ (renvoie le nouveau registre ; seuls les bits du champ changent, et une valeur trop grande est tronquée à la largeur du champ) et @@int compter_bits(uint32_t x)@@ (le nombre de bits à 1). La largeur va de 1 à 31.</p>`,
       starter: C`#include <stdint.h>

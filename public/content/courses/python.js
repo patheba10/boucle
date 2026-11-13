@@ -74,17 +74,6 @@ print(f"{mot} a {len(mot)} lettres, pi ≈ {pi:.2f}")
       { q: R`Que vaut @@"python"[1:4]@@ ?`, options: ["pyt", "yth", "ytho", "ython"], answer: 1,
         explain: "L'indice 1 est inclus, l'indice 4 est exclu : y, t, h." }
     ],
-    exercices: [
-      { type: "sortie", code: R`mot = "boucle"
-print(mot[1:3], mot[-2])
-print(len(mot) * 2)`, reponse: "ou l\n12",
-        explain: R`@@mot[1:3]@@ prend les indices 1 et 2 (o, u), @@mot[-2]@@ est l'avant-dernière lettre. print sépare ses arguments par une espace. La chaîne a 6 lettres.` },
-      { type: "trous", code: R`nom = "ada"
-print([[f]]"Bonjour {nom.[[capitalize§title]]()} !")`, attendu: "Bonjour Ada !",
-        explain: R`Le préfixe @@f@@ active le remplacement des accolades ; @@capitalize()@@ met la première lettre en majuscule.` },
-      { type: "ordre", lignes: ["prenom = \"grace\"", "initiale = prenom[0].upper()", "message = f\"Initiale : {initiale}\"", "print(message)"], attendu: "Initiale : G",
-        explain: "Une variable doit exister avant d'être lue : chaque ligne utilise le résultat de la précédente." }
-    ],
     challenge: {
       prompt: R`<p>Avec les variables fournies, affiche cette phrase grâce à une f-string, @@capitalize()@@ et @@len()@@ :</p><pre class="out">Ada habite à Montreal (8 lettres).</pre>`,
       starter: "prenom = \"ada\"\nville = \"montreal\"\n\n",
