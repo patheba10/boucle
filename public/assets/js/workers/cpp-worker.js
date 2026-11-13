@@ -1,16 +1,15 @@
 /* Worker C++ (AUDIT #22) : JSCPP tourne hors du fil principal. L'interface reste fluide, une boucle infinie est
    coupée en arrêtant le worker, et la page n'a plus besoin d'autoriser eval() dans sa Content-Security-Policy
    (JSCPP s'en sert pour décoder les séquences d'échappement comme \n). */
-const LIBS = ["https://cdn.jsdelivr.net/npm/JSCPP@2.0.6/dist/JSCPP.es5.min.js", "https://unpkg.com/JSCPP@2.0.6/dist/JSCPP.es5.min.js"];
+// JSCPP est servi par le site lui-même (copie du paquet npm, empreinte vérifiée par tests/unit/vendor.test.mjs) :
+// pas de dépendance à un CDN tiers, que la Content-Security-Policy ne protège pas à l'intérieur d'un worker.
+const LIB = "../vendor/JSCPP-2.0.6.es5.min.js";
 let charge = null;
 
 function charger() {
   if (charge) return charge;
-  let err = null;
-  for (const u of LIBS) {
-    try { importScripts(u); return (charge = true); } catch (e) { err = e; }
-  }
-  throw new Error("Échec du chargement de l'interpréteur C++ : " + ((err && err.message) || err));
+  try { importScripts(LIB); } catch (e) { throw new Error("Échec du chargement de l'interpréteur C++ : " + ((e && e.message) || e)); }
+  return (charge = true);
 }
 
 self.onmessage = (e) => {

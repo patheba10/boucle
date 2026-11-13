@@ -1,11 +1,11 @@
 /* Service worker de Boucle (AUDIT #19) : le site s'ouvre sans réseau.
    - Installation : tous les fichiers du site sont mis en cache (liste générée par scripts/precache.mjs).
    - Fichiers du site : réseau d'abord, pour être toujours à jour en ligne ; le cache sert quand le réseau manque.
-   - CDN (Pyodide, JSCPP : adresses versionnées, donc immuables) : cache d'abord, gardés après la première
-     utilisation. Python et C++ marchent donc hors ligne une fois qu'ils ont servi une fois.
+   - CDN (Pyodide : adresses versionnées, donc immuables) : cache d'abord, gardé après la première utilisation.
+     Python marche donc hors ligne une fois qu'il a servi une fois ; JSCPP fait partie du site (précache).
    - Polices Google : cache, mis à jour en arrière-plan. */
 // <precache> généré par scripts/precache.mjs, ne pas modifier à la main
-const VERSION = "0c9dcc753a9d";
+const VERSION = "b07eb1b0ec48";
 const PRECACHE = [
   "./",
   "assets/css/style.css",
@@ -55,6 +55,7 @@ const PRECACHE = [
   "assets/js/lib/wfview.js",
   "assets/js/lib/workflow.js",
   "assets/js/main.js",
+  "assets/js/vendor/JSCPP-2.0.6.es5.min.js",
   "assets/js/vendor/js-yaml.mjs",
   "assets/js/workers/cpp-worker.js",
   "assets/js/workers/python-worker.js",
@@ -187,7 +188,7 @@ const PRECACHE = [
 
 const SITE = "boucle-site-" + VERSION;
 const CDN = "boucle-cdn-v1";
-const IMMUABLES = ["https://cdn.jsdelivr.net/", "https://unpkg.com/"];
+const IMMUABLES = ["https://cdn.jsdelivr.net/"];
 const POLICES = ["https://fonts.googleapis.com/", "https://fonts.gstatic.com/"];
 
 self.addEventListener("install", (e) => {
