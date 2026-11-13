@@ -5,7 +5,7 @@
      utilisation. Python et C++ marchent donc hors ligne une fois qu'ils ont servi une fois.
    - Polices Google : cache, mis à jour en arrière-plan. */
 // <precache> généré par scripts/precache.mjs, ne pas modifier à la main
-const VERSION = "cec544e17aaf";
+const VERSION = "b4a6fa01b9df";
 const PRECACHE = [
   "./",
   "assets/css/style.css",
@@ -212,10 +212,12 @@ async function reseauDabord(req) {
 
 async function cacheDabord(req) {
   const cache = await caches.open(CDN);
-  const enCache = await cache.match(req);
+  const enCache = await cache.match(req.url);
   if (enCache) return enCache;
-  const rep = await fetch(req);
-  if (rep.ok) cache.put(req, rep.clone());
+  // importScripts demande le fichier en mode no-cors : la réponse serait opaque (statut 0), impossible à
+  // vérifier et coûteuse en quota. Le CDN accepte CORS : on redemande en mode cors, réponse lisible et cachable.
+  const rep = await fetch(req.url, { mode: "cors", credentials: "omit" });
+  if (rep.ok) cache.put(req.url, rep.clone());
   return rep;
 }
 

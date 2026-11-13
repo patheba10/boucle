@@ -478,6 +478,7 @@ def test_python_hors_ligne(page_hors_ligne):
     page.evaluate("navigator.serviceWorker.ready.then(() => true)")
     page.wait_for_function("navigator.serviceWorker.controller !== null", timeout=30_000)
     expect(run_atelier(page, "print(6 * 7)\n")).to_contain_text("42")
+    page.contexte.unroute("**")  # hors CI, la copie locale de Pyodide ne doit plus répondre : seul le cache compte
     page.contexte.set_offline(True)
     page.reload()
     expect(run_atelier(page, "print(6 * 8)\n")).to_contain_text("48")

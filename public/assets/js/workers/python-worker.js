@@ -33,6 +33,9 @@ async function init() {
   runJson = pyodide.globals.get("__boucle_run");
 }
 const ready = init();
+// Hors ligne sans copie de Pyodide, init échoue : l'erreur est signalée à la première exécution (await ready),
+// pas comme une erreur non rattrapée.
+ready.catch(() => {});
 
 /* Paquets absents de la distribution Pyodide, installés depuis PyPI avec micropip (versions épinglées,
    identiques à requirements.txt pour la CI). Seuls ces paquets-là peuvent être installés à la volée. */
