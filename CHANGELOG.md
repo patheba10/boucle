@@ -4,6 +4,14 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.41.0] — 2026-11-13
+
+Sprint 14.1 : Boucle hors ligne.
+
+### Ajouté
+- **Boucle s'installe et marche hors ligne** : manifeste, icônes, service worker qui met tout le site en cache. Python et C++ restent disponibles sans réseau une fois utilisés une fois (#139).
+- `npm run precache` régénère la liste des fichiers du service worker ; un test refuse une liste périmée.
+
 ## [0.40.0] — 2026-11-13
 
 Sprint 13.1 : défis d'entretien en C embarqué et en SQL.
