@@ -148,7 +148,7 @@ La CI GitHub Actions lance cette validation à chaque push, puis publie `public/
 | Site statique, pas de backend | Gratuit, sûr, rapide, déployable partout | Progression locale au navigateur (export/import prévu) |
 | Pyodide plutôt que Skulpt | Vrai CPython, vraies bibliothèques data | Premier chargement d'environ 10 Mo |
 | Pas de framework (React…) | Zéro build, code lisible pour apprendre | Plus de code manuel pour le rendu |
-| JSCPP pour le C++ | Tourne sans serveur | Sous-ensemble du langage ; à remplacer (voir AUDIT #15) |
+| JSCPP pour le C++, dans un Web Worker | Tourne sans serveur ; isolé de la page (qui n'autorise pas eval) | Sous-ensemble du langage ; à remplacer (voir AUDIT #15) |
 | Hash routing | Fonctionne sur tout hébergeur statique | URLs moins jolies |
 | Service worker « réseau d'abord » pour le site | Toujours la dernière version en ligne, la copie locale hors ligne | Une requête réseau par fichier même quand le cache suffirait |
 
@@ -158,6 +158,13 @@ La CI GitHub Actions lance cette validation à chaque push, puis publie `public/
 - `public/sw.js` met en cache, à l'installation, la liste des fichiers du site écrite par `scripts/precache.mjs` avec une empreinte du contenu. Changer un fichier change l'empreinte, donc `sw.js` : le navigateur installe la nouvelle version et l'activation supprime l'ancien cache. Après toute modification de `public/`, lancer `npm run precache` ; un test unitaire échoue si la liste est périmée.
 - Stratégies : réseau d'abord pour le site (le cache ne sert que sans réseau), cache d'abord pour les adresses versionnées du CDN (Pyodide, JSCPP), cache mis à jour en arrière-plan pour les polices. Les requêtes du worker Python passent aussi par le service worker : Python marche hors ligne une fois qu'il a servi une fois.
 - Les tests e2e bloquent le service worker, sauf `test_hors_ligne` et `test_python_hors_ligne`, qui coupent le réseau.
+
+## Content-Security-Policy (sprint 14.2)
+
+- La politique est dans une balise meta de `index.html` (GitHub Pages n'envoie pas d'en-têtes) et en en-tête sur Vercel (`vercel.json`, pour `/` et `/index.html`), où s'ajoutent `frame-ancestors 'none'` et HSTS.
+- `script-src 'self'` : aucun script inline, aucun script d'un autre domaine, pas d'`eval`. Pyodide (CDN, WebAssembly) et JSCPP (qui appelle `eval` pour décoder les échappements comme `\n`) tournent dans des Web Workers, chargés depuis le site : leurs propres requêtes ne dépendent pas de la politique de la page.
+- `style-src` garde `'unsafe-inline'` : l'interface pose des couleurs par attribut `style` (variables CSS par cours). Le risque est faible (pas d'exécution de code), et le retirer demanderait de réécrire le rendu.
+- Les tests e2e échouent sur toute violation signalée dans la console ; `test_content_security_policy` vérifie qu'un script inline injecté ne s'exécute pas.
 
 ## Données, chapitres et installation locale (sprint 2.1)
 

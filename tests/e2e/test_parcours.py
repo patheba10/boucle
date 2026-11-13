@@ -483,3 +483,35 @@ def test_python_hors_ligne(page_hors_ligne):
     page.reload()
     expect(run_atelier(page, "print(6 * 8)\n")).to_contain_text("48")
     page.contexte.set_offline(False)
+
+
+def test_content_security_policy(page):
+    """La page refuse les scripts inline et ceux venus d'ailleurs ; Python et C++, dans leurs workers, tournent quand même."""
+    page.goto(page.base + "#home")
+    csp = page.locator('meta[http-equiv="Content-Security-Policy"]').get_attribute("content")
+    assert "script-src 'self';" in csp and "object-src 'none'" in csp and "unsafe-eval" not in csp
+    # Un script inline injecté (ce que ferait une faille XSS) ne s'exécute pas.
+    page.evaluate("""() => { const s = document.createElement("script"); s.textContent = "window.__xss = 1"; document.head.appendChild(s); }""")
+    assert page.evaluate("window.__xss === undefined")
+    bloque = page.evaluate("""() => new Promise((ok) => {
+        const s = document.createElement("script");
+        s.src = "https://cdn.jsdelivr.net/npm/left-pad@1.3.0/index.js";
+        s.onload = () => ok("chargé"); s.onerror = () => ok("bloqué");
+        document.head.appendChild(s); })""")
+    assert bloque == "bloqué"
+    page.errors.clear()  # les violations ci-dessus étaient voulues
+    expect(run_atelier(page, 'print("python", 6 * 7)\n')).to_contain_text("python 42")
+    expect(run_atelier(page, '#include <iostream>\nusing namespace std;\nint main() {\n    cout << "c++ " << 6 * 7 << "\\n";\n    return 0;\n}\n', lang="cpp")).to_contain_text("c++ 42")
+    assert page.errors == []
+
+
+def test_cpp_boucle_infinie_interrompue(page):
+    """Le C++ tourne dans un worker : une boucle infinie est coupée, et la page reste réactive pendant ce temps."""
+    page.goto(page.base + "#atelier")
+    page.click('.seg button[data-lang="cpp"]')
+    page.fill("#ed-atelier", "int main() {\n    while (true) {}\n    return 0;\n}\n")
+    page.click('[data-act="run"]')
+    expect(page.locator(".console")).to_contain_text("Exécution")
+    assert page.evaluate("new Promise((ok) => setTimeout(() => ok(true), 50))")  # le fil principal répond
+    expect(page.locator(".console")).to_contain_text("Arrêt après", timeout=45_000)
+    assert page.errors == []

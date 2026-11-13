@@ -3,6 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Content-Security-Policy (AUDIT #21). GitHub Pages n'envoie pas d'en-têtes : la politique est ici, et Vercel
+     l'envoie aussi en en-tête, avec frame-ancestors (ignoré dans une balise meta). Python et C++ tournent dans des
+     workers, qui ont leur propre politique : la page n'autorise ni eval ni script venu d'ailleurs. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
 <title>Boucle</title>
 <meta name="description" content="Apprendre Python, C++, la data, Git et le hardware par la pratique, avec des roadmaps DevOps, Cloud, ML et embarqué.">
 <meta name="theme-color" content="#F2F3F7" media="(prefers-color-scheme: light)">
