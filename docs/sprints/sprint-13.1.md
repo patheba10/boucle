@@ -4,7 +4,7 @@
 
 | Story | Points | Statut |
 |-------|--------|--------|
-| #136 B-4 Défis d'entretien en C embarqué et en SQL | 5 | En cours |
+| #136 B-4 Défis d'entretien en C embarqué et en SQL | 5 | Terminé |
 
 ## Conception
 
@@ -16,3 +16,20 @@
 ## Journal
 
 - 13 nov. : 8 défis SQL et 6 défis C. Résultats SQL relus dans SQLite (aucun résultat vide ni trivial) ; sorties C calculées par gcc, relues, puis identiques dans minic.
+- 13 nov. : PR #137, les trois jobs verts (dont la parité navigateur en ligne, qui rejoue les défis SQL et C). Fusionnée ; version 0.40.0.
+
+## Revue de sprint
+
+| Story | Points | Livré |
+|-------|--------|-------|
+| #136 Défis d'entretien en C embarqué et en SQL | 5 | Oui (PR #137) |
+
+Vélocité : 5 points sur 5. Version 0.40.0. Audit #2 terminé : 34 défis gradués en Python, Algorithmique, SQL et C embarqué.
+
+## Rétrospective
+
+**Ce qui a marché.** Un moteur générique dès B-3 : ce sprint n'a été que du contenu, sans toucher au code du site.
+
+**Ce qui a coincé.** Un défi SQL sur la base du cours a donné un résultat vide (aucun employé mieux payé que son manager) : il a été remplacé. Il faut relire le résultat de chaque solution SQL, pas seulement vérifier qu'elle s'exécute.
+
+**À essayer.** Ajouter le contrôle « résultat non vide » à la validation des défis SQL.
