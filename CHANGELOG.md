@@ -4,6 +4,14 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.43.0] — 2026-11-13
+
+Sprint 14.3 : exercices DevOps sur la mise en production d'un site. Fin du milestone « Hors ligne et sécurité ».
+
+### Ajouté
+- **Deux leçons dans le cours CI/CD** : « Un site qui marche hors ligne » (service worker, stratégies de cache, versionnage) et « En-têtes de sécurité et Content-Security-Policy », chacune avec quiz, exercices courts, défi et défi d'entretien (#141).
+- **Projet guidé « Site statique installable, hors ligne et durci »** dans la roadmap DevOps.
+
 ## [0.42.0] — 2026-11-13
 
 Sprint 14.2 : Content-Security-Policy.

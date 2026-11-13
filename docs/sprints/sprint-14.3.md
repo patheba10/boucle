@@ -4,7 +4,7 @@
 
 | Story | Points | Statut |
 |-------|--------|--------|
-| #141 C-3 Exercices DevOps : hors ligne et en-têtes de sécurité | 8 | En cours |
+| #141 C-3 Exercices DevOps : hors ligne et en-têtes de sécurité | 8 | Terminé |
 
 ## Conception
 
@@ -18,3 +18,20 @@
 ## Journal
 
 - 13 nov. : leçons ci-23 et ci-24 ; sorties attendues des défis calculées en exécutant les solutions, puis relues ; projet pj-site-durci (4 jalons). 1 303 vérifications, e2e complets verts.
+- 13 nov. : PR #146 verte et fusionnée ; version 0.43.0, milestone 13 fermé.
+
+## Revue de sprint
+
+| Story | Points | Livré |
+|-------|--------|-------|
+| #141 Exercices DevOps : hors ligne et en-têtes de sécurité | 8 | Oui (PR #146) |
+
+Milestone « Hors ligne et sécurité » : 21 points sur 21, versions 0.41.0 à 0.43.0. AUDIT #19, #21 et #22 faits.
+
+## Rétrospective du milestone
+
+**Ce qui a marché.** Construire d'abord sur le vrai site, puis en faire des exercices : les leçons s'appuient sur des problèmes réellement rencontrés (réponse opaque, eval dans JSCPP), pas sur des exemples inventés.
+
+**Ce qui a coincé.** Deux tests passaient en local pour de mauvaises raisons (copie locale de Pyodide servie hors ligne, `page.evaluate` qui ignore la CSP). La CI en conditions réelles les a révélés.
+
+**À essayer.** Garder ce réflexe : à chaque nouvelle garantie du site, se demander ce qui pourrait faire passer son test à tort.
