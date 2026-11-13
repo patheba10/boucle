@@ -4,7 +4,7 @@
 
 | Story | Points | Statut |
 |-------|--------|--------|
-| #156 E-2 Page de connexion | 8 | En cours |
+| #156 E-2 Page de connexion | 8 | Terminé |
 
 ## Conception
 
@@ -20,3 +20,8 @@
 - 13 nov. : `lib/compte.js` (client, session, actions, erreurs) et `lib/compteview.js` (pages, lien de l'en-tête) ; routes `#connexion`, `#inscription`, `#mot-de-passe-oublie`, `#nouveau-mot-de-passe`, `#compte`, `#confidentialite`.
 - 13 nov. : un test e2e échouait une fois sur deux. La déconnexion renvoyait vers l'accueil après la fin de l'appel réseau, pendant que le test avait déjà ouvert la page suivante. Le test attend maintenant la fin de la déconnexion, comme le ferait quelqu'un qui clique.
 - 13 nov. : 132 tests unitaires, 30 e2e, audit sans faille non traitée.
+- 13 nov. : PR #160, CI verte (dont CodeQL et la base Supabase). Fusionnée ; publiée en 0.45.0.
+
+## Revue de sprint
+
+8 points livrés sur 8 (PR #160).

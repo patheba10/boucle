@@ -4,7 +4,7 @@
 
 | Story | Points | Statut |
 |-------|--------|--------|
-| #155 E-1 Base de données des comptes (Supabase, RLS) | 8 | En cours |
+| #155 E-1 Base de données des comptes (Supabase, RLS) | 8 | Terminé |
 
 ## Conception
 
@@ -19,3 +19,8 @@
 
 - 13 nov. : `supabase/config.toml` (mot de passe d'au moins 10 caractères avec lettres et chiffres, fournisseurs GitHub et Google lus dans des variables d'environnement), migration, tests pgTAP. Mis au point en local sur PostgreSQL 16 avec une émulation minimale de Supabase (rôles, schéma `auth`, `auth.uid()`, droits par défaut) : 24 sur 24.
 - 13 nov. : job CI « Base de données (Supabase, RLS) », requis avant publication.
+- 13 nov. : PR #159, CI verte (dont CodeQL et la base Supabase). Fusionnée ; publiée en 0.45.0.
+
+## Revue de sprint
+
+8 points livrés sur 8 (PR #159).
