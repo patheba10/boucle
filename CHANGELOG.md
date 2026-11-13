@@ -4,6 +4,14 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.39.0] — 2026-11-12
+
+Sprint 12.3 : défis gradués. Fin du milestone « Formats d'exercice et défis gradués ».
+
+### Ajouté
+- **Défis gradués** : en plus du défi principal, des défis facile, moyen et entretien en onglets, avec leur code, leur progression et leurs XP (#129).
+- Dix problèmes d'entretien classiques en algorithmique (3-sum, histogramme, médiane d'un flux, distance d'édition…) et dix défis de niveau moyen en Python. La complexité demandée est vérifiée en comptant les lectures de liste.
+
 ## [0.38.0] — 2026-11-12
 
 Sprint 12.2 : exercices dans les cours.

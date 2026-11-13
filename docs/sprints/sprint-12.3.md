@@ -4,7 +4,7 @@
 
 | Story | Points | Statut |
 |-------|--------|--------|
-| #129 B-3 Défis gradués | 13 | En cours |
+| #129 B-3 Défis gradués | 13 | Terminé |
 
 ## Conception
 
@@ -19,3 +19,20 @@
 - 12 nov. : module `lib/defis.js` et rendu en onglets. La partie « défi à éditeur » de la page de leçon devient une fonction réutilisée par chaque onglet.
 - 12 nov. : contenu : un problème d'entretien classique pour chacune des dix leçons de patterns d'algorithmique (suite consécutive, 3-sum, fenêtre à k caractères, minimum d'une liste tournée, histogramme, cycle de dépendances, médiane d'un flux, insertion d'intervalle, N reines, distance d'édition), et un défi « moyen » pour les leçons 4 à 13 de Python. Sorties attendues calculées en exécutant la solution, puis relues.
 - 12 nov. : `npm run validate` vérifie chaque défi gradué (solution et code de départ) ; le test de parité du navigateur les rejoue tous, onglet par onglet. 1 252 vérifications.
+- 12 nov. : PR #134, les trois jobs verts. Fusionnée ; version 0.39.0, milestone 11 fermé.
+
+## Revue de sprint
+
+| Story | Points | Livré |
+|-------|--------|-------|
+| #129 Défis gradués | 13 | Oui (PR #134) |
+
+Vélocité : 13 points sur 13. Version 0.39.0. Milestone « Formats d'exercice et défis gradués » : 26 points sur 26.
+
+## Rétrospective du milestone
+
+**Ce qui a marché.** Garder le défi principal intact (mêmes champs, même code sauvegardé) : aucune migration de la progression. Calculer les sorties attendues avec la solution, puis les relire, plutôt que de les écrire à la main.
+
+**Ce qui a coincé.** Un commit fait sur main au lieu de la branche de la story, rattrapé avant le push. Un code de départ trop lent (recherche linéaire répétée) aurait fait attendre la validation une minute : les codes de départ doivent échouer vite.
+
+**À essayer.** Ajouter des défis gradués au C embarqué et au SQL, qui ont déjà le moteur ; restent dans l'audit la PWA hors ligne (#19) et la Content-Security-Policy (#21).
