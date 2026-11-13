@@ -95,43 +95,41 @@ export function preloadPy(code) {
 }
 
 /* ---------- C++ ---------- */
-const CPP_LIBS = ["https://cdn.jsdelivr.net/npm/JSCPP@2.0.6/dist/JSCPP.es5.min.js", "https://unpkg.com/JSCPP@2.0.6/dist/JSCPP.es5.min.js"];
-let cppP = null;
-function loadScript(src) {
-  return new Promise((res, rej) => {
-    const s = document.createElement("script");
-    s.src = src; s.onload = res; s.onerror = () => rej(new Error("Échec du chargement : " + src));
-    document.head.appendChild(s);
-  });
-}
-function cppEngine() {
-  if (!cppP) cppP = (async () => {
-    let err;
-    for (const u of CPP_LIBS) { try { await loadScript(u); return; } catch (e) { err = e; } }
-    throw err;
-  })().catch((e) => { cppP = null; throw e; });
-  return cppP;
+/* JSCPP tourne dans un Web Worker (workers/cpp-worker.js, AUDIT #22) : l'interface reste fluide, et la page n'a
+   pas à autoriser eval() dans sa Content-Security-Policy (JSCPP en a besoin). Le worker coupe lui-même un
+   programme trop long ; s'il ne répond plus du tout, on l'arrête et on en démarre un neuf. */
+let cppWorker = null, cppSeq = 0, cppCharge = false;
+const cppJobs = new Map();
+
+function demarrerCpp() {
+  cppWorker = new Worker(new URL("../workers/cpp-worker.js", import.meta.url));
+  cppWorker.onmessage = (e) => {
+    const m = e.data; const job = cppJobs.get(m.id);
+    if (!job) return;
+    if (m.statut) { cppCharge = true; job.onStatus && job.onStatus(m.statut); return; }
+    clearTimeout(job.garde); cppJobs.delete(m.id);
+    job.resolve({ out: m.out || "", err: m.err || null, figs: [] });
+  };
+  cppWorker.onerror = (e) => {
+    e.preventDefault();
+    for (const [, job] of cppJobs) { clearTimeout(job.garde); job.resolve({ out: "", err: e.message || "Erreur de l'interpréteur C++", figs: [] }); }
+    cppJobs.clear(); cppWorker.terminate(); cppWorker = null;
+  };
 }
 
-export async function runCpp(code, stdin, onStatus) {
-  if (!window.JSCPP) onStatus && onStatus("Chargement de l'interpréteur C++…");
-  await cppEngine();
-  onStatus && onStatus("Exécution…");
-  let out = "";
-  try {
-    const dbg = window.JSCPP.run(code, stdin || "", { debug: true, stdio: { write: (s) => { if (out.length < MAX_OUT) out += s; } } });
-    const t0 = performance.now();
-    for (;;) {
-      for (let i = 0; i < 2500; i++) {
-        const r = dbg.next();
-        if (r !== false) return { out, figs: [] };
-      }
-      if (performance.now() - t0 > CPP_TIMEOUT_MS) return { out, err: "TimeLimit", figs: [] };
-      await new Promise((r) => setTimeout(r, 0));
-    }
-  } catch (e) {
-    return { out, err: String((e && e.message) || e), figs: [] };
-  }
+export function runCpp(code, stdin, onStatus) {
+  if (!cppWorker) demarrerCpp();
+  if (!cppCharge) onStatus && onStatus("Chargement de l'interpréteur C++…");
+  return new Promise((resolve) => {
+    const id = ++cppSeq;
+    const garde = setTimeout(() => {
+      cppJobs.delete(id);
+      if (cppWorker) { cppWorker.terminate(); cppWorker = null; cppCharge = false; }
+      resolve({ out: "", err: "TimeLimit", figs: [] });
+    }, CPP_TIMEOUT_MS + 15000);
+    cppJobs.set(id, { resolve, onStatus, garde });
+    cppWorker.postMessage({ id, code, stdin: stdin || "", limiteMs: CPP_TIMEOUT_MS, maxOut: MAX_OUT });
+  });
 }
 
 /** SQL : la requête tourne dans SQLite (module sqlite3 de Python) sur une base neuve créée par le script db. */

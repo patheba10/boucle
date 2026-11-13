@@ -73,6 +73,8 @@ def _page(context, base_url):
     pg = context.new_page()
     pg.errors = []
     pg.on("pageerror", lambda e: pg.errors.append(str(e)))
+    # Une violation de la Content-Security-Policy n'est pas une exception : le navigateur la signale dans la console.
+    pg.on("console", lambda m: pg.errors.append(m.text) if m.type == "error" and "Content Security Policy" in m.text else None)
     pg.base = base_url
     return pg
 
