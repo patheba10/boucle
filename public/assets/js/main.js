@@ -97,7 +97,7 @@ const app = () => $("#app");
 /** Chiffres de l'espace personnel (#compte). */
 function tableauDeBord() {
   const cours = COURSES.map(c => ({ c, p: courseProgress(c) })).filter(x => x.p.d > 0)
-    .map(({ c, p }) => ({ id: c.id, route: c.route, nom: c.name.replace(/<[^>]+>/g, ""), couleur: color(c.id), ...p }));
+    .map(({ c, p }) => ({ id: c.id, route: c.route, nom: c.name, couleur: color(c.id), ...p }));
   const projets = PROJETS.map(p => ({ id: p.id, titre: p.titre, ...projetProgress(S, p) })).filter(x => x.d > 0 && x.d < x.n);
   return {
     xp: S.xp, niveau: level(), serie: streak(),
