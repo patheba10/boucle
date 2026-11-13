@@ -146,3 +146,21 @@ export async function lireProfil() {
   if (error) throw error;
   return data;
 }
+
+/** Modifie le profil (seules ces colonnes sont permises par la base). Renvoie le profil enregistré. */
+export async function majProfil({ nom, objectif, roadmap }) {
+  const c = await obtenirClient();
+  const { data, error } = await c.from("profils")
+    .update({ nom: nom || null, objectif: objectif || null, roadmap: roadmap || null })
+    .eq("id", utilisateur().id).select("nom, avatar_url, objectif, roadmap").single();
+  if (error) throw error;
+  return data;
+}
+
+/** Supprime le compte et toutes ses données (fonction supprimer_mon_compte de la base), puis ferme la session. */
+export async function supprimerCompte() {
+  const c = await obtenirClient();
+  const { error } = await c.rpc("supprimer_mon_compte");
+  if (error) throw error;
+  await c.auth.signOut({ scope: "local" }); // la session n'existe plus côté serveur
+}

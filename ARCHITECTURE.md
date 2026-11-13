@@ -152,6 +152,20 @@ La CI GitHub Actions lance cette validation à chaque push, puis publie `public/
 | Hash routing | Fonctionne sur tout hébergeur statique | URLs moins jolies |
 | Service worker « réseau d'abord » pour le site | Toujours la dernière version en ligne, la copie locale hors ligne | Une requête réseau par fichier même quand le cache suffirait |
 
+## Comptes (sprints 16.1 à 16.4)
+
+- **Supabase** fournit l'authentification (GitHub, Google, e-mail) et PostgreSQL. Le site reste statique : le navigateur parle directement à Supabase avec une clé publique, et ce sont les **règles RLS** de la base qui protègent les données (`supabase/migrations`, testées en pgTAP en CI).
+- `public/config.js` est vide dans le dépôt : comptes désactivés, site inchangé. Le déploiement le remplit (`scripts/config.mjs`, qui refuse une clé secrète). Mise en service : `docs/comptes.md`.
+- `lib/compte.js` (client, session, actions), `lib/compteview.js` (pages), `lib/synchro.js` (fusion et envoi de la progression, concurrence optimiste par révision).
+- La progression garde le format de `lib/sauvegarde.js` : le compte stocke le même objet que le navigateur et que l'export.
+- Les migrations s'appliquent à la production par le workflow « Base de données », après fusion sur `main`.
+
+| Choix | Pour | Contre |
+|-------|------|--------|
+| Supabase (Auth + Postgres + RLS) plutôt qu'un serveur à nous | Pas de serveur à maintenir ; la sécurité est dans la base, testée en SQL | Dépendance à un service ; quotas du plan gratuit |
+| Progression en un seul JSON par utilisateur | Même format que le navigateur et l'export ; une seule écriture | Pas de requêtes fines sur la progression (inutiles aujourd'hui) |
+| Fusion côté client + révision côté base | Hors ligne et multi-appareil sans rien perdre | Les XP prennent le maximum (pas de somme exacte entre appareils) |
+
 ## Hors ligne (sprint 14.1)
 
 - `public/manifest.webmanifest` rend le site installable (icônes dans `public/assets/icons/`).

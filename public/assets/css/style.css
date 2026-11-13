@@ -278,9 +278,35 @@ pre.out { margin: 0; padding: 12px 14px; background: var(--surface-2); border-ra
 .auth-form .btn.primary { justify-content: center; }
 .auth-err { color: var(--bad); font-size: 14px; }
 .auth-ok { color: var(--ok); font-size: 14px; }
-.auth .petit { font-size: 13px; }
+.auth .petit, .espace .petit { font-size: 13px; }
+.espace .tdb-rm .petit, .espace p { margin: 0; }
+.compte-tete { flex-direction: row; justify-content: space-between; }
 .auth-bas { text-align: center; font-size: 14px; }
 .legal { max-width: 760px; margin: 0 auto; }
+.espace { display: flex; flex-direction: column; gap: 16px; }
+.compte-tete { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px; }
+.compte-id { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.compte-id h1 { margin: 0; font-size: 24px; }
+.compte-id p { margin: 2px 0 0; overflow-wrap: anywhere; }
+.avatar { width: 56px; height: 56px; border-radius: 50%; flex: none; object-fit: cover; }
+.avatar.initiale { display: grid; place-items: center; background: var(--accent); color: #fff; font-size: 24px; font-weight: 700; }
+.compte-chiffres { display: flex; flex-wrap: wrap; gap: 22px; }
+.compte-chiffres div { display: flex; flex-direction: column; }
+.compte-chiffres b { font-size: 24px; font-variant-numeric: tabular-nums; }
+.compte-chiffres span { font-size: 13px; color: var(--muted); }
+.compte-grille { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.compte-col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+@media (max-width: 860px) { .compte-grille { grid-template-columns: minmax(0, 1fr); } }
+.espace h2 { margin: 0 0 12px; font-size: 18px; }
+.espace h3 { margin: 18px 0 8px; font-size: 15px; }
+.tdb-cours { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.tdb-cours li { display: grid; grid-template-columns: minmax(0, 10em) minmax(0, 1fr) auto; align-items: center; gap: 10px; }
+.tdb-cours a { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tdb-rm { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.tdb-rm p { margin: 0; }
+.auth-form select { font: inherit; font-weight: 400; padding: 9px 10px; border-radius: 8px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); }
+.card.danger { border-color: color-mix(in srgb, var(--bad) 45%, var(--line)); }
+.btn.danger { background: var(--bad); color: #fff; border-color: var(--bad); justify-content: center; }
 /* Défis gradués : onglets */
 .onglets { display: flex; flex-wrap: wrap; gap: 6px; }
 .onglet { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }

@@ -542,7 +542,7 @@ def test_connexion_par_email(page_comptes):
     page.click('button[type="submit"]')
     expect(page).to_have_url(re.compile("#compte$"))
     expect(lien).to_contain_text("Ada Lovelace")
-    expect(page.locator(".auth")).to_contain_text("ada@exemple.org")
+    expect(page.locator(".compte-id")).to_contain_text("ada@exemple.org")
     page.reload()  # la session survit au rechargement
     expect(page.locator("#compte-lien")).to_contain_text("Ada Lovelace")
     page.click("[data-deconnexion]")
@@ -621,4 +621,38 @@ def test_progression_synchronisee(page_comptes):
     assert fs.progression["revision"] == 6
     assert d["roadmap"]["do-net"] is True and d["lessons"]["sql-01"]["ch"] and d["lessons"]["py-01"]["ch"]
     assert page.evaluate("JSON.parse(localStorage.getItem('boucle-v1')).lessons['sql-01'].ch") is True
+    assert page.errors == []
+
+
+def test_espace_personnel(page_comptes):
+    """Mon compte : chiffres, profil modifiable, roadmap suivie au tableau de bord, suppression confirmée."""
+    page = page_comptes
+    fs = page.supabase
+    fs.progression = {"donnees": {"xp": 230, "roadmap": {"ml-python": True}, "days": [], "maj": 1, "compte": "11111111-1111-1111-1111-111111111111"}, "revision": 2}
+    page.goto(page.base + "#connexion")
+    page.fill('input[name="email"]', "ada@exemple.org")
+    page.fill('input[name="mdp"]', "analytique42")
+    page.click('button[type="submit"]')
+    expect(page.locator(".compte-id h1")).to_have_text("Ada Lovelace")
+    expect(page.locator(".compte-chiffres")).to_contain_text("230")
+    expect(page.locator(".compte-chiffres")).to_contain_text("niveau 2")
+    expect(page.locator(".espace")).to_contain_text("Choisis une roadmap")
+    page.fill('form[data-form="profil"] input[name="nom"]', "Ada L.")
+    page.select_option('select[name="objectif"]', "ml")
+    page.select_option('select[name="roadmap"]', "ml")
+    page.click('form[data-form="profil"] button[type="submit"]')
+    expect(page.locator('form[data-form="profil"] .auth-ok')).to_have_text("Profil enregistré.")
+    expect(page.locator("#compte-lien")).to_contain_text("Ada L.")
+    assert fs.utilisateurs["ada@exemple.org"]["objectif"] == "ml"
+    page.reload()
+    expect(page.locator(".tdb-rm")).to_contain_text("Roadmap ML")
+    expect(page.locator('select[name="objectif"]')).to_have_value("ml")
+    bouton = page.locator('form[data-form="suppression"] button[type="submit"]')
+    expect(bouton).to_be_disabled()
+    page.fill('form[data-form="suppression"] input[name="conf"]', "SUPPRIMER")
+    bouton.click()
+    expect(page).to_have_url(re.compile("#home$"))
+    expect(page.locator("#compte-lien")).to_have_text("Connexion")
+    assert fs.supprimes == ["11111111-1111-1111-1111-111111111111"]
+    assert page.evaluate("JSON.parse(localStorage.getItem('boucle-v1')).xp") == 0
     assert page.errors == []
