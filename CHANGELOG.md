@@ -4,6 +4,13 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.40.0] — 2026-11-13
+
+Sprint 13.1 : défis d'entretien en C embarqué et en SQL.
+
+### Ajouté
+- **Huit défis SQL de niveau entretien** (leçons 5 à 12) et **six défis d'entretien en C embarqué** : débordement signé, comptage de bits, inversion sur place, boutisme, moyenne glissante, CRC-8 (#136).
+
 ## [0.39.0] — 2026-11-12
 
 Sprint 12.3 : défis gradués. Fin du milestone « Formats d'exercice et défis gradués ».
