@@ -5,7 +5,7 @@
      Python marche donc hors ligne une fois qu'il a servi une fois ; JSCPP fait partie du site (précache).
    - Polices Google : cache, mis à jour en arrière-plan. */
 // <precache> généré par scripts/precache.mjs, ne pas modifier à la main
-const VERSION = "b07eb1b0ec48";
+const VERSION = "5d76bfbef141";
 const PRECACHE = [
   "./",
   "assets/css/style.css",
@@ -18,6 +18,8 @@ const PRECACHE = [
   "assets/js/lib/aws/cli.js",
   "assets/js/lib/aws/iam.js",
   "assets/js/lib/checker.js",
+  "assets/js/lib/compte.js",
+  "assets/js/lib/compteview.js",
   "assets/js/lib/defis.js",
   "assets/js/lib/docker/catalog.js",
   "assets/js/lib/docker/cli.js",
@@ -57,12 +59,14 @@ const PRECACHE = [
   "assets/js/main.js",
   "assets/js/vendor/JSCPP-2.0.6.es5.min.js",
   "assets/js/vendor/js-yaml.mjs",
+  "assets/js/vendor/supabase-2.118.0.js",
   "assets/js/workers/cpp-worker.js",
   "assets/js/workers/python-worker.js",
   "assets/py/harness.py",
   "assets/py/mcu.h",
   "assets/py/minic.py",
   "assets/py/minikeras.py",
+  "config.js",
   "content/certifs/clf.js",
   "content/certifs/entretien-devops.js",
   "content/certifs/entretien-embarque.js",

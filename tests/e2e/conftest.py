@@ -83,6 +83,18 @@ def page(browser, base_url):
 
 
 @pytest.fixture
+def page_comptes(browser, base_url):
+    """Une page dont les comptes sont actifs, branchés sur une API Supabase simulée (faux_supabase.py)."""
+    from faux_supabase import FauxSupabase
+    context = _contexte(browser)
+    pg = _page(context, base_url)
+    pg.supabase = FauxSupabase()
+    pg.supabase.brancher(context)
+    yield pg
+    context.close()
+
+
+@pytest.fixture
 def page_hors_ligne(browser, base_url):
     """Une page dont le service worker est actif."""
     context = _contexte(browser, service_workers="allow")
