@@ -11,6 +11,8 @@ import { esc, $, $$, inl, norm, color, today, toast as rawToast } from "./lib/ut
 import { S, save, resetAll, remplacer, markDay, streak, level, ls, XP_PER_LEVEL } from "./lib/state.js";
 import { exporter, importer, nomFichier } from "./lib/sauvegarde.js";
 import { highlight } from "./lib/highlight.js";
+import { actif as comptesActifs, obtenirClient, surChangement, pageApresConnexion, lireProfil } from "./lib/compte.js";
+import { majEntete, pageConnexion, bindConnexion, pageNouveauMdp, bindNouveauMdp, pageCompte, bindCompte, pageConfidentialite } from "./lib/compteview.js";
 import { editorHTML, mountEditor } from "./lib/editor.js";
 import { run, isPyReady, preloadPy } from "./lib/engines.js";
 import { check, consoleHTML, statusHTML, loadFailHTML } from "./lib/checker.js";
@@ -597,6 +599,10 @@ function render() {
   else if (PROJETS.some(p => p.id === route)) { const p = PROJETS.find(p => p.id === route); el.innerHTML = pageProjet(S, p, ROADMAPS, byId, color, I); bind = () => bindProjet(S, p, { save, toast, markDay, updateStats }); }
   else if (CERTS.some(c => "cert-" + c.id === route)) { const c = CERTS.find(c => "cert-" + c.id === route); el.innerHTML = pageCert(S, c); bind = () => bindCert(S, c, { save, gain, today, rerender: () => { render(); window.scrollTo(0, 0); } }); }
   else if (route === "atelier") { el.innerHTML = pageAtelier(); bind = bindAtelier; }
+  else if (["connexion", "inscription", "mot-de-passe-oublie"].includes(route)) { el.innerHTML = pageConnexion(route === "mot-de-passe-oublie" ? "oubli" : route); bind = () => bindConnexion({ apres: "#compte" }); }
+  else if (route === "nouveau-mot-de-passe") { el.innerHTML = pageNouveauMdp(); bind = () => bindNouveauMdp({ fini: () => { toast("Mot de passe modifié", I.check); location.hash = "#compte"; } }); }
+  else if (route === "compte") { el.innerHTML = pageCompte(); bind = () => bindCompte({ fini: () => { toast("Tu es déconnecté", I.check); location.hash = "#home"; } }); }
+  else if (route === "confidentialite") el.innerHTML = pageConfidentialite();
   else if (ROADMAPS.some(r => r.id === route)) { const r = ROADMAPS.find(r => r.id === route); el.innerHTML = pageRoadmap(r); bind = () => bindRoadmap(r); }
   else if (byId(route)) { const x = byId(route); el.innerHTML = pageLesson(x); bind = () => bindLesson(x); }
   else el.innerHTML = pageHome();
@@ -632,3 +638,24 @@ if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
 }
 window.addEventListener("offline", () => toast("Hors ligne : Boucle continue avec sa copie locale", I.bolt));
 window.addEventListener("online", () => toast("De retour en ligne", I.check));
+
+/* Comptes (Supabase) : désactivés si config.js est vide. Le lien de l'en-tête suit la session. */
+const PAGES_COMPTE = ["connexion", "inscription", "mot-de-passe-oublie", "nouveau-mot-de-passe", "compte"];
+let profilCourant = null;
+majEntete(null);
+if (comptesActifs()) {
+  surChangement((evenement, session) => {
+    const route = (location.hash || "#home").slice(1);
+    if (evenement === "PASSWORD_RECOVERY") { location.hash = "#nouveau-mot-de-passe"; render(); return; }
+    if (!session) profilCourant = null;
+    majEntete(profilCourant);
+    if (session && (evenement === "SIGNED_IN" || evenement === "INITIAL_SESSION")) {
+      lireProfil().then((p) => { profilCourant = p; majEntete(p); }).catch(() => {});
+      const apres = pageApresConnexion();
+      if (apres) { location.hash = apres; return; }
+      if (evenement === "SIGNED_IN" && ["connexion", "inscription"].includes(route)) { location.hash = "#compte"; return; }
+    }
+    if (PAGES_COMPTE.includes(route)) render();
+  });
+  obtenirClient().catch(() => toast("Module de connexion indisponible", I.bolt));
+}

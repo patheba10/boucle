@@ -1,5 +1,6 @@
 """Tests de bout en bout : les parcours essentiels d'un élève, dans un vrai navigateur."""
 import re
+from urllib.parse import parse_qs, urlparse
 
 import pytest
 from playwright.sync_api import expect
@@ -515,3 +516,74 @@ def test_cpp_boucle_infinie_interrompue(page):
     assert page.evaluate("new Promise((ok) => setTimeout(() => ok(true), 50))")  # le fil principal répond
     expect(page.locator(".console")).to_contain_text("Arrêt après", timeout=45_000)
     assert page.errors == []
+
+
+def test_comptes_desactives_sans_configuration(page):
+    """config.js vide (celui du dépôt) : pas de lien Connexion, et la page l'explique."""
+    page.goto(page.base + "#home")
+    expect(page.locator("#compte-lien")).to_be_hidden()
+    page.goto(page.base + "#connexion")
+    expect(page.locator(".auth")).to_contain_text("pas encore activés")
+    assert page.errors == []
+
+
+def test_connexion_par_email(page_comptes):
+    page = page_comptes
+    page.goto(page.base + "#home")
+    lien = page.locator("#compte-lien")
+    expect(lien).to_have_text("Connexion")
+    lien.click()
+    expect(page.locator(".auth h1")).to_have_text("Se connecter")
+    page.fill('input[name="email"]', "ada@exemple.org")
+    page.fill('input[name="mdp"]', "mauvais-mdp1")
+    page.click('button[type="submit"]')
+    expect(page.locator(".auth-err")).to_have_text("Adresse e-mail ou mot de passe incorrect.")
+    page.fill('input[name="mdp"]', "analytique42")
+    page.click('button[type="submit"]')
+    expect(page).to_have_url(re.compile("#compte$"))
+    expect(lien).to_contain_text("Ada Lovelace")
+    expect(page.locator(".auth")).to_contain_text("ada@exemple.org")
+    page.reload()  # la session survit au rechargement
+    expect(page.locator("#compte-lien")).to_contain_text("Ada Lovelace")
+    page.click("[data-deconnexion]")
+    expect(page.locator("#compte-lien")).to_have_text("Connexion")
+    expect(page).to_have_url(re.compile("#home$"))
+    assert page.errors == []
+
+
+def test_inscription_et_mot_de_passe_oublie(page_comptes):
+    page = page_comptes
+    page.goto(page.base + "#inscription")
+    page.fill('input[name="email"]', "grace@exemple.org")
+    page.fill('input[name="mdp"]', "court")
+    page.click('button[type="submit"]')
+    expect(page.locator(".auth-err")).to_contain_text("10 caractères")
+    assert not any(a[1] == "/auth/v1/signup" for a in page.supabase.appels)  # vérifié avant l'envoi
+    page.fill('input[name="email"]', "ada@exemple.org")
+    page.fill('input[name="mdp"]', "analytique42")
+    page.click('button[type="submit"]')
+    expect(page.locator(".auth-err")).to_contain_text("existe déjà")
+    page.fill('input[name="nom"]', "Grace")
+    page.fill('input[name="email"]', "grace@exemple.org")
+    page.click('button[type="submit"]')
+    expect(page).to_have_url(re.compile("#compte$"))
+    expect(page.locator("#compte-lien")).to_contain_text("Grace")
+    page.click("[data-deconnexion]")
+    expect(page).to_have_url(re.compile("#home$"))
+    page.goto(page.base + "#mot-de-passe-oublie")
+    page.fill('input[name="email"]', "ada@exemple.org")
+    page.click('button[type="submit"]')
+    expect(page.locator(".auth-ok")).to_contain_text("lien vient d'y être envoyé")
+    assert any(a[1] == "/auth/v1/recover" and a[3].get("email") == "ada@exemple.org" for a in page.supabase.appels)
+    assert page.errors == []
+
+
+def test_connexion_github_redirige_vers_le_fournisseur(page_comptes):
+    page = page_comptes
+    page.goto(page.base + "#connexion")
+    page.click('[data-fournisseur="github"]')
+    page.wait_for_url(re.compile(r"test\.supabase\.co/auth/v1/authorize"))
+    q = parse_qs(urlparse(page.url).query)
+    assert q["provider"] == ["github"]
+    assert q["redirect_to"] == [page.base.rstrip("#").split("#")[0]]
+    assert q.get("code_challenge_method") == ["s256"]  # PKCE

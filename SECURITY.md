@@ -6,7 +6,7 @@ Merci de **ne pas ouvrir d'issue publique**. Utilise le signalement privé de Gi
 
 ## Ce qui est couvert
 
-Boucle est un site statique : pas de serveur, pas de compte, pas de données envoyées. Le code des élèves s'exécute dans leur navigateur (Pyodide, JSCPP et minic dans des Web Workers) et la progression reste dans leur navigateur.
+Boucle est un site statique, sans serveur à lui. Le code des élèves s'exécute dans leur navigateur (Pyodide, JSCPP et minic dans des Web Workers). Sans compte, la progression reste dans le navigateur ; avec un compte, elle est aussi rangée dans Supabase, où des règles de sécurité par ligne réservent chaque donnée à son propriétaire.
 
 Sont dans le périmètre :
 
@@ -14,6 +14,8 @@ Sont dans le périmètre :
 - un contournement de la Content-Security-Policy ;
 - le service worker (mise en cache de réponses qui ne devraient pas l'être) ;
 - la CI et la publication (workflows GitHub Actions, déploiement Pages et Vercel).
+
+Avec les comptes (Supabase) s'ajoutent : l'accès aux données d'un autre utilisateur (règles RLS, `supabase/migrations`), la connexion et la réinitialisation du mot de passe.
 
 Ne sont pas des failles : exécuter du code arbitraire dans son propre navigateur depuis l'atelier (c'est le principe du site), ou modifier sa propre progression.
 

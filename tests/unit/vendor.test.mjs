@@ -9,7 +9,8 @@ const sha256 = (p) => createHash("sha256").update(readFileSync(p)).digest("hex")
 const VENDOR = new URL("../../public/assets/js/vendor/", import.meta.url);
 const SOURCES = {
   "JSCPP-2.0.6.es5.min.js": ["JSCPP", "2.0.6", "dist/JSCPP.es5.min.js"],
-  "js-yaml.mjs": ["js-yaml", "4.3.2", "dist/js-yaml.mjs"]
+  "js-yaml.mjs": ["js-yaml", "4.3.2", "dist/js-yaml.mjs"],
+  "supabase-2.118.0.js": ["@supabase/supabase-js", "2.118.0", "dist/umd/supabase.js"]
 };
 
 test("chaque fichier de vendor/ a une source connue", () => {

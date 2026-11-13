@@ -256,6 +256,31 @@ pre.out { margin: 0; padding: 12px 14px; background: var(--surface-2); border-ra
 .quiz { display: flex; flex-direction: column; gap: 10px; }
 .quiz + .quiz { padding-top: 16px; border-top: 1px solid var(--line); }
 .quiz-q { font-weight: 600; }
+/* Comptes */
+.pill.compte { text-decoration: none; color: var(--ink); gap: 8px; }
+.pill.compte:hover { background: var(--surface-3, var(--surface-2)); }
+.pill.compte img, .pill.compte .initiale { width: 22px; height: 22px; border-radius: 50%; flex: none; }
+.pill.compte .initiale { display: grid; place-items: center; background: var(--accent); color: #fff; font-size: 12px; }
+.pill.compte .nom { max-width: 12ch; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 720px) { .pill.compte .nom { display: none; } }
+.auth { max-width: 460px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.auth h1 { margin: 0; font-size: 26px; }
+.auth p { margin: 0; }
+.auth-fournisseurs { display: flex; flex-direction: column; gap: 8px; }
+.auth-fournisseurs .btn { justify-content: center; gap: 10px; }
+.auth-fournisseurs svg { width: 18px; height: 18px; }
+.auth-ou { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 13px; }
+.auth-ou::before, .auth-ou::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.auth-form { display: flex; flex-direction: column; gap: 12px; }
+.auth-form label { display: flex; flex-direction: column; gap: 6px; font-weight: 600; font-size: 14px; }
+.auth-form input { font: inherit; font-weight: 400; padding: 10px 12px; border-radius: 8px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); }
+.auth-form input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+.auth-form .btn.primary { justify-content: center; }
+.auth-err { color: var(--bad); font-size: 14px; }
+.auth-ok { color: var(--ok); font-size: 14px; }
+.auth .petit { font-size: 13px; }
+.auth-bas { text-align: center; font-size: 14px; }
+.legal { max-width: 760px; margin: 0 auto; }
 /* Défis gradués : onglets */
 .onglets { display: flex; flex-wrap: wrap; gap: 6px; }
 .onglet { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
