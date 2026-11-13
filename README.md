@@ -67,6 +67,11 @@ Une leçon est un objet dans `public/content/courses/<cours>.js` :
   - SQL (cours dont `lang` vaut `"sql"`) : la base est le script `db` du défi, de la leçon ou du cours ; le résultat de la dernière requête de l'élève est comparé à celui de `solution` (ordre exigé si la solution contient `ORDER BY`, ou selon `ordered`). `columns: true` exige aussi les noms de colonnes ; `check` donne une requête de contrôle relancée sur les deux bases, pour un exercice qui modifie les données. Les blocs `~~~sql` de la théorie sont exécutables ; l'option `erreur` marque un extrait qui doit échouer.
   - Git (cours dont `lang` vaut `"git"`) : `setup` (commandes de mise en place, silencieuses), `checks` (état attendu, critères listés dans `evaluate` de `lib/gitsim.js`), `solution` (une suite de commandes possible).
   - Workflow GitHub Actions (`lang` vaut `"yaml"`) : `starter` et `solution` (fichiers YAML), `checks` (critères listés dans `evaluate` de `lib/workflow.js`, dont `scenarios` : un événement simulé et les jobs qui doivent tourner ou être sautés), `events` facultatif (onglets de simulation ; par défaut, ceux des scénarios), `file` facultatif (nom affiché).
+- `exercices` (facultatif) : exercices courts affichés après le quiz, en Python ou en C. Chacun a un `type` et une explication `explain` (montrée quand c'est juste) :
+  - `{ type: "sortie", code, reponse }` : l'élève écrit ce que le code affiche ;
+  - `{ type: "trous", code }` : chaque `[[réponse]]` du code devient un champ ; plusieurs réponses acceptées s'écrivent `[[a§b]]` ;
+  - `{ type: "ordre", lignes }` : les lignes, dans le bon ordre (indentation comprise), présentées mélangées.
+  `attendu` (facultatif, pour `trous` et `ordre`) donne la sortie du code complet. `npm run validate` exécute chaque code (Python, ou C avec gcc et l'interpréteur du navigateur) et vérifie la sortie. Réussir un exercice rapporte 5 XP ; les exercices ne comptent pas pour terminer la leçon.
 - `lang` (facultatif) sur une leçon : remplace le langage du cours pour cette leçon.
 - `practice` (facultatif, leçons sans défi) : `{ title, body }`, panneau de pratique à droite.
 - Blocs `~~~git` : exécutés dans un dépôt simulé neuf ; une ligne préfixée par `!` doit échouer.

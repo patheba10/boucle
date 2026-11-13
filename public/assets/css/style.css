@@ -256,6 +256,25 @@ pre.out { margin: 0; padding: 12px 14px; background: var(--surface-2); border-ra
 .quiz { display: flex; flex-direction: column; gap: 10px; }
 .quiz + .quiz { padding-top: 16px; border-top: 1px solid var(--line); }
 .quiz-q { font-weight: 600; }
+/* Exercices courts */
+.ex { display: flex; flex-direction: column; gap: 10px; }
+.ex + .ex { padding-top: 16px; border-top: 1px solid var(--line); }
+.ex-code { margin: 0; padding: 12px 14px; border-radius: 8px; background: var(--surface-2); font-family: var(--f-mono); font-size: 14px; line-height: 1.6; overflow-x: auto; white-space: pre; }
+.ex-l { font-size: 13px; color: var(--muted); }
+.ex-saisie { width: 100%; box-sizing: border-box; font-family: var(--f-mono); font-size: 14px; padding: 10px 12px; border-radius: 8px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); resize: vertical; }
+.trou { font: inherit; padding: 1px 4px; margin: 0 1px; border: 0; border-bottom: 2px solid var(--accent); border-radius: 4px 4px 0 0; background: var(--surface); color: var(--ink); max-width: 100%; }
+.trou.faux { border-bottom-color: var(--bad); background: var(--bad-soft); }
+.ex.fait .trou, .ex.fait .ex-saisie { border-color: var(--ok); }
+.ex-ordre { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; counter-reset: ln; }
+.ex-ordre li { display: flex; align-items: center; gap: 8px; padding: 6px 8px 6px 10px; border: 1.5px solid var(--line); border-radius: 8px; background: var(--surface); min-width: 0; }
+.ex-ordre li::before { counter-increment: ln; content: counter(ln); font-family: var(--f-mono); font-size: 12px; color: var(--muted); min-width: 1.5em; }
+.ex-ordre code { flex: 1; min-width: 0; font-family: var(--f-mono); font-size: 14px; white-space: pre; overflow-x: auto; background: none; padding: 0; }
+.ex-fl { display: flex; gap: 4px; }
+.ex-fleche { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 6px; border: 1.5px solid var(--line); background: var(--surface-2); color: var(--ink); font-size: 15px; cursor: pointer; }
+.ex-fleche:hover { border-color: var(--muted); }
+.ex-fleche:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.ex.fait .ex-ordre li { border-color: var(--ok); }
+.ex.fait .ex-fl { display: none; }
 .opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .opt { text-align: left; padding: 10px 14px; border-radius: 8px; border: 1.5px solid var(--line); background: var(--surface); cursor: pointer; font-family: var(--f-mono); font-size: 14px; min-width: 0; overflow-wrap: anywhere; display: flex; gap: 10px; align-items: center; }
 .opt:hover:not(:disabled) { border-color: var(--muted); }
