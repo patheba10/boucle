@@ -4,6 +4,13 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.37.0] — 2026-11-12
+
+Sprint 12.1 : exercices courts.
+
+### Ajouté
+- **Exercices courts** après le quiz : prédire la sortie d'un programme, compléter le code à trous, remettre des lignes dans l'ordre. Chaque exercice est vérifié par exécution dans `npm run validate` (#127).
+
 ## [0.36.0] — 2026-11-12
 
 Sprint 11.4 : sauvegarde de la progression. Fin du milestone « Améliorations de l'audit ».
