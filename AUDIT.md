@@ -15,7 +15,7 @@ Priorités : **P0** bloquant pour l'objectif, **P1** fort impact, **P2** confort
 | # | Constat | Priorité | Statut |
 |---|---------|----------|--------|
 | 1 | Aucun contenu sur la data (NumPy, pandas, Matplotlib, scikit-learn), Git, SQL, cloud, TensorFlow ou hardware. | P0 | Étapes 2 à 8 |
-| 2 | Un seul défi par leçon : pas assez de répétition pour ancrer une notion. Viser 3 défis gradués (facile, moyen, entretien). | P1 | À faire |
+| 2 | Un seul défi par leçon : pas assez de répétition pour ancrer une notion. Viser 3 défis gradués (facile, moyen, entretien). | P1 | En partie (0.39.0) : moteur en onglets ; défis entretien en algorithmique, moyens en Python ; reste C embarqué et SQL |
 | 3 | Aucune révision : une erreur de quiz n'est jamais reproposée. Ajouter une file de révision espacée (J+1, J+3, J+7). | P1 | **Fait** (A-2) : page Révisions et carte sur l'accueil ; une question ratée revient à J+1, J+3, J+7 et sort après trois réussites |
 | 4 | Pas de projet guidé en plusieurs étapes, alors que les recruteurs regardent des projets. | P1 | **Fait** (étape 9) : 8 projets capstone avec jalons, 2 par roadmap |
 | 5 | Rien pour préparer les entretiens : structures de données, patterns d'algorithmes, system design, questions comportementales. | P1 | Étape 8 |
