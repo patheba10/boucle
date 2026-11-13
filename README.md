@@ -99,6 +99,14 @@ Un nouveau cours se déclare avec `route` (son adresse, ex. `data`) et `badge` (
 - Git : simulateur maison (`lib/gitsim.js`).
 - GitHub Actions : moteur maison (`lib/workflow.js`) qui lit le YAML avec [js-yaml](https://github.com/nodeca/js-yaml) 4.1.0 (copié dans `assets/js/vendor/`, licence MIT), signale les erreurs et simule les événements.
 
+## Comptes
+
+Connexion avec GitHub, Google ou une adresse e-mail, progression synchronisée entre appareils, profil et tableau de bord. Le tout repose sur Supabase, et les règles de sécurité par ligne de la base sont testées en CI (`supabase/tests`). Sans configuration, le site marche sans comptes. Mise en service : [docs/comptes.md](docs/comptes.md).
+
+```bash
+supabase db start && supabase test db   # tests pgTAP des droits (Docker et Supabase CLI requis)
+```
+
 ## Déploiement
 
 - **Vercel** : chaque push sur `main` redéploie automatiquement.

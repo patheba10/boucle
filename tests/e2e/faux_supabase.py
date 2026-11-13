@@ -25,6 +25,7 @@ class FauxSupabase:
         self.appels = []
         self.progression = {"donnees": {}, "revision": 1}
         self.avant_ecriture = None
+        self.supprimes = []
 
     def _user(self, email):
         u = self.utilisateurs[email]
@@ -97,11 +98,24 @@ class FauxSupabase:
                 return self._json(route, 409, {"code": "40001", "message": "progression modifiée sur un autre appareil", "details": None, "hint": None})
             self.progression = {"donnees": corps["donnees"], "revision": self.progression["revision"] + 1}
             return self._json(route, 200, self.progression["revision"])
+        if chemin == "/rest/v1/rpc/supprimer_mon_compte":
+            u = self._connecte(req)
+            if not u:
+                return self._json(route, 401, {"code": "42501", "message": "connexion requise", "details": None, "hint": None})
+            self.utilisateurs = {e: v for e, v in self.utilisateurs.items() if v is not u}
+            self.supprimes.append(u["id"])
+            return route.fulfill(status=204, headers={"access-control-allow-origin": "*"})
         if chemin == "/rest/v1/profils":
             u = self._connecte(req)
             if not u:
                 return self._json(route, 200, None)
-            return self._json(route, 200, {"nom": u["nom"], "avatar_url": None, "objectif": None, "roadmap": None})
+            if req.method == "PATCH":
+                if q.get("id") != ["eq." + u["id"]]:  # comme la règle RLS : seulement sa propre ligne
+                    return self._json(route, 406, {"code": "PGRST116", "message": "0 ligne", "details": None, "hint": None})
+                for k in ("nom", "objectif", "roadmap"):
+                    if k in corps:
+                        u[k] = corps[k]
+            return self._json(route, 200, {"nom": u["nom"], "avatar_url": None, "objectif": u.get("objectif"), "roadmap": u.get("roadmap")})
         return self._erreur(route, 404, "not_found", "route inconnue du faux Supabase : " + chemin)
 
     def brancher(self, context):

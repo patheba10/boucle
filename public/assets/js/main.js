@@ -1,7 +1,7 @@
 /* Boucle — routeur et pages. */
 import { COURSES, ROADMAPS, INSTALL, CERTS, PROJETS, GROUPES } from "../../content/index.js";
 import { pageCerts, pageCert, bindCert } from "./lib/examview.js";
-import { pageProjets, pageProjet, bindProjet, projetsDeRoadmap } from "./lib/projets.js";
+import { pageProjets, pageProjet, bindProjet, projetsDeRoadmap, projetProgress } from "./lib/projets.js";
 import { rater, reussir, aReviser, prochaine, cle as cleRev, decoder } from "./lib/revision.js";
 import { indicesDe, indicesHTML, libelleIndice } from "./lib/indices.js";
 import { exercicesHTML, bindExercices } from "./lib/exercices.js";
@@ -94,6 +94,18 @@ function bindSnippets(root) {
 
 /* ===================== Rendu des pages ===================== */
 const app = () => $("#app");
+/** Chiffres de l'espace personnel (#compte). */
+function tableauDeBord() {
+  const cours = COURSES.map(c => ({ c, p: courseProgress(c) })).filter(x => x.p.d > 0)
+    .map(({ c, p }) => ({ id: c.id, route: c.route, nom: c.name.replace(/<[^>]+>/g, ""), couleur: color(c.id), ...p }));
+  const projets = PROJETS.map(p => ({ id: p.id, titre: p.titre, ...projetProgress(S, p) })).filter(x => x.d > 0 && x.d < x.n);
+  return {
+    xp: S.xp, niveau: level(), serie: streak(),
+    lecons: { d: ALL.filter(x => lessonState(x.l).done).length, n: ALL.length },
+    revisions: aReviser(S.revision || {}, today()).length, prochaine: prochaine(S.revision || {}, today()),
+    cours, projets, roadmaps: ROADMAPS.map(r => ({ id: r.id, ...rmProgress(r) }))
+  };
+}
 function setNav(route) {
   const lesson = byId(route);
   $$(".nav a").forEach(a => {
@@ -602,7 +614,18 @@ function render() {
   else if (route === "atelier") { el.innerHTML = pageAtelier(); bind = bindAtelier; }
   else if (["connexion", "inscription", "mot-de-passe-oublie"].includes(route)) { el.innerHTML = pageConnexion(route === "mot-de-passe-oublie" ? "oubli" : route); bind = () => bindConnexion({ apres: "#compte" }); }
   else if (route === "nouveau-mot-de-passe") { el.innerHTML = pageNouveauMdp(); bind = () => bindNouveauMdp({ fini: () => { toast("Mot de passe modifié", I.check); location.hash = "#compte"; } }); }
-  else if (route === "compte") { el.innerHTML = pageCompte(); bind = () => bindCompte({ fini: () => { toast("Tu es déconnecté", I.check); location.hash = "#home"; } }); }
+  else if (route === "compte") {
+    el.innerHTML = pageCompte(tableauDeBord(), ROADMAPS, profilCourant);
+    bind = () => bindCompte({
+      deconnecte: () => { toast("Tu es déconnecté", I.check); location.hash = "#home"; },
+      profilMaj: (p) => { profilCourant = p; majEntete(p); },
+      supprime: () => {
+        if (synchro) { synchro.arreter(); synchro = null; }
+        profilCourant = null; resetAll(); majEntete(null); updateStats();
+        toast("Compte et données supprimés", I.check); location.hash = "#home";
+      }
+    });
+  }
   else if (route === "confidentialite") el.innerHTML = pageConfidentialite();
   else if (ROADMAPS.some(r => r.id === route)) { const r = ROADMAPS.find(r => r.id === route); el.innerHTML = pageRoadmap(r); bind = () => bindRoadmap(r); }
   else if (byId(route)) { const x = byId(route); el.innerHTML = pageLesson(x); bind = () => bindLesson(x); }
@@ -674,7 +697,7 @@ if (comptesActifs()) {
     else lancerSynchro(session);
     majEntete(profilCourant);
     if (session && (evenement === "SIGNED_IN" || evenement === "INITIAL_SESSION")) {
-      lireProfil().then((p) => { profilCourant = p; majEntete(p); }).catch(() => {});
+      lireProfil().then((p) => { profilCourant = p; majEntete(p); if ((location.hash || "").slice(1) === "compte") render(); }).catch(() => {});
       const apres = pageApresConnexion();
       if (apres) { location.hash = apres; return; }
       if (evenement === "SIGNED_IN" && ["connexion", "inscription"].includes(route)) { location.hash = "#compte"; return; }
