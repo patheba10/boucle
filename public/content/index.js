@@ -24,11 +24,15 @@ import installer from "./guides/installer.js";
 import { CERTS as certs } from "./certifs/index.js";
 import { PROJETS as projets } from "./projets/index.js";
 import { EXERCICES } from "./exercices/index.js";
+import { DEFIS } from "./defis/index.js";
 
 export const COURSES = [python, data, git, cicd, linux, docker, kubernetes, exploitation, terraform, aws, sql, api, dl, elec, logique, embarque, algo, sysdesign, entretiens, cpp];
-for (const c of COURSES) for (const l of c.lessons) if (EXERCICES[l.id]) l.exercices = [...(l.exercices || []), ...EXERCICES[l.id]];
-/** Ids de leçon cités par les fichiers d'exercices (npm run validate vérifie qu'ils existent). */
-export const EXERCICES_IDS = Object.keys(EXERCICES);
+for (const c of COURSES) for (const l of c.lessons) {
+  if (EXERCICES[l.id]) l.exercices = [...(l.exercices || []), ...EXERCICES[l.id]];
+  if (DEFIS[l.id]) l.defis = [...(l.defis || []), ...DEFIS[l.id]];
+}
+/** Ids de leçon cités par les fichiers d'exercices et de défis gradués (npm run validate vérifie qu'ils existent). */
+export const EXERCICES_IDS = [...Object.keys(EXERCICES), ...Object.keys(DEFIS)];
 export const ROADMAPS = roadmaps;
 /* Regroupement des cours par domaine, pour la page Cours et l'accueil (chaque cours dans un seul groupe). */
 export const GROUPES = [

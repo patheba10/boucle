@@ -5,6 +5,7 @@ import { pageProjets, pageProjet, bindProjet, projetsDeRoadmap } from "./lib/pro
 import { rater, reussir, aReviser, prochaine, cle as cleRev, decoder } from "./lib/revision.js";
 import { indicesDe, indicesHTML, libelleIndice } from "./lib/indices.js";
 import { exercicesHTML, bindExercices } from "./lib/exercices.js";
+import { defisDe, defiFait, solutionVue, cleCode, xpDefi, marquerFait, marquerSolution, ongletsHTML, NIVEAUX } from "./lib/defis.js";
 import { I } from "./lib/icons.js";
 import { esc, $, $$, inl, norm, color, today, toast as rawToast } from "./lib/util.js";
 import { S, save, resetAll, remplacer, markDay, streak, level, ls, XP_PER_LEVEL } from "./lib/state.js";
@@ -213,6 +214,25 @@ function quizHTML(l) {
   }).join("");
 }
 
+/* Défi à éditeur (Python, SQL, C, C++) : le défi principal, ou l'un des défis gradués (onglets). */
+function defiCorpsHTML(x, k) {
+  const { c, l } = x; const lang = l.lang || c.lang; const L = ls(l.id);
+  const defis = defisDe(l); const ch = defis[k]; const fait = defiFait(L, ch);
+  const cle = cleCode(l, ch); const code = S.code[cle] != null ? S.code[cle] : ch.starter || "";
+  const file = lang === "py" ? "main.py" : lang === "sql" ? "requete.sql" : lang === "c" ? "main.c" : "main.cpp";
+  return '<div class="block-h"><span class="n">3</span><h2>Défi' + (k ? " · " + NIVEAUX[ch.niveau].nom : "") + '</h2><span class="chip' + (fait ? " ok" : " acc") + '">' + (fait ? I.check + "Réussi" : "+" + xpDefi(l, ch, false) + " XP") + "</span></div>" +
+    ongletsHTML(defis, L, k, I.check) +
+    '<div class="prose">' + inl(ch.prompt) + "</div>" +
+    '<div class="ide" style="--c:' + color(c.id) + '"><div class="ide-bar"><span class="file"><i></i>' + file + "</span>" +
+      '<button class="tb" type="button" data-act="hint">' + I.bulb + "Indice</button>" +
+      '<button class="tb" type="button" data-act="sol">' + I.eye + "Solution</button>" +
+      '<button class="tb" type="button" data-act="reset">' + I.reset + "Réinitialiser</button></div>" +
+      editorHTML("ed-" + l.id, lang, code) +
+      '<div class="ide-actions"><button class="btn sm" type="button" data-act="run">' + I.play + 'Exécuter</button><button class="btn sm primary" type="button" data-act="check">' + I.check + 'Vérifier</button><span class="kbd">Ctrl + Entrée pour exécuter</span></div>' +
+      '<div class="console" aria-live="polite"><span class="lbl">Console</span><span class="dim">Exécute ton code pour voir la sortie ici.' + (lang === "cpp" ? " Pour « Exécuter », l'entrée du premier test est utilisée." : "") + "</span></div>" +
+    "</div><div data-slot=\"hint\"></div><div data-slot=\"verdict\"></div>";
+}
+
 function pageLesson(x) {
   const { c, l, i } = x; const lang = l.lang || c.lang; const st = lessonState(l); const L = ls(l.id);
   S.last = l.id; save();
@@ -220,7 +240,6 @@ function pageLesson(x) {
   const ch = l.challenge;
   const term = ch && (lang === "git" || (lang === "sh" && ch.kind !== "script"));
   const code = (S.code[l.id] != null && !term ? S.code[l.id] : (ch ? ch.starter || "" : ""));
-  const file = lang === "py" ? "main.py" : lang === "sql" ? "requete.sql" : lang === "c" ? "main.c" : "main.cpp";
   const nQuiz = (l.quiz || []).length;
   let right = "";
   if (term) {
@@ -245,16 +264,7 @@ function pageLesson(x) {
         (lang === "yaml" ? '<div class="wf-live" aria-live="polite"></div>' : "") +
       "</div><div data-slot=\"hint\"></div><div data-slot=\"verdict\"></div></section>";
   } else if (ch) {
-    right = '<section class="card block" id="defi"><div class="block-h"><span class="n">3</span><h2>Défi</h2><span class="chip' + (st.chDone ? " ok" : " acc") + '">' + (st.chDone ? I.check + "Réussi" : "+" + Math.round(l.xp * 0.6) + " XP") + "</span></div>" +
-      '<div class="prose">' + inl(ch.prompt) + "</div>" +
-      '<div class="ide" style="--c:' + color(c.id) + '"><div class="ide-bar"><span class="file"><i></i>' + file + "</span>" +
-        '<button class="tb" type="button" data-act="hint">' + I.bulb + "Indice</button>" +
-        '<button class="tb" type="button" data-act="sol">' + I.eye + "Solution</button>" +
-        '<button class="tb" type="button" data-act="reset">' + I.reset + "Réinitialiser</button></div>" +
-        editorHTML("ed-" + l.id, lang, code) +
-        '<div class="ide-actions"><button class="btn sm" type="button" data-act="run">' + I.play + 'Exécuter</button><button class="btn sm primary" type="button" data-act="check">' + I.check + 'Vérifier</button><span class="kbd">Ctrl + Entrée pour exécuter</span></div>' +
-        '<div class="console" aria-live="polite"><span class="lbl">Console</span><span class="dim">Exécute ton code pour voir la sortie ici.' + (lang === "cpp" ? " Pour « Exécuter », l'entrée du premier test est utilisée." : "") + "</span></div>" +
-      "</div><div data-slot=\"hint\"></div><div data-slot=\"verdict\"></div></section>";
+    right = '<section class="card block" id="defi">' + defiCorpsHTML(x, 0) + "</section>";
   } else if (l.practice) {
     right = '<section class="card block"><div class="block-h"><span class="n">3</span><h2>' + esc(l.practice.title || "Pratique") + '</h2></div><div class="prose">' + theoryHTML(l.practice.body, "bash", false) + "</div></section>";
   } else if (lang === "cpp") {
@@ -311,9 +321,19 @@ function bindLesson(x) {
   if (lang === "git" || (lang === "sh" && ch.kind !== "script")) { bindTermChallenge(x, L, lang); return; }
   if (lang === "sh") { bindScriptChallenge(x, L); return; }
   if (lang === "yaml") { bindYamlChallenge(x, L); return; }
+  bindEditeur(x, L, 0);
+}
+
+function bindEditeur(x, L, k) {
+  const { c, l } = x; const lang = l.lang || c.lang; const ch = defisDe(l)[k]; const cle = cleCode(l, ch);
+  $$("[data-defi]").forEach(b => b.addEventListener("click", () => {
+    const k2 = +b.dataset.defi; if (k2 === k) return;
+    $("#defi").innerHTML = defiCorpsHTML(x, k2); bindEditeur(x, L, k2);
+    const o = $('[data-defi="' + k2 + '"]'); if (o) o.focus();
+  }));
   const root = $('[data-ed="ed-' + l.id + '"]'); const cons = $(".console");
   let tSave;
-  const ed = mountEditor(root, v => { clearTimeout(tSave); tSave = setTimeout(() => { S.code[l.id] = v; save(); }, 300); }, () => doRun());
+  const ed = mountEditor(root, v => { clearTimeout(tSave); tSave = setTimeout(() => { S.code[cle] = v; save(); }, 300); }, () => doRun());
   const btnRun = $('[data-act="run"]'), btnCheck = $('[data-act="check"]');
   const busy = on => { btnRun.disabled = on; btnCheck.disabled = on; };
   async function doRun() {
@@ -333,23 +353,28 @@ function bindLesson(x) {
       const r = await check(lang, ch, ed.get(), t => { cons.innerHTML = lbl + statusHTML(t); }, l.db || c.db || "");
       cons.innerHTML = lbl + consoleHTML({ out: r.pre || "", err: r.err, line: r.line, figs: r.figs }, lang, r.userLines);
       slot.innerHTML = verdictHTML(r, lang);
-      if (r.ok && !L.ch) {
-        L.ch = true; const xp = Math.round(l.xp * 0.6) * (L.sol ? 0.5 : 1);
-        gain(Math.round(xp), L.sol ? "défi réussi (solution vue)" : "défi réussi"); refreshSteps(x);
-      } else if (!r.ok) { L.fails = (L.fails || 0) + 1; save(); }
+      if (r.ok) {
+        const vue = solutionVue(L, ch);
+        if (marquerFait(L, ch)) {
+          gain(xpDefi(l, ch, vue), (k ? "défi " + NIVEAUX[ch.niveau].nom.toLowerCase() + " réussi" : "défi réussi") + (vue ? " (solution vue)" : ""));
+          if (k) { const o = $('[data-defi="' + k + '"]'); if (o) { o.classList.add("fait"); o.innerHTML = I.check + NIVEAUX[ch.niveau].nom; } const ch2 = $("#defi .block-h .chip"); if (ch2) { ch2.className = "chip ok"; ch2.innerHTML = I.check + "Réussi"; } }
+          else { const o = $('[data-defi="0"]'); if (o) { o.classList.add("fait"); o.innerHTML = I.check + "Défi"; } refreshSteps(x); }
+        }
+      } else { L.fails = (L.fails || 0) + 1; save(); }
     } catch (e) { cons.innerHTML = '<span class="lbl">Console</span>' + loadFailHTML(lang, e); }
     busy(false);
   }
   btnRun.addEventListener("click", doRun);
   btnCheck.addEventListener("click", doCheck);
-  $('[data-act="reset"]').addEventListener("click", () => { ed.set(ch.starter); delete S.code[l.id]; save(); $('[data-slot="verdict"]').innerHTML = ""; });
+  $('[data-act="reset"]').addEventListener("click", () => { ed.set(ch.starter); delete S.code[cle]; save(); $('[data-slot="verdict"]').innerHTML = ""; });
   bindIndices(ch);
   const solBtn = $('[data-act="sol"]'); let armed = false;
   solBtn.addEventListener("click", () => {
-    if (L.ch || L.sol || armed) {
-      if (!L.ch && !L.sol) { L.sol = true; save(); }
+    const fait = defiFait(L, ch), vue = solutionVue(L, ch);
+    if (fait || vue || armed) {
+      if (!fait && !vue) { marquerSolution(L, ch); save(); }
       ed.set(ch.solution); armed = false; solBtn.innerHTML = I.eye + "Solution";
-      $('[data-slot="hint"]').innerHTML = '<div class="hint-box"><b>Solution chargée.</b> Lis-la ligne par ligne, puis clique sur Vérifier.' + (L.ch ? "" : " Le défi rapportera la moitié des XP.") + "</div>";
+      $('[data-slot="hint"]').innerHTML = '<div class="hint-box"><b>Solution chargée.</b> Lis-la ligne par ligne, puis clique sur Vérifier.' + (fait ? "" : " Le défi rapportera la moitié des XP.") + "</div>";
     } else {
       armed = true; solBtn.innerHTML = I.eye + "Confirmer (½ XP)";
       setTimeout(() => { if (armed) { armed = false; solBtn.innerHTML = I.eye + "Solution"; } }, 4000);
