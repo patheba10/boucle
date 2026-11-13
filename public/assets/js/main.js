@@ -4,6 +4,7 @@ import { pageCerts, pageCert, bindCert } from "./lib/examview.js";
 import { pageProjets, pageProjet, bindProjet, projetsDeRoadmap } from "./lib/projets.js";
 import { rater, reussir, aReviser, prochaine, cle as cleRev, decoder } from "./lib/revision.js";
 import { indicesDe, indicesHTML, libelleIndice } from "./lib/indices.js";
+import { exercicesHTML, bindExercices } from "./lib/exercices.js";
 import { I } from "./lib/icons.js";
 import { esc, $, $$, inl, norm, color, today, toast as rawToast } from "./lib/util.js";
 import { S, save, resetAll, remplacer, markDay, streak, level, ls, XP_PER_LEVEL } from "./lib/state.js";
@@ -263,11 +264,13 @@ function pageLesson(x) {
   return '<div style="--c:' + color(c.id) + ';display:flex;flex-direction:column;gap:22px">' +
     '<div class="lesson-head"><div class="crumbs"><a href="#home">Accueil</a><span>/</span><a href="#' + c.route + '">' + c.name + "</a><span>/</span><span>Leçon " + (i + 1) + "</span></div>" +
       "<h1>" + esc(l.title) + '</h1><div class="steps"><a href="#theorie" data-jump="theorie">' + I.book + 'Théorie</a><a href="#quiz" data-jump="quiz" class="' + (st.quizDone ? "ok" : "") + '">' + (st.quizDone ? I.check : "") + "Quiz</a>" +
+      ((l.exercices || []).length ? '<a href="#exercices" data-jump="exercices">Exercices</a>' : "") +
       (ch ? '<a href="#defi" data-jump="defi" class="' + (st.chDone ? "ok" : "") + '">' + (st.chDone ? I.check : "") + "Défi</a>" : "") + "</div></div>" +
     '<div class="lesson-grid"><div class="lesson-col">' +
       '<section class="card block" id="theorie"><div class="block-h"><span class="n">1</span><h2>Théorie</h2></div><div class="prose">' + theoryHTML(l.theory, lang, true) + "</div></section>" +
       (l.setup ? '<details class="card block setup"><summary><span class="block-h"><span class="n">' + I.info + '</span><h2>Sur ta machine</h2></span></summary><div class="prose">' + theoryHTML(l.setup, "bash", false) + "</div></details>" : "") +
       '<section class="card block" id="quiz"><div class="block-h"><span class="n">2</span><h2>Quiz</h2><span class="chip' + (st.quizDone ? " ok" : " acc") + '">' + (st.quizDone ? I.check + "Réussi" : "+" + (ch ? Math.round(l.xp * 0.4) : l.xp) + " XP") + "</span></div>" + quizHTML(l) + "</section>" +
+      exercicesHTML(l, L, highlight, lang, I) +
     '</div><div class="lesson-col sticky">' + right + "</div></div>" +
     '<nav class="lesson-nav">' + (prev ? '<a class="btn" href="#' + prev.id + '">' + I.back + esc(prev.title) + "</a>" : '<a class="btn" href="#' + c.route + '">' + I.back + "Sommaire</a>") +
       (next ? '<a class="btn primary" href="#' + next.id + '">' + esc(next.title) + I.arrow + "</a>" : '<a class="btn primary" href="#roadmaps">Voir les roadmaps' + I.arrow + "</a>") + "</nav></div>";
@@ -303,6 +306,7 @@ function bindLesson(x) {
       qd.appendChild(p);
     }));
   });
+  bindExercices(l, L, { gain, highlight, lang, I });
   if (!ch) return;
   if (lang === "git" || (lang === "sh" && ch.kind !== "script")) { bindTermChallenge(x, L, lang); return; }
   if (lang === "sh") { bindScriptChallenge(x, L); return; }

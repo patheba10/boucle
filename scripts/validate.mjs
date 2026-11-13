@@ -19,6 +19,7 @@ import { COURSES, ROADMAPS, INSTALL, CERTS, PROJETS, GROUPES } from "../public/c
 import { lintCert, buildExam, grade } from "../public/assets/js/lib/exam.js";
 import { sqlRunProgram, sqlCheckProgram, parseSqlCheck } from "../public/assets/js/lib/sql.js";
 import { cProgram } from "../public/assets/js/lib/engines.js";
+import { trous, codeComplet, verifierOrdre, melange } from "../public/assets/js/lib/exercices.js";
 import { runScript, evaluate as evaluateGit } from "../public/assets/js/lib/gitsim.js";
 import { lint as lintWorkflow, evaluate as evaluateWorkflow } from "../public/assets/js/lib/workflow.js";
 import { createShell, evaluate as evaluateShell } from "../public/assets/js/lib/shell/shell.js";
@@ -110,6 +111,43 @@ function cppCheck(ch, code, runner) {
     if (r.err || norm(r.out) !== norm(t.expected)) return { pass: false, got: r.out, err: r.err, input: t.input };
   }
   return { pass: true };
+}
+
+/* ---------- Exercices courts (lib/exercices.js) ---------- */
+// Chaque code est exécuté : en Python, et en C avec gcc et l'interpréteur du navigateur (sorties identiques exigées).
+function executer(lang, code) {
+  if (lang === "py") return runPy(code);
+  const g = runGcc(code), m = runMinic(code);
+  if (g.err) return { out: "", err: "gcc : " + g.err };
+  if (m.err) return { out: "", err: "navigateur : " + m.err };
+  if (norm(g.out) !== norm(m.out)) return { out: "", err: "sorties différentes entre gcc et le navigateur" };
+  return g;
+}
+function verifierExercices(c, l) {
+  (l.exercices || []).forEach((ex, i) => {
+    const ou = l.id + " exercice " + (i + 1), lang = ex.lang || l.lang || c.lang;
+    if (!["sortie", "trous", "ordre"].includes(ex.type)) return fail(ou, "type inconnu : " + ex.type);
+    if (!ex.explain) return fail(ou, "explication manquante");
+    if (lang !== "py" && lang !== "c") return fail(ou, "langage non exécutable : " + lang);
+    let code;
+    if (ex.type === "sortie") {
+      if (!ex.code || ex.reponse == null) return fail(ou, "code ou réponse manquant");
+      code = ex.code;
+    } else if (ex.type === "trous") {
+      const t = trous(ex.code || "");
+      if (!t.length || t.some((r) => r.some((x) => !x))) return fail(ou, "aucun trou, ou réponse vide");
+      code = codeComplet(ex.code);
+    } else {
+      if (!Array.isArray(ex.lignes) || ex.lignes.length < 3) return fail(ou, "il faut au moins 3 lignes");
+      if (verifierOrdre(ex, melange(ex.lignes.length, l.id + "/" + i))) return fail(ou, "le mélange donne déjà le bon ordre");
+      code = ex.lignes.join("\n");
+    }
+    const r = executer(lang, code);
+    if (r.err) return fail(ou, "le code ne s'exécute pas : " + r.err);
+    const attendu = ex.type === "sortie" ? ex.reponse : ex.attendu;
+    if (attendu != null && norm(r.out) !== norm(attendu)) return fail(ou, "sortie " + JSON.stringify(r.out.slice(0, 200)) + " au lieu de " + JSON.stringify(attendu));
+    ok();
+  });
 }
 
 /* ---------- Structure ---------- */
@@ -224,6 +262,7 @@ for (const c of COURSES) for (const l of c.lessons) {
       if (!/norun/.test(opts)) { const j = runJscpp(code, stdin); j.err ? fail(l.id, "extrait C++ (navigateur) : " + j.err) : ok(); }
     }
   }
+  verifierExercices(c, l);
   const ch = l.challenge;
   if (!ch) continue;
   const clang = l.lang || c.lang;

@@ -378,3 +378,40 @@ def test_terminal_linux(page):
     expect(page.locator('[data-slot="verdict"] .verdict.no')).to_be_visible()
     expect(page.locator('[data-slot="verdict"] .crit li.ok', has_text="deploy.sh a les droits 700")).to_have_count(1)
     expect(page.locator('[data-slot="verdict"] .crit li.no')).to_have_count(3)
+
+
+def test_exercices_courts(page):
+    """Les trois formats d'exercice : erreur signalée, puis réussite enregistrée et conservée au rechargement."""
+    page.goto(page.base + "#py-03")
+    blocs = page.locator("#exercices [data-ex]")
+    expect(blocs).to_have_count(3)
+    sortie, trous, ordre = blocs.nth(0), blocs.nth(1), blocs.nth(2)
+    sortie.locator("textarea").fill("ou\n12")
+    sortie.locator("[data-ex-verif]").click()
+    expect(sortie.locator(".explain.no")).to_be_visible()
+    sortie.locator("textarea").fill("ou l\n12\n")
+    sortie.locator("[data-ex-verif]").click()
+    expect(sortie.locator(".explain b")).to_have_text("Exact.")
+    champs = trous.locator("input.trou")
+    champs.nth(0).fill("f")
+    champs.nth(1).fill("upper")
+    trous.locator("[data-ex-verif]").click()
+    expect(champs.nth(1)).to_have_class(re.compile("faux"))
+    champs.nth(1).fill("title")
+    trous.locator("[data-ex-verif]").click()
+    expect(trous.locator(".explain b")).to_have_text("Exact.")
+    # Remonte chaque ligne à sa place, comme le ferait l'élève avec les flèches.
+    attendu = ['prenom = "grace"', "initiale = prenom[0].upper()", 'message = f"Initiale : {initiale}"', "print(message)"]
+    for cible, texte in enumerate(attendu):
+        while True:
+            lignes = ordre.locator("li code").all_inner_texts()
+            k = lignes.index(texte)
+            if k == cible:
+                break
+            ordre.locator("li").nth(k).locator("[data-monter]").click()
+    ordre.locator("[data-ex-verif]").click()
+    expect(ordre.locator(".explain b")).to_have_text("Exact.")
+    expect(page.locator("[data-ex-chip]")).to_contain_text("Réussis")
+    page.reload()
+    expect(page.locator("#exercices .ex.fait")).to_have_count(3)
+    assert page.errors == []
