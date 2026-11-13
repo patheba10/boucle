@@ -4,7 +4,7 @@
 
 | Story | Points | Statut |
 |-------|--------|--------|
-| #139 C-1 Boucle hors ligne (PWA) | 8 | En cours |
+| #139 C-1 Boucle hors ligne (PWA) | 8 | Terminé |
 
 ## Conception
 
@@ -18,3 +18,19 @@
 
 - 13 nov. : manifeste et icônes, `sw.js`, générateur et test de la liste, enregistrement dans `main.js` avec un message quand le réseau tombe.
 - 13 nov. : tests e2e. Le service worker est bloqué par défaut (chaque test part d'un navigateur neuf) ; deux tests le laissent actif, coupent le réseau et vérifient qu'une leçon jamais ouverte s'affiche et que Python s'exécute.
+- 13 nov. : la CI a trouvé deux défauts invisibles en local. (1) Un dossier `__pycache__` local changeait l'empreinte : le générateur ignore maintenant les fichiers cachés et les caches Python. (2) Pyodide n'était jamais mis en cache : `importScripts` demande le fichier en mode no-cors, la réponse est opaque (statut 0) et le service worker l'écartait. Il redemande désormais en mode cors. En local, la copie de Pyodide servie par Playwright masquait le problème ; le test la retire avant de couper le réseau.
+- 13 nov. : PR #142 verte et fusionnée ; version 0.41.0.
+
+## Revue de sprint
+
+| Story | Points | Livré |
+|-------|--------|-------|
+| #139 Boucle hors ligne (PWA) | 8 | Oui (PR #142) |
+
+## Rétrospective
+
+**Ce qui a marché.** Le test de bout en bout réseau coupé : il a trouvé le vrai défaut (réponse opaque), que la relecture du code n'aurait pas vu.
+
+**Ce qui a coincé.** Un test passait en local pour une mauvaise raison (la copie locale de Pyodide répondait même hors ligne). Un test doit retirer ce qui pourrait le faire réussir à tort.
+
+**À essayer.** Même méthode pour la CSP : les tests e2e échouent sur la moindre violation signalée par le navigateur.
