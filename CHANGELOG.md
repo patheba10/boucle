@@ -4,6 +4,16 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.42.0] — 2026-11-13
+
+Sprint 14.2 : Content-Security-Policy.
+
+### Sécurité
+- **Content-Security-Policy stricte** : aucun script inline, d'un autre domaine ou par eval sur la page ; en en-tête sur Vercel avec `frame-ancestors 'none'` et HSTS (#140).
+
+### Modifié
+- Le C++ tourne dans un Web Worker : une boucle infinie ne fige plus l'interface.
+
 ## [0.41.0] — 2026-11-13
 
 Sprint 14.1 : Boucle hors ligne.
