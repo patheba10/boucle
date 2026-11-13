@@ -4,6 +4,17 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.38.0] — 2026-11-12
+
+Sprint 12.2 : exercices dans les cours.
+
+### Ajouté
+- **94 exercices courts** dans les cours Python, Algorithmique et C embarqué, au moins deux par leçon à défi, tous vérifiés par exécution (#128).
+- « Remettre dans l'ordre » peut entourer les lignes de code fixe, pour ne faire ordonner que la partie utile.
+
+### Modifié
+- Les trous s'écrivent `⟦réponse⟧` au lieu de `[[réponse]]`, qui apparaissait dans du vrai Python.
+
 ## [0.37.0] — 2026-11-12
 
 Sprint 12.1 : exercices courts.
