@@ -15,11 +15,11 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 import vm from "node:vm";
-import { COURSES, ROADMAPS, INSTALL, CERTS, PROJETS, GROUPES } from "../public/content/index.js";
+import { COURSES, ROADMAPS, INSTALL, CERTS, PROJETS, GROUPES, EXERCICES_IDS } from "../public/content/index.js";
 import { lintCert, buildExam, grade } from "../public/assets/js/lib/exam.js";
 import { sqlRunProgram, sqlCheckProgram, parseSqlCheck } from "../public/assets/js/lib/sql.js";
 import { cProgram } from "../public/assets/js/lib/engines.js";
-import { trous, codeComplet, verifierOrdre, melange } from "../public/assets/js/lib/exercices.js";
+import { trous, codeComplet, codeOrdre, verifierOrdre, melange } from "../public/assets/js/lib/exercices.js";
 import { runScript, evaluate as evaluateGit } from "../public/assets/js/lib/gitsim.js";
 import { lint as lintWorkflow, evaluate as evaluateWorkflow } from "../public/assets/js/lib/workflow.js";
 import { createShell, evaluate as evaluateShell } from "../public/assets/js/lib/shell/shell.js";
@@ -134,13 +134,14 @@ function verifierExercices(c, l) {
       if (!ex.code || ex.reponse == null) return fail(ou, "code ou réponse manquant");
       code = ex.code;
     } else if (ex.type === "trous") {
+      if ((ex.code.match(/⟦/g) || []).length !== (ex.code.match(/⟧/g) || []).length) return fail(ou, "trou mal fermé (⟦ … ⟧)");
       const t = trous(ex.code || "");
       if (!t.length || t.some((r) => r.some((x) => !x))) return fail(ou, "aucun trou, ou réponse vide");
       code = codeComplet(ex.code);
     } else {
       if (!Array.isArray(ex.lignes) || ex.lignes.length < 3) return fail(ou, "il faut au moins 3 lignes");
       if (verifierOrdre(ex, melange(ex.lignes.length, l.id + "/" + i))) return fail(ou, "le mélange donne déjà le bon ordre");
-      code = ex.lignes.join("\n");
+      code = codeOrdre(ex);
     }
     const r = executer(lang, code);
     if (r.err) return fail(ou, "le code ne s'exécute pas : " + r.err);
@@ -194,6 +195,7 @@ for (const p of PROJETS) {
 }
 for (const c of COURSES) { const n = GROUPES.filter((g) => g.cours.includes(c.id)).length; if (n !== 1) fail(c.id, "cours présent dans " + n + " groupe(s) de la page Cours (il en faut exactement 1)"); }
 for (const g of GROUPES) for (const id of g.cours) if (!COURSES.some((c) => c.id === id)) fail("groupes", "cours inconnu : " + id);
+for (const id of EXERCICES_IDS) if (!ids.has(id)) fail("exercices", "leçon inconnue : " + id);
 for (const sec of INSTALL.sections) if (!sec.id || !sec.title || !sec.body) fail("installer", "section incomplète");
 ok();
 
