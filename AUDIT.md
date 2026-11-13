@@ -14,11 +14,11 @@ Priorités : **P0** bloquant pour l'objectif, **P1** fort impact, **P2** confort
 
 | # | Constat | Priorité | Statut |
 |---|---------|----------|--------|
-| 1 | Aucun contenu sur la data (NumPy, pandas, Matplotlib, scikit-learn), Git, SQL, cloud, TensorFlow ou hardware. | P0 | Étapes 2 à 8 |
+| 1 | Aucun contenu sur la data (NumPy, pandas, Matplotlib, scikit-learn), Git, SQL, cloud, TensorFlow ou hardware. | P0 | **Fait** (étapes 2 à 8) : 20 cours, de Python au C embarqué |
 | 2 | Un seul défi par leçon : pas assez de répétition pour ancrer une notion. Viser 3 défis gradués (facile, moyen, entretien). | P1 | Fait (0.39.0, 0.40.0) : défis en onglets ; entretien en algorithmique, SQL et C embarqué, moyens en Python |
 | 3 | Aucune révision : une erreur de quiz n'est jamais reproposée. Ajouter une file de révision espacée (J+1, J+3, J+7). | P1 | **Fait** (A-2) : page Révisions et carte sur l'accueil ; une question ratée revient à J+1, J+3, J+7 et sort après trois réussites |
 | 4 | Pas de projet guidé en plusieurs étapes, alors que les recruteurs regardent des projets. | P1 | **Fait** (étape 9) : 8 projets capstone avec jalons, 2 par roadmap |
-| 5 | Rien pour préparer les entretiens : structures de données, patterns d'algorithmes, system design, questions comportementales. | P1 | Étape 8 |
+| 5 | Rien pour préparer les entretiens : structures de données, patterns d'algorithmes, system design, questions comportementales. | P1 | **Fait** (étape 8) : Algorithmique, System design, Entretiens, examens blancs d'entretien |
 | 6 | Un seul format d'exercice (QCM). Ajouter « prédire la sortie », « compléter le code », « remettre les lignes dans l'ordre ». | P2 | Fait (0.37.0, 0.38.0) : trois formats, 94 exercices en Python, Algorithmique et C embarqué, vérifiés par exécution |
 | 7 | Un seul indice, révélé d'un coup. Passer à des indices progressifs. | P2 | **Fait** (A-3) : l'indice se révèle phrase par phrase (ou depuis une liste `hints`), sans jamais couper un extrait de code |
 | 8 | Théorie parfois courte, sans schéma. Ajouter des diagrammes (mémoire, pointeurs, Git, circuits). | P2 | En continu |
