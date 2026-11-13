@@ -17,6 +17,6 @@
   },
   "devDependencies": {
     "js-yaml": "4.3.2",
-    "JSCPP": "2.0.6"
+    "JSCPP": "2.0.9"
   }
 }
