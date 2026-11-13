@@ -24,7 +24,7 @@ export default [
         lessons: ["ci-13"], links: [["Docker : bien démarrer", "https://docs.docker.com/get-started/"]] },
       { id: "do-cicd", title: "CI/CD", desc: "Pipelines qui testent, construisent et déploient à chaque push. Cache, matrices, secrets, environnements, déploiement continu.",
         skills: ["GitHub Actions / GitLab CI", "tests automatisés", "build et push d'images", "gestion des secrets"], project: "Pipeline GitHub Actions : lint → tests → build Docker → push vers un registre → déploiement.",
-        lessons: ["ci-02", "ci-04", "ci-06", "ci-09", "ci-15", "ci-21"], links: [["GitHub Actions", "https://docs.github.com/fr/actions"]] }
+        lessons: ["ci-02", "ci-04", "ci-06", "ci-09", "ci-15", "ci-21", "ci-23"], links: [["GitHub Actions", "https://docs.github.com/fr/actions"]] }
     ]},
     { title: "Infrastructure", nodes: [
       { id: "do-iac", title: "Infrastructure as Code", desc: "Décrire l'infrastructure dans du code versionné : plan, apply, state distant, modules réutilisables.",
@@ -43,7 +43,7 @@ export default [
         links: [["Prometheus", "https://prometheus.io/docs/introduction/overview/"], ["OpenTelemetry", "https://opentelemetry.io/docs/"]] },
       { id: "do-sec", title: "DevSecOps", desc: "Sécurité intégrée au pipeline : scans de dépendances et d'images, secrets hors du code, moindre privilège.",
         skills: ["scan d'images (Trivy)", "gestion des secrets", "moindre privilège", "OWASP Top 10"], project: "Ajouter un scan Trivy au pipeline qui bloque les vulnérabilités critiques.",
-        lessons: ["ci-11", "ci-12"], links: [["Trivy", "https://trivy.dev/"], ["OWASP Top 10", "https://owasp.org/www-project-top-ten/"]] },
+        lessons: ["ci-11", "ci-12", "ci-24"], links: [["Trivy", "https://trivy.dev/"], ["OWASP Top 10", "https://owasp.org/www-project-top-ten/"]] },
       { id: "do-sre", title: "Fiabilité (SRE)", desc: "SLI, SLO et budget d'erreur, gestion d'incidents, postmortems sans blâme, réduction du travail manuel.",
         skills: ["SLI / SLO", "budget d'erreur", "runbooks", "postmortems"], project: "Définir 2 SLO pour ton API et un runbook d'incident.",
         links: [["Google SRE Book", "https://sre.google/sre-book/table-of-contents/"]] }
