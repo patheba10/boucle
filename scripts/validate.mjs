@@ -163,7 +163,7 @@ function verifierDefisGradues(c, l) {
     if (vus.has(d.niveau)) { fail(ou, "un seul défi par niveau"); continue; }
     vus.add(d.niveau);
     if (!LANGS_DEFIS.includes(lang)) { fail(ou, "langage sans défis gradués : " + lang); continue; }
-    const manque = ["prompt", "starter", "solution", "expected"].filter((k) => d[k] == null).concat(d.hint || (d.hints || []).length ? [] : ["hint"]);
+    const manque = ["prompt", "starter", "solution", ...(lang === "sql" ? [] : ["expected"])].filter((k) => d[k] == null).concat(d.hint || (d.hints || []).length ? [] : ["hint"]);
     if (manque.length) { fail(ou, "champ manquant : " + manque.join(", ")); continue; }
     if (lang === "py") {
       const s = pyCheck(d, d.solution); s.pass ? ok() : fail(ou, "la solution échoue : " + (s.err || JSON.stringify(s.got)));
