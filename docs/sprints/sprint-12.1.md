@@ -4,7 +4,7 @@
 
 | Story | Points | Statut |
 |-------|--------|--------|
-| #127 B-1 Moteur des exercices courts | 8 | En cours |
+| #127 B-1 Moteur des exercices courts | 8 | Terminé |
 
 ## Conception
 
@@ -17,3 +17,20 @@
 ## Journal
 
 - 12 nov. : module, rendu dans la leçon (section « Exercices » après le quiz), validation par exécution, trois exercices d'exemple en Python (py-03) et en C (em-03), tests unitaires et test de bout en bout des trois formats.
+- 12 nov. : PR #130, les trois jobs verts. Fusionnée ; version 0.37.0.
+
+## Revue de sprint
+
+| Story | Points | Livré |
+|-------|--------|-------|
+| #127 Moteur des exercices courts | 8 | Oui (PR #130) |
+
+Vélocité : 8 points sur 8. Version 0.37.0. 1 124 vérifications, 113 tests unitaires.
+
+## Rétrospective
+
+**Ce qui a marché.** Écrire les exercices puis faire échouer exprès la validation (mauvaise réponse, mauvaise sortie) : on sait que la vérification attrape vraiment les erreurs.
+
+**Ce qui a coincé.** Le séparateur `|` prévu pour les réponses multiples est un opérateur en C : remplacé par `§`. Une étiquette de gabarit inexistante (`R` dans un fichier qui utilise `C`) passe `node --check` ; seul l'import réel la révèle.
+
+**À essayer.** Remplir les cours avec deux exercices par leçon à défi (B-2), en calculant chaque réponse par exécution.
