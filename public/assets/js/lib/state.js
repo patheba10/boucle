@@ -13,12 +13,18 @@ function load() {
   } catch (e) { /* stockage indisponible : on garde un état en mémoire */ }
   return blank();
 }
-export function save() {
+const ecouteurs = new Set();
+/** Être prévenu de chaque sauvegarde (synchronisation avec le compte, lib/synchro.js). */
+export function surSauvegarde(f) { ecouteurs.add(f); }
+/** Enregistre la progression. « silencieux » : sans changer l'horodatage ni prévenir (état venu du compte). */
+export function save(silencieux = false) {
+  if (!silencieux) S.maj = Date.now();
   try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* ignoré */ }
+  if (!silencieux) ecouteurs.forEach((f) => f());
 }
 export function resetAll() { S = blank(); save(); }
-/** Remplace toute la progression (import d'une sauvegarde déjà validée). */
-export function remplacer(etat) { S = Object.assign(blank(), etat); save(); }
+/** Remplace toute la progression (import d'une sauvegarde déjà validée, ou état fusionné avec le compte). */
+export function remplacer(etat, silencieux = false) { S = Object.assign(blank(), etat); save(silencieux); }
 
 export function markDay() {
   const t = today();

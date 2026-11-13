@@ -587,3 +587,38 @@ def test_connexion_github_redirige_vers_le_fournisseur(page_comptes):
     assert q["provider"] == ["github"]
     assert q["redirect_to"] == [page.base.rstrip("#").split("#")[0]]
     assert q.get("code_challenge_method") == ["s256"]  # PKCE
+
+
+def test_progression_synchronisee(page_comptes):
+    """À la connexion, la progression du navigateur et celle du compte se rejoignent ; un conflit avec un autre
+    appareil est résolu par fusion, sans rien perdre."""
+    page = page_comptes
+    fs = page.supabase
+    fs.progression = {"donnees": {"xp": 80, "lessons": {"al-01": {"quiz": {}, "ch": True, "sol": False}}, "maj": 1, "compte": "11111111-1111-1111-1111-111111111111"}, "revision": 3}
+    page.add_init_script("""if (!sessionStorage.getItem("init")) { sessionStorage.setItem("init", "1");
+        localStorage.setItem("boucle-v1", JSON.stringify({ xp: 50, lessons: { "py-01": { quiz: {}, ch: true, sol: false } }, maj: 2, days: [] })); }""")
+    page.goto(page.base + "#connexion")
+    page.fill('input[name="email"]', "ada@exemple.org")
+    page.fill('input[name="mdp"]', "analytique42")
+    page.click('button[type="submit"]')
+    expect(page.locator("#synchro")).to_have_text("Ta progression est synchronisée avec ton compte.")
+    expect(page.locator("#xp")).to_have_text("80 XP")
+    assert fs.progression["revision"] == 4
+    lecons = fs.progression["donnees"]["lessons"]
+    assert lecons["py-01"]["ch"] and lecons["al-01"]["ch"], "le compte a les leçons des deux côtés"
+    # Un autre appareil écrit juste avant nous : conflit, relecture, fusion, nouvel envoi.
+    def autre_appareil(f):
+        d = dict(f.progression["donnees"])
+        d["lessons"] = {**d["lessons"], "sql-01": {"quiz": {}, "ch": True, "sol": False}}
+        f.progression = {"donnees": d, "revision": f.progression["revision"] + 1}
+    fs.avant_ecriture = autre_appareil
+    page.goto(page.base + "#devops")
+    page.locator('article.rnode[data-node="do-net"] label.check').click()
+    page.wait_for_function("() => document.querySelector('#synchro') && /synchronisée/.test(document.querySelector('#synchro').textContent)")
+    page.wait_for_timeout(2600)  # envoi groupé après 2 s
+    expect(page.locator("#synchro")).to_have_text("Ta progression est synchronisée avec ton compte.")
+    d = fs.progression["donnees"]
+    assert fs.progression["revision"] == 6
+    assert d["roadmap"]["do-net"] is True and d["lessons"]["sql-01"]["ch"] and d["lessons"]["py-01"]["ch"]
+    assert page.evaluate("JSON.parse(localStorage.getItem('boucle-v1')).lessons['sql-01'].ch") is True
+    assert page.errors == []
