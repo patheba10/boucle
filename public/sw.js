@@ -5,7 +5,7 @@
      utilisation. Python et C++ marchent donc hors ligne une fois qu'ils ont servi une fois.
    - Polices Google : cache, mis à jour en arrière-plan. */
 // <precache> généré par scripts/precache.mjs, ne pas modifier à la main
-const VERSION = "d17cb6460509";
+const VERSION = "cec544e17aaf";
 const PRECACHE = [
   "./",
   "assets/css/style.css",
@@ -57,9 +57,6 @@ const PRECACHE = [
   "assets/js/main.js",
   "assets/js/vendor/js-yaml.mjs",
   "assets/js/workers/python-worker.js",
-  "assets/py/__pycache__/harness.cpython-313.pyc",
-  "assets/py/__pycache__/minic.cpython-313.pyc",
-  "assets/py/__pycache__/minikeras.cpython-313.pyc",
   "assets/py/harness.py",
   "assets/py/mcu.h",
   "assets/py/minic.py",

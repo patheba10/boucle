@@ -20,7 +20,8 @@ function fichiers(dir) {
 }
 
 export function bloc() {
-  const liste = fichiers(PUBLIC).filter((f) => !EXCLUS.has(f) && !f.split("/").some((p) => p.startsWith("."))).sort();
+  // Ni fichiers cachés, ni caches Python (__pycache__ apparaît quand on exécute les tests en local).
+  const liste = fichiers(PUBLIC).filter((f) => !EXCLUS.has(f) && !f.split("/").some((p) => p.startsWith(".") || p === "__pycache__") && !f.endsWith(".pyc")).sort();
   const h = createHash("sha256");
   for (const f of liste) h.update(f + "\0").update(readFileSync(join(PUBLIC, f)));
   const files = ["./", ...liste.filter((f) => f !== "index.html"), "index.html"];
