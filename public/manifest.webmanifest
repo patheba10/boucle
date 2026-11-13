@@ -1,0 +1,17 @@
+{
+  "name": "Boucle : apprendre en pratiquant",
+  "short_name": "Boucle",
+  "description": "Python, data, DevOps, cloud et embarqué par la pratique, avec du vrai code exécuté dans le navigateur.",
+  "lang": "fr",
+  "start_url": "./#home",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0E1020",
+  "theme_color": "#E8501F",
+  "icons": [
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "assets/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

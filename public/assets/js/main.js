@@ -625,3 +625,10 @@ function render() {
 window.addEventListener("hashchange", () => { render(); window.scrollTo(0, 0); });
 render();
 
+
+/* Hors ligne (AUDIT #19) : le service worker garde une copie du site ; voir public/sw.js. */
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+  window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
+}
+window.addEventListener("offline", () => toast("Hors ligne : Boucle continue avec sa copie locale", I.bolt));
+window.addEventListener("online", () => toast("De retour en ligne", I.check));

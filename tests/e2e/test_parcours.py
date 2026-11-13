@@ -202,7 +202,7 @@ def test_numpy_et_figure(page):
 
 
 def test_mobile_sans_debordement_horizontal(browser, base_url):
-    context = browser.new_context(viewport={"width": 390, "height": 844}, color_scheme="dark")
+    context = browser.new_context(viewport={"width": 390, "height": 844}, color_scheme="dark", service_workers="block")
     context.route("**/fonts.g*/**", lambda r: r.abort())
     pg = context.new_page()
     for route in ["home", "py-09", "cpp-07", "ml", "installer", "atelier"]:
@@ -452,3 +452,33 @@ def test_defis_gradues(page):
     page.reload()
     expect(page.locator('[data-defi="1"]')).to_have_class(re.compile("fait"))
     assert page.errors == []
+
+
+def test_hors_ligne(page_hors_ligne):
+    """Après une première visite, le service worker sert le site sans réseau, y compris une page jamais ouverte."""
+    page = page_hors_ligne
+    page.goto(page.base + "#home")
+    page.evaluate("navigator.serviceWorker.ready.then(() => true)")
+    page.wait_for_function("navigator.serviceWorker.controller !== null", timeout=30_000)  # clients.claim()
+    page.contexte.set_offline(True)
+    page.goto(page.base + "#al-13")
+    page.reload()
+    expect(page.locator("#defi h2")).to_have_text("Défi")
+    assert page.evaluate("navigator.onLine") is False
+    page.goto(page.base + "#projets")
+    expect(page.locator("a[href='#pj-plateforme']")).to_be_visible()
+    page.contexte.set_offline(False)
+    assert page.errors == []
+
+
+def test_python_hors_ligne(page_hors_ligne):
+    """Pyodide, une fois utilisé, est gardé par le service worker : Python s'exécute ensuite sans réseau."""
+    page = page_hors_ligne
+    page.goto(page.base + "#home")
+    page.evaluate("navigator.serviceWorker.ready.then(() => true)")
+    page.wait_for_function("navigator.serviceWorker.controller !== null", timeout=30_000)
+    expect(run_atelier(page, "print(6 * 7)\n")).to_contain_text("42")
+    page.contexte.set_offline(True)
+    page.reload()
+    expect(run_atelier(page, "print(6 * 8)\n")).to_contain_text("48")
+    page.contexte.set_offline(False)

@@ -150,6 +150,14 @@ La CI GitHub Actions lance cette validation à chaque push, puis publie `public/
 | Pas de framework (React…) | Zéro build, code lisible pour apprendre | Plus de code manuel pour le rendu |
 | JSCPP pour le C++ | Tourne sans serveur | Sous-ensemble du langage ; à remplacer (voir AUDIT #15) |
 | Hash routing | Fonctionne sur tout hébergeur statique | URLs moins jolies |
+| Service worker « réseau d'abord » pour le site | Toujours la dernière version en ligne, la copie locale hors ligne | Une requête réseau par fichier même quand le cache suffirait |
+
+## Hors ligne (sprint 14.1)
+
+- `public/manifest.webmanifest` rend le site installable (icônes dans `public/assets/icons/`).
+- `public/sw.js` met en cache, à l'installation, la liste des fichiers du site écrite par `scripts/precache.mjs` avec une empreinte du contenu. Changer un fichier change l'empreinte, donc `sw.js` : le navigateur installe la nouvelle version et l'activation supprime l'ancien cache. Après toute modification de `public/`, lancer `npm run precache` ; un test unitaire échoue si la liste est périmée.
+- Stratégies : réseau d'abord pour le site (le cache ne sert que sans réseau), cache d'abord pour les adresses versionnées du CDN (Pyodide, JSCPP), cache mis à jour en arrière-plan pour les polices. Les requêtes du worker Python passent aussi par le service worker : Python marche hors ligne une fois qu'il a servi une fois.
+- Les tests e2e bloquent le service worker, sauf `test_hors_ligne` et `test_python_hors_ligne`, qui coupent le réseau.
 
 ## Données, chapitres et installation locale (sprint 2.1)
 

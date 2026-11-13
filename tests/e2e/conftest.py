@@ -57,17 +57,38 @@ def _serve_pyodide(route):
         route.fulfill(status=404, body="absent de la copie locale")
 
 
-@pytest.fixture
-def page(browser, base_url):
-    context = browser.new_context(viewport={"width": 1280, "height": 900})
+def _contexte(browser, service_workers="block"):
+    # Le service worker est bloqué par défaut : chaque test part d'un navigateur neuf, sans cache hors ligne.
+    # test_hors_ligne l'autorise pour vérifier le mode hors ligne lui-même.
+    context = browser.new_context(viewport={"width": 1280, "height": 900}, service_workers=service_workers)
     context.route("**/fonts.g*/**", lambda r: r.abort())
     if PYODIDE_DIR:
         context.route("https://cdn.jsdelivr.net/pyodide/**", _serve_pyodide)
     if JSCPP_FILE:
         context.route("https://cdn.jsdelivr.net/npm/JSCPP**", lambda r: r.fulfill(path=JSCPP_FILE, headers={"content-type": "text/javascript"}))
+    return context
+
+
+def _page(context, base_url):
     pg = context.new_page()
     pg.errors = []
     pg.on("pageerror", lambda e: pg.errors.append(str(e)))
     pg.base = base_url
+    return pg
+
+
+@pytest.fixture
+def page(browser, base_url):
+    context = _contexte(browser)
+    yield _page(context, base_url)
+    context.close()
+
+
+@pytest.fixture
+def page_hors_ligne(browser, base_url):
+    """Une page dont le service worker est actif."""
+    context = _contexte(browser, service_workers="allow")
+    pg = _page(context, base_url)
+    pg.contexte = context
     yield pg
     context.close()
