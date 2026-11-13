@@ -4,7 +4,7 @@
 
 | Story | Points | Statut |
 |-------|--------|--------|
-| #157 E-3 Synchronisation de la progression | 8 | En cours |
+| #157 E-3 Synchronisation de la progression | 8 | Terminé |
 
 ## Conception
 
@@ -19,3 +19,8 @@
 - 13 nov. : `lib/synchro.js`, sauvegarde « silencieuse » dans `lib/state.js` (un état venu du compte ne repart pas aussitôt et garde son horodatage), état de la synchronisation en bas de page.
 - 13 nov. : `render()` lit l'état de la synchronisation dès le premier affichage, avant que la fin du module ait été exécutée : variables déclarées avec `var` pour éviter l'erreur de zone morte temporelle de `let`.
 - 13 nov. : 140 tests unitaires, 31 e2e verts.
+- 13 nov. : PR #161, CI verte (dont CodeQL et la base Supabase). Fusionnée ; publiée en 0.45.0.
+
+## Revue de sprint
+
+8 points livrés sur 8 (PR #161).

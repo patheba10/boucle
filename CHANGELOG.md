@@ -4,6 +4,21 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.45.0] — 2026-11-13
+
+Sprints 16.1 à 16.4 : comptes utilisateurs. Fin du milestone « Comptes utilisateurs » (AUDIT #16).
+
+### Ajouté
+- **Comptes** : connexion avec GitHub, Google ou une adresse e-mail (inscription, mot de passe oublié, nouveau mot de passe), avec Supabase (#155, #156).
+- **Progression synchronisée** entre appareils : fusion sans perte, envoi groupé, conflits entre appareils résolus, reprise hors ligne (#157).
+- **Mon compte** : profil (nom, objectif, roadmap suivie), tableau de bord, changement de mot de passe, suppression du compte et de ses données (#158).
+- **Politique de confidentialité** (Loi 25 du Québec).
+- Guide de mise en service : `docs/comptes.md`. Sans configuration, le site marche sans comptes, comme avant.
+
+### Sécurité
+- Règles de sécurité par ligne (RLS) sur chaque table, droits par défaut retirés, 24 tests pgTAP joués en CI sur un vrai Postgres Supabase, avec le lint de la base.
+- Le déploiement refuse une clé secrète ou `service_role` ; supabase-js servi par le site ; flux PKCE.
+
 ## [0.44.0] — 2026-11-13
 
 Sprint 15.1 : suites de l'audit de sécurité.
