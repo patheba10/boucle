@@ -402,7 +402,10 @@ def test_exercices_courts(page):
     sortie, trous, ordre = blocs.nth(0), blocs.nth(1), blocs.nth(2)
     sortie.locator("textarea").fill("ou\n12")
     sortie.locator("[data-ex-verif]").click()
-    expect(sortie.locator(".explain.no")).to_be_visible()
+    expect(sortie.locator(".explain.no")).to_contain_text("ligne 1 n'est pas juste")
+    sortie.locator("textarea").fill("OU L\n12")
+    sortie.locator("[data-ex-verif]").click()
+    expect(sortie.locator(".explain.no")).to_contain_text("majuscules et minuscules")
     sortie.locator("textarea").fill("ou l\n12\n")
     sortie.locator("[data-ex-verif]").click()
     expect(sortie.locator(".explain b")).to_have_text("Exact.")
@@ -411,9 +414,12 @@ def test_exercices_courts(page):
     champs.nth(1).fill("upper")
     trous.locator("[data-ex-verif]").click()
     expect(champs.nth(1)).to_have_class(re.compile("faux"))
+    expect(trous.locator(".explain.no")).to_contain_text("1 trou à revoir")
     champs.nth(1).fill("title")
     trous.locator("[data-ex-verif]").click()
     expect(trous.locator(".explain b")).to_have_text("Exact.")
+    ordre.locator("[data-ex-verif]").click()
+    expect(ordre.locator(".explain.no")).to_contain_text("sur 4")
     # Remonte chaque ligne à sa place, comme le ferait l'élève avec les flèches.
     attendu = ['prenom = "grace"', "initiale = prenom[0].upper()", 'message = f"Initiale : {initiale}"', "print(message)"]
     for cible, texte in enumerate(attendu):
