@@ -4,9 +4,11 @@
      { type: "trous", code: "… ⟦réponse⟧ … ⟦a§b⟧ …", explain },  // une ou plusieurs réponses acceptées par trou, séparées par §
      { type: "ordre", lignes: [... dans le bon ordre], avant, apres, explain } ]   // présentées mélangées ; avant et apres :
                                                                              // code fixe affiché autour des lignes
+   Chaque exercice peut avoir `indices` (textes, du plus général au plus précis) ; des indices calculés suivent.
    Le langage est celui de la leçon (ou `lang` sur l'exercice). scripts/validate.mjs exécute chaque code pour vérifier
    que la réponse attendue est juste. Les fonctions de correction sont pures et testées (tests/unit/exercices.test.mjs). */
 import { esc, $, $$, norm } from "./util.js";
+import { libelleIndice } from "./indices.js";
 
 export const XP_EXERCICE = 5;
 const TROU = /⟦([\s\S]+?)⟧/g;  // ⟦ ⟧ plutôt que [[ ]], qui apparaît dans du vrai code (listes de listes)
@@ -60,6 +62,32 @@ export function diagnostic(ex, reponse, lang) {
   return (places ? pluriel(places, "ligne") + " sur " + ex.lignes.length + (places > 1 ? " sont déjà à leur place." : " est déjà à sa place.") : "Aucune ligne n'est encore à sa place.") + " Pense à ce qui doit exister avant d'être utilisé.";
 }
 
+/** Indices d'un exercice, du plus général au plus précis : ceux de l'auteur (`indices`), puis des indices calculés
+    à partir de la réponse. Le dernier ne donne jamais toute la réponse. */
+export function indicesExercice(ex) {
+  const auteur = Array.isArray(ex.indices) ? ex.indices.slice() : [];
+  const auto = [];
+  if (ex.type === "sortie") {
+    const a = norm(ex.reponse).split("\n");
+    auto.push("Le programme affiche " + pluriel(a.length, "ligne") + ".");
+    if (a.length > 1) auto.push("La première ligne est @@" + a[0] + "@@.");
+    else {
+      const mots = a[0].trim().split(/\s+/);
+      auto.push(mots.length > 1 ? "Elle commence par @@" + mots[0] + "@@." : "Elle fait " + pluriel(a[0].length, "caractère") + ".");
+    }
+  } else if (ex.type === "trous") {
+    const t = trous(ex.code).map((r) => r[0]);
+    auto.push(t.map((r, i) => (t.length > 1 ? "Trou " + (i + 1) + " : " : "Le trou fait ") + pluriel(r.length, "caractère")).join(" ; ") + ".");
+    const longs = t.map((r, i) => [r, i]).filter(([r]) => r.length > 1);
+    if (longs.length) auto.push(longs.map(([r, i]) => (t.length > 1 ? "Le trou " + (i + 1) : "Il") + " commence par @@" + r[0] + "@@").join(" ; ") + ".");
+  } else if (ex.type === "ordre") {
+    const l = ex.lignes;
+    auto.push("La première ligne est @@" + l[0].trim() + "@@.");
+    if (l.length > 3) auto.push("La dernière ligne est @@" + l[l.length - 1].trim() + "@@.");
+  }
+  return auteur.concat(auto);
+}
+
 /** Mélange déterministe (même ordre à chaque visite), jamais identique à l'ordre correct. */
 export function melange(n, graine) {
   let h = 2166136261;
@@ -95,7 +123,9 @@ export function exercicesHTML(l, L, highlight, lang, I) {
           (ex.apres ? '<pre class="ex-code ex-fixe">' + highlight(ex.apres.replace(/^\n/, ""), lg) + "</pre>" : "");
       }
       return '<div class="ex' + (fait ? " fait" : "") + '" data-ex="' + i + '"><p class="quiz-q">' + (i + 1) + ". " + TITRES[ex.type] + "</p>" + (ex.consigne ? '<p class="ex-consigne">' + texte(ex.consigne) + "</p>" : "") + corps +
-        '<div class="row"><button class="btn sm' + (fait ? "" : " primary") + '" type="button" data-ex-verif>' + (fait ? "Réussi" : "Vérifier") + '</button></div><div data-ex-fb>' + (fait ? '<p class="explain"><b>Exact.</b> ' + texte(ex.explain) + "</p>" : "") + "</div></div>";
+        '<div class="row"><button class="btn sm' + (fait ? "" : " primary") + '" type="button" data-ex-verif>' + (fait ? "Réussi" : "Vérifier") + "</button>" +
+        (fait ? "" : '<button class="btn sm" type="button" data-ex-indice>' + I.bulb + "<span>" + libelleIndice(indicesExercice(ex), 0) + "</span></button>") +
+        '</div><div data-ex-indices></div><div data-ex-fb>' + (fait ? '<p class="explain"><b>Exact.</b> ' + texte(ex.explain) + "</p>" : "") + "</div></div>";
     }).join("") + "</section>";
 }
 
@@ -119,6 +149,16 @@ export function bindExercices(l, L, { gain, highlight, lang, I }) {
         const nouv = ol.children[j]; const cible = nouv && nouv.querySelector(b.hasAttribute("data-monter") ? "[data-monter]" : "[data-descendre]"); if (cible) cible.focus();
       });
     }
+    const bIndice = $("[data-ex-indice]", bloc);
+    if (bIndice) {
+      const liste = indicesExercice(ex); let n = 0;
+      bIndice.addEventListener("click", () => {
+        if (n < liste.length) n++;
+        $("[data-ex-indices]", bloc).innerHTML = '<div class="hint-box">' + liste.slice(0, n).map((t, k) => "<p><b>Indice " + (k + 1) + (liste.length > 1 ? " / " + liste.length : "") + ".</b> " + texte(t) + "</p>").join("") + "</div>";
+        $("span", bIndice).textContent = libelleIndice(liste, n);
+        bIndice.disabled = n >= liste.length;
+      });
+    }
     $("[data-ex-verif]", bloc).addEventListener("click", () => {
       let ok = false, rep;
       if (ex.type === "sortie") { rep = $(".ex-saisie", bloc).value; ok = verifierSortie(ex, rep); }
@@ -129,6 +169,7 @@ export function bindExercices(l, L, { gain, highlight, lang, I }) {
       if (ok) {
         fb.innerHTML = '<p class="explain"><b>Exact.</b> ' + texte(ex.explain) + "</p>";
         bloc.classList.add("fait");
+        if (bIndice) bIndice.remove();
         if (!(L.ex && L.ex[i])) { L.ex = L.ex || {}; L.ex[i] = true; gain(XP_EXERCICE, "exercice réussi"); }
         const faits = exs.filter((_, k) => L.ex[k]).length; const chip = $("[data-ex-chip]");
         if (chip) { chip.className = "chip" + (faits === exs.length ? " ok" : " acc"); chip.innerHTML = faits === exs.length ? I.check + "Réussis" : faits + " / " + exs.length; }

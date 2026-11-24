@@ -129,6 +129,7 @@ function verifierExercices(c, l) {
     const ou = l.id + " exercice " + (i + 1), lang = ex.lang || l.lang || c.lang;
     if (!["sortie", "trous", "ordre"].includes(ex.type)) return fail(ou, "type inconnu : " + ex.type);
     if (!ex.explain) return fail(ou, "explication manquante");
+    if (ex.indices !== undefined && (!Array.isArray(ex.indices) || !ex.indices.length || ex.indices.some((t) => typeof t !== "string" || !t.trim()))) return fail(ou, "indices : liste de textes non vides attendue");
     if (lang !== "py" && lang !== "c") return fail(ou, "langage non exécutable : " + lang);
     let code;
     if (ex.type === "sortie") {
