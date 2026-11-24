@@ -458,6 +458,29 @@ def test_indices_exercice(page):
     assert page.errors == []
 
 
+def test_voir_reponse_exercice(page):
+    """Voir la réponse : un clic prévient, le second remplit la réponse ; l'exercice compte comme fait, sans XP."""
+    page.goto(page.base + "#py-03")
+    blocs = page.locator("#exercices [data-ex]")
+    trous, ordre = blocs.nth(1), blocs.nth(2)
+    trous.locator("[data-ex-reponse]").click()
+    expect(trous.locator(".explain")).to_contain_text("sans XP")
+    trous.locator("[data-ex-reponse]").click()
+    expect(trous.locator("input.trou").nth(0)).to_have_value("f")
+    expect(trous.locator("input.trou").nth(1)).to_have_value("capitalize")
+    expect(trous.locator(".explain b")).to_have_text("Réponse.")
+    expect(trous.locator("[data-ex-reponse]")).to_have_count(0)
+    ordre.locator("[data-ex-reponse]").click()
+    ordre.locator("[data-ex-reponse]").click()
+    expect(ordre.locator("li code").first).to_have_text('prenom = "grace"')
+    expect(page.locator("[data-ex-chip]")).to_have_text("2 / 3")
+    expect(page.locator("#xp")).to_have_text("0 XP")
+    page.reload()
+    expect(page.locator("#exercices .ex.fait")).to_have_count(2)
+    expect(page.locator("#exercices [data-ex]").nth(1).locator("[data-ex-verif]")).to_have_text("Réponse vue")
+    assert page.errors == []
+
+
 def test_defis_gradues(page):
     """Un défi gradué a son onglet, son code et sa progression, séparés du défi principal."""
     page.goto(page.base + "#al-13")

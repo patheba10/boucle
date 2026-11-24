@@ -18,6 +18,7 @@ test("fusion : rien de réussi n'est perdu", () => {
   assert.equal(f.lessons["py-02"].ch, true);
   assert.deepEqual(f.lessons["py-02"].ex, { 0: true });
   assert.deepEqual(f.lessons["py-02"].defis, { moyen: true });
+  assert.deepEqual(fusionner({ lessons: { a: { ex: { 0: true }, exVu: { 0: true } } } }, { lessons: { a: { ex: { 1: true } } } }).lessons.a.exVu, { 0: true });
   assert.ok(f.lessons["al-01"].ch);
   assert.deepEqual(f.roadmap, { "do-git": true, "do-net": true });
   assert.deepEqual(f.projets, { "pj-x/a": true });

@@ -331,7 +331,7 @@ function bindLesson(x) {
       qd.appendChild(p);
     }));
   });
-  bindExercices(l, L, { gain, highlight, lang, I });
+  bindExercices(l, L, { gain, save, highlight, lang, I });
   if (!ch) return;
   if (lang === "git" || (lang === "sh" && ch.kind !== "script")) { bindTermChallenge(x, L, lang); return; }
   if (lang === "sh") { bindScriptChallenge(x, L); return; }
