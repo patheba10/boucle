@@ -4,6 +4,22 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Ver
 
 ## [Non publié]
 
+## [0.46.0] — 2026-11-23
+
+Sprint 17.1 : aide aux exercices. Fin du milestone « Aide aux exercices ».
+
+### Ajouté
+- **Indices progressifs** sur chaque exercice : ceux de l'auteur, puis des indices calculés à partir de la réponse, sans jamais la donner entière (#165).
+- **Voir la réponse** : en deux clics, la réponse est remplie avec son explication. L'exercice compte comme fait, sans XP (#166).
+
+### Modifié
+- **Une réponse fausse dit ce qui cloche** (#164) :
+  - nombre de lignes, ligne fautive ;
+  - majuscules, espaces ou guillemets seuls ;
+  - trous faux ou vides ;
+  - lignes déjà à leur place.
+- Les guillemets typographiques et les espaces insécables saisis comptent comme leur forme simple.
+
 ## [0.45.0] — 2026-11-13
 
 Sprints 16.1 à 16.4 : comptes utilisateurs. Fin du milestone « Comptes utilisateurs » (AUDIT #16).
