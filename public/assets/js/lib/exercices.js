@@ -22,11 +22,43 @@ export const codeComplet = (code) => code.replace(TROU, (_, r) => r.split("§")[
 /** Les morceaux de texte autour des trous. */
 const morceaux = (code) => code.split(TROU).filter((_, i) => i % 2 === 0);
 
-const compacte = (s) => String(s).trim().replace(/\s+/g, " ").replace(/\s*([()[\]{},;:+\-*/%<>=!&|^.])\s*/g, "$1");
-export const verifierSortie = (ex, saisie) => norm(saisie) === norm(ex.reponse);
+const compacte = (s) => droits(s).trim().replace(/\s+/g, " ").replace(/\s*([()[\]{},;:+\-*/%<>=!&|^.])\s*/g, "$1");
+/** Guillemets typographiques (correcteur du clavier) et espaces insécables ramenés à leur forme simple. */
+const droits = (s) => String(s).replace(/[\u201C\u201D\u201E]/g, '"').replace(/[\u2018\u2019\u201A]/g, "'").replace(/[\u00A0\u202F]/g, " ");
+export const verifierSortie = (ex, saisie) => norm(droits(saisie)) === norm(droits(ex.reponse));
 /** Une réponse de trou est juste si elle égale l'une des réponses acceptées, aux espaces près autour des opérateurs. */
 export const verifierTrous = (ex, saisies) => trous(ex.code).map((ok, i) => ok.some((r) => compacte(r) === compacte(saisies[i] || "")));
 export const verifierOrdre = (ex, ordre) => ordre.every((k, i) => ex.lignes[k] === ex.lignes[i]);
+
+const pluriel = (n, mot) => n + " " + mot + (n > 1 ? "s" : "");
+const sansEspaces = (s) => s.replace(/\s+/g, "");
+const sansGuillemets = (s) => s.replace(/["']/g, "");
+
+/** Ce qui cloche dans une réponse fausse, sans donner la réponse. `reponse` : le texte saisi (sortie), la liste
+    des saisies (trous) ou l'ordre des lignes (ordre). Renvoie un texte (le code est entre @@ @@). */
+export function diagnostic(ex, reponse, lang) {
+  if (ex.type === "sortie") {
+    if (!String(reponse || "").trim()) return "Écris ce que le programme affiche, une ligne par affichage.";
+    const a = norm(droits(ex.reponse)).split("\n"), s = norm(droits(reponse)).split("\n");
+    if (s.length !== a.length) return "Le programme affiche " + pluriel(a.length, "ligne") + ", ta réponse en a " + s.length + ". " + (lang === "py" ? "Chaque @@print@@ écrit une ligne." : "Repère chaque saut de ligne.");
+    const fausses = a.map((l, i) => i).filter((i) => s[i] !== a[i]), k = fausses[0], n = k + 1;
+    if (s[k].toLowerCase() === a[k].toLowerCase()) return "Presque : ligne " + n + ", seules les majuscules et minuscules diffèrent. Le programme affiche le texte exactement comme il est écrit.";
+    if (sansEspaces(s[k]) === sansEspaces(a[k])) return "Presque : ligne " + n + ", ce sont les espaces." + (lang === "py" ? " Une virgule dans @@print@@ ajoute une espace entre les valeurs." : "");
+    if (sansGuillemets(s[k]) === sansGuillemets(a[k])) return "Presque : ligne " + n + ", ce sont les guillemets. Ceux qui entourent une chaîne ne s'affichent pas ; ceux qui sont à l'intérieur, si.";
+    return "La ligne " + n + " n'est pas juste" + (fausses.length > 1 ? " (" + pluriel(fausses.length, "ligne") + " à revoir)" : "") + ". Suis le code ligne par ligne, en notant la valeur de chaque variable.";
+  }
+  if (ex.type === "trous") {
+    const t = trous(ex.code), saisies = reponse || [], res = verifierTrous(ex, saisies);
+    const faux = res.map((r, i) => i).filter((i) => !res[i]);
+    const casse = faux.filter((i) => t[i].some((r) => compacte(r).toLowerCase() === compacte(saisies[i] || "").toLowerCase()));
+    const vides = faux.filter((i) => !String(saisies[i] || "").trim());
+    return pluriel(faux.length, "trou") + " à revoir, en rouge." +
+      (casse.length ? " Trou " + casse.map((i) => i + 1).join(", ") + " : attention aux majuscules et minuscules, le langage les distingue." : "") +
+      (vides.length === faux.length ? "" : vides.length ? " " + (vides.length > 1 ? "Des trous sont restés vides." : "Un trou est resté vide.") : "");
+  }
+  const places = reponse.filter((k, i) => ex.lignes[k] === ex.lignes[i]).length;
+  return (places ? pluriel(places, "ligne") + " sur " + ex.lignes.length + (places > 1 ? " sont déjà à leur place." : " est déjà à sa place.") : "Aucune ligne n'est encore à sa place.") + " Pense à ce qui doit exister avant d'être utilisé.";
+}
 
 /** Mélange déterministe (même ordre à chaque visite), jamais identique à l'ordre correct. */
 export function melange(n, graine) {
@@ -88,13 +120,12 @@ export function bindExercices(l, L, { gain, highlight, lang, I }) {
       });
     }
     $("[data-ex-verif]", bloc).addEventListener("click", () => {
-      let ok = false, detail = "";
-      if (ex.type === "sortie") ok = verifierSortie(ex, $(".ex-saisie", bloc).value);
+      let ok = false, rep;
+      if (ex.type === "sortie") { rep = $(".ex-saisie", bloc).value; ok = verifierSortie(ex, rep); }
       else if (ex.type === "trous") {
-        const champs = $$(".trou", bloc); const res = verifierTrous(ex, champs.map((c) => c.value));
+        const champs = $$(".trou", bloc); rep = champs.map((c) => c.value); const res = verifierTrous(ex, rep);
         champs.forEach((c, k) => c.classList.toggle("faux", !res[k])); ok = res.every(Boolean);
-        if (!ok) detail = " " + res.filter((r) => !r).length + " trou(s) à revoir, en rouge.";
-      } else ok = verifierOrdre(ex, $(".ex-ordre", bloc).dataset.ordre.split(",").map(Number));
+      } else { rep = $(".ex-ordre", bloc).dataset.ordre.split(",").map(Number); ok = verifierOrdre(ex, rep); }
       if (ok) {
         fb.innerHTML = '<p class="explain"><b>Exact.</b> ' + texte(ex.explain) + "</p>";
         bloc.classList.add("fait");
@@ -102,7 +133,7 @@ export function bindExercices(l, L, { gain, highlight, lang, I }) {
         const faits = exs.filter((_, k) => L.ex[k]).length; const chip = $("[data-ex-chip]");
         if (chip) { chip.className = "chip" + (faits === exs.length ? " ok" : " acc"); chip.innerHTML = faits === exs.length ? I.check + "Réussis" : faits + " / " + exs.length; }
       } else {
-        fb.innerHTML = '<p class="explain no"><b>Pas encore.</b>' + (detail || (ex.type === "sortie" ? " Exécute le code dans ta tête, ligne par ligne, en notant la valeur de chaque variable." : ex.type === "ordre" ? " Pense à ce qui doit exister avant d'être utilisé." : "")) + "</p>";
+        fb.innerHTML = '<p class="explain no"><b>Pas encore.</b> ' + texte(diagnostic(ex, rep, lg)) + "</p>";
       }
     });
   });
