@@ -110,7 +110,7 @@ export function exercicesHTML(l, L, highlight, lang, I) {
   const faits = exs.filter((_, i) => L.ex && L.ex[i]).length;
   return '<section class="card block" id="exercices"><div class="block-h"><span class="n">' + I.target + '</span><h2>Exercices</h2><span class="chip' + (faits === exs.length ? " ok" : " acc") + '" data-ex-chip>' + (faits === exs.length ? I.check + "Réussis" : faits + " / " + exs.length) + "</span></div>" +
     exs.map((ex, i) => {
-      const lg = ex.lang || lang; const fait = !!(L.ex && L.ex[i]);
+      const lg = ex.lang || lang; const fait = !!(L.ex && L.ex[i]); const vu = fait && !!(L.exVu && L.exVu[i]);
       let corps = "";
       if (ex.type === "sortie") corps = '<pre class="ex-code">' + highlight(ex.code, lg) + '</pre><label class="ex-l">Sortie du programme</label><textarea class="ex-saisie" rows="' + Math.min(8, ex.reponse.split("\n").length + 1) + '" spellcheck="false">' + (fait ? esc(ex.reponse) : "") + "</textarea>";
       else if (ex.type === "trous") {
@@ -123,9 +123,10 @@ export function exercicesHTML(l, L, highlight, lang, I) {
           (ex.apres ? '<pre class="ex-code ex-fixe">' + highlight(ex.apres.replace(/^\n/, ""), lg) + "</pre>" : "");
       }
       return '<div class="ex' + (fait ? " fait" : "") + '" data-ex="' + i + '"><p class="quiz-q">' + (i + 1) + ". " + TITRES[ex.type] + "</p>" + (ex.consigne ? '<p class="ex-consigne">' + texte(ex.consigne) + "</p>" : "") + corps +
-        '<div class="row"><button class="btn sm' + (fait ? "" : " primary") + '" type="button" data-ex-verif>' + (fait ? "Réussi" : "Vérifier") + "</button>" +
-        (fait ? "" : '<button class="btn sm" type="button" data-ex-indice>' + I.bulb + "<span>" + libelleIndice(indicesExercice(ex), 0) + "</span></button>") +
-        '</div><div data-ex-indices></div><div data-ex-fb>' + (fait ? '<p class="explain"><b>Exact.</b> ' + texte(ex.explain) + "</p>" : "") + "</div></div>";
+        '<div class="row"><button class="btn sm' + (fait ? "" : " primary") + '" type="button" data-ex-verif>' + (vu ? "Réponse vue" : fait ? "Réussi" : "Vérifier") + "</button>" +
+        (fait ? "" : '<button class="btn sm" type="button" data-ex-indice>' + I.bulb + "<span>" + libelleIndice(indicesExercice(ex), 0) + "</span></button>" +
+          '<button class="btn sm" type="button" data-ex-reponse>' + I.eye + "<span>Voir la réponse</span></button>") +
+        '</div><div data-ex-indices></div><div data-ex-fb>' + (fait ? '<p class="explain"><b>' + (vu ? "Réponse." : "Exact.") + "</b> " + texte(ex.explain) + "</p>" : "") + "</div></div>";
     }).join("") + "</section>";
 }
 
@@ -134,8 +135,12 @@ function ligneHTML(texte, lg, highlight) {
   return '<li><code style="--ind:' + ind + '">' + highlight(texte.trimStart(), lg) + '</code><span class="ex-fl"><button type="button" class="ex-fleche" data-monter aria-label="Monter">↑</button><button type="button" class="ex-fleche" data-descendre aria-label="Descendre">↓</button></span></li>';
 }
 
-export function bindExercices(l, L, { gain, highlight, lang, I }) {
+export function bindExercices(l, L, { gain, save, highlight, lang, I }) {
   const exs = l.exercices || [];
+  const majChip = () => {
+    const faits = exs.filter((_, k) => L.ex && L.ex[k]).length; const chip = $("[data-ex-chip]");
+    if (chip) { chip.className = "chip" + (faits === exs.length ? " ok" : " acc"); chip.innerHTML = faits === exs.length ? I.check + "Réussis" : faits + " / " + exs.length; }
+  };
   $$("[data-ex]").forEach((bloc) => {
     const i = +bloc.dataset.ex; const ex = exs[i]; const lg = ex.lang || lang; const fb = $("[data-ex-fb]", bloc);
     if (ex.type === "ordre") {
@@ -159,6 +164,25 @@ export function bindExercices(l, L, { gain, highlight, lang, I }) {
         bIndice.disabled = n >= liste.length;
       });
     }
+    // Voir la réponse : deux clics (le premier prévient), puis la réponse est remplie ; l'exercice compte comme
+    // fait, sans XP (L.exVu).
+    const bReponse = $("[data-ex-reponse]", bloc); let arme = false;
+    if (bReponse) bReponse.addEventListener("click", () => {
+      if (!arme) {
+        arme = true; $("span", bReponse).textContent = "Confirmer";
+        fb.innerHTML = '<p class="explain">L\'exercice comptera comme fait, sans XP. Clique sur <b>Confirmer</b> pour voir la réponse.</p>';
+        return;
+      }
+      if (ex.type === "sortie") $(".ex-saisie", bloc).value = norm(ex.reponse);
+      else if (ex.type === "trous") { const t = trous(ex.code); $$(".trou", bloc).forEach((c, k) => { c.value = t[k][0]; c.classList.remove("faux"); }); }
+      else { const ol = $(".ex-ordre", bloc); ol.dataset.ordre = ex.lignes.map((_, k) => k).join(","); ol.innerHTML = ex.lignes.map((t) => ligneHTML(t, lg, highlight)).join(""); }
+      fb.innerHTML = '<p class="explain"><b>Réponse.</b> ' + texte(ex.explain) + "</p>";
+      bloc.classList.add("fait");
+      const v = $("[data-ex-verif]", bloc); v.textContent = "Réponse vue"; v.classList.remove("primary");
+      bReponse.remove(); if (bIndice) bIndice.remove();
+      if (!(L.ex && L.ex[i])) { L.ex = L.ex || {}; L.ex[i] = true; L.exVu = L.exVu || {}; L.exVu[i] = true; save(); }
+      majChip();
+    });
     $("[data-ex-verif]", bloc).addEventListener("click", () => {
       let ok = false, rep;
       if (ex.type === "sortie") { rep = $(".ex-saisie", bloc).value; ok = verifierSortie(ex, rep); }
@@ -170,9 +194,9 @@ export function bindExercices(l, L, { gain, highlight, lang, I }) {
         fb.innerHTML = '<p class="explain"><b>Exact.</b> ' + texte(ex.explain) + "</p>";
         bloc.classList.add("fait");
         if (bIndice) bIndice.remove();
+        if (bReponse) bReponse.remove();
         if (!(L.ex && L.ex[i])) { L.ex = L.ex || {}; L.ex[i] = true; gain(XP_EXERCICE, "exercice réussi"); }
-        const faits = exs.filter((_, k) => L.ex[k]).length; const chip = $("[data-ex-chip]");
-        if (chip) { chip.className = "chip" + (faits === exs.length ? " ok" : " acc"); chip.innerHTML = faits === exs.length ? I.check + "Réussis" : faits + " / " + exs.length; }
+        majChip();
       } else {
         fb.innerHTML = '<p class="explain no"><b>Pas encore.</b> ' + texte(diagnostic(ex, rep, lg)) + "</p>";
       }

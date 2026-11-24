@@ -23,7 +23,7 @@ function fusionnerLecon(a, b) {
   r.quiz = union(x.quiz, y.quiz);
   r.ch = !!(x.ch || y.ch);
   r.sol = !!(x.sol || y.sol);
-  for (const k of ["ex", "defis", "solD"]) if (x[k] || y[k]) r[k] = union(x[k], y[k]);
+  for (const k of ["ex", "exVu", "defis", "solD"]) if (x[k] || y[k]) r[k] = union(x[k], y[k]);
   if (x.fails || y.fails) r.fails = Math.max(x.fails || 0, y.fails || 0);
   return r;
 }
