@@ -1,7 +1,8 @@
 /* Exercices courts : correction des trois formats et mélange déterministe. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { trous, codeComplet, codeOrdre, verifierSortie, verifierTrous, verifierOrdre, melange, diagnostic } from "../../public/assets/js/lib/exercices.js";
+import { trous, codeComplet, codeOrdre, verifierSortie, verifierTrous, verifierOrdre, melange, diagnostic, indicesExercice } from "../../public/assets/js/lib/exercices.js";
+import { norm } from "../../public/assets/js/lib/util.js";
 
 test("sortie : espaces de fin et lignes vides finales ignorés", () => {
   const ex = { reponse: "3\n[1, 2]" };
@@ -74,4 +75,27 @@ test("diagnostic : trous et ordre", () => {
   assert.match(diagnostic(o, [0, 2, 1, 3]), /^2 lignes sur 4 sont déjà à leur place/);
   assert.match(diagnostic(o, [1, 0, 3, 2]), /^Aucune ligne/);
   assert.match(diagnostic(o, [0, 2, 3, 1]), /^1 ligne sur 4 est déjà à sa place/);
+});
+
+test("indices : ceux de l'auteur d'abord, puis calculés", () => {
+  const s = { type: "sortie", reponse: "Boucle 1\na b c", indices: ["Lis les commentaires."] };
+  assert.deepEqual(indicesExercice(s), ["Lis les commentaires.", "Le programme affiche 2 lignes.", "La première ligne est @@Boucle 1@@."]);
+  assert.deepEqual(indicesExercice({ type: "sortie", reponse: "3.4 3 2" }), ["Le programme affiche 1 ligne.", "Elle commence par @@3.4@@."]);
+  assert.deepEqual(indicesExercice({ type: "sortie", reponse: "12" }), ["Le programme affiche 1 ligne.", "Elle fait 2 caractères."]);
+  assert.deepEqual(indicesExercice({ type: "trous", code: "x = ⟦//⟧ 60 ⟦%⟧" }), ["Trou 1 : 2 caractères ; Trou 2 : 1 caractère.", "Le trou 1 commence par @@/@@."]);
+  assert.deepEqual(indicesExercice({ type: "trous", code: "⟦f⟧" }), ["Le trou fait 1 caractère."]);
+  assert.deepEqual(indicesExercice({ type: "ordre", lignes: ["a", "  b", "c", "d"] }), ["La première ligne est @@a@@.", "La dernière ligne est @@d@@."]);
+  assert.equal(indicesExercice({ type: "ordre", lignes: ["a", "b", "c"] }).length, 1);
+});
+
+test("indices : jamais toute la réponse, sur tous les exercices du site", async () => {
+  const { EXERCICES } = await import("../../public/content/exercices/index.js");
+  let n = 0;
+  for (const [id, exs] of Object.entries(EXERCICES)) exs.forEach((ex, i) => {
+    const tout = indicesExercice(ex).join("\n"); n++;
+    if (ex.type === "sortie") assert.ok(!tout.includes("@@" + norm(ex.reponse) + "@@") || ex.indices, id + "/" + i);
+    if (ex.type === "trous") for (const r of trous(ex.code)) if (r[0].length > 1) assert.ok(!tout.includes("@@" + r[0] + "@@"), id + "/" + i);
+    if (ex.type === "ordre") assert.ok(ex.lignes.length - (ex.lignes.length > 3 ? 2 : 1) >= 2, id + "/" + i);
+  });
+  assert.ok(n > 90, n + " exercices");
 });

@@ -7,6 +7,7 @@ export default {
 # print("caché")
 print("a", "b", "c")
 print('Il dit "oui"')`, reponse: "Boucle 1\na b c\nIl dit \"oui\"",
+      indices: ["Une ligne qui commence par @@#@@ est un commentaire : elle n'affiche rien.", "@@print@@ écrit ses valeurs séparées par une espace, puis passe à la ligne."],
       explain: "Chaque virgule ajoute une espace ; la ligne commentée n'est pas exécutée ; des guillemets doubles peuvent vivre dans une chaîne entourée d'apostrophes." },
     { type: "ordre", lignes: [`print("1. Ouvrir le terminal")`, `print("2. Taper python3")`, `print("3. Lancer le script")`], attendu: "1. Ouvrir le terminal\n2. Taper python3\n3. Lancer le script",
       explain: "Le programme s'exécute de haut en bas : l'ordre des lignes est l'ordre de l'affichage." }

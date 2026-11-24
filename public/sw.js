@@ -5,7 +5,7 @@
      Python marche donc hors ligne une fois qu'il a servi une fois ; JSCPP fait partie du site (précache).
    - Polices Google : cache, mis à jour en arrière-plan. */
 // <precache> généré par scripts/precache.mjs, ne pas modifier à la main
-const VERSION = "827a555c65d5";
+const VERSION = "9a14b8e16a63";
 const PRECACHE = [
   "./",
   "assets/css/style.css",

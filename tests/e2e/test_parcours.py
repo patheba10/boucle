@@ -437,6 +437,27 @@ def test_exercices_courts(page):
     assert page.errors == []
 
 
+def test_indices_exercice(page):
+    """Le bouton Indice révèle les indices un par un, puis se désactive ; il disparaît une fois l'exercice réussi."""
+    page.goto(page.base + "#py-01")
+    sortie = page.locator("#exercices [data-ex]").nth(0)
+    bouton = sortie.locator("[data-ex-indice]")
+    expect(bouton).to_contain_text("Indice (1 / 4)")
+    bouton.click()
+    expect(sortie.locator(".hint-box p")).to_have_count(1)
+    expect(sortie.locator(".hint-box")).to_contain_text("commentaire")
+    for _ in range(3):
+        bouton.click()
+    expect(sortie.locator(".hint-box p")).to_have_count(4)
+    expect(sortie.locator(".hint-box")).to_contain_text("Boucle 1")
+    expect(bouton).to_be_disabled()
+    sortie.locator("textarea").fill('Boucle 1\na b c\nIl dit “oui”')
+    sortie.locator("[data-ex-verif]").click()
+    expect(sortie.locator(".explain b")).to_have_text("Exact.")
+    expect(bouton).to_have_count(0)
+    assert page.errors == []
+
+
 def test_defis_gradues(page):
     """Un défi gradué a son onglet, son code et sa progression, séparés du défi principal."""
     page.goto(page.base + "#al-13")
